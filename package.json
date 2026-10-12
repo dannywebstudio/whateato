@@ -12,7 +12,8 @@
     "next": "^15.5.27",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "pg": "^8.16.0"
+    "pg": "^8.16.0",
+    "next-auth": "5.0.0-beta.32"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
