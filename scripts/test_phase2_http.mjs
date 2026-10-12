@@ -36,12 +36,23 @@ assert.equal(matched.body.items[0].tags[0].label,'Café');
 assert.ok(matched.body.items[0].featured_image_metadata?.id);
 assert.ok(!matched.body.items[0].featured_image_metadata?.storage_key,
   'unpublished storage location must not leak to API');
+// Public permit category fallback is allowed only for concrete cafe/pub
+// classifications. It must not synthesize lifestyle tag assignments.
+const permitBar=await get('/api/v1/restaurants?q='+encodeURIComponent('테스트식당')+'&hl=ko&f=bar');
+assert.equal(permitBar.status,200);
+assert.equal(permitBar.body.items.length,1,'permit pub should match bar chip');
+assert.equal(permitBar.body.items[0].category_code,'정종/대포집/소주방');
+assert.deepEqual(permitBar.body.items[0].tags,[],'permit classification is NOT a verified lifestyle tag');
+const permitCafe=await get('/api/v1/restaurants?q='+encodeURIComponent('지번전용식당')+'&hl=ko&f=cafe');
+assert.equal(permitCafe.status,200);
+assert.equal(permitCafe.body.items.length,1,'old permit 까페 classification should match cafe chip');
+assert.deepEqual(permitCafe.body.items[0].tags,[],'permit category is not a licensed enrichment');
 const noVerifiedTags=await get('/api/v1/restaurants?hl=ko&f=date_night');
 assert.deepEqual(noVerifiedTags.body.items,[],'proposed tag must not match');
 const ja=await get('/api/v1/restaurants?hl=ja&q='+encodeURIComponent('테스트카페'));
 assert.equal(ja.body.items[0].name,'테스트카페','no fabricated Japanese translation');
 const region=await get('/api/v1/restaurants?hl=ko&region='+encodeURIComponent('종로구')+'&f=cafe');
-assert.equal(region.body.items.length,1);
+assert.equal(region.body.items.length,2,'registry category fallback adds old-spelling cafe without invented verified tag');
 const detail=await get('/api/v1/restaurants/'+rid+'?hl=en');
 assert.equal(detail.status,200);
 assert.equal(detail.body.restaurant.name,'Sunny Table');
@@ -160,6 +171,10 @@ const mapAll=await get('/api/v1/map/markers?bbox=37.56,126.97,37.59,127.01&hl=ja
 assert.equal(mapAll.status,200);
 assert.equal(mapAll.body.items.length,1);
 assert.equal(mapAll.body.has_more,true,'viewport marker cap surfaces truncated state');
+const permitPubMarker=await get('/api/v1/map/markers?bbox=37.57,126.98,37.59,127.01&f=bar');
+assert.equal(permitPubMarker.status,200);
+assert.equal(permitPubMarker.body.items.length,1,'map and search share permit fallback');
+assert.equal(permitPubMarker.body.items[0].category_code,'정종/대포집/소주방');
 const mapNoTag=await get('/api/v1/map/markers?bbox=37.56,126.97,37.59,127.01&f=date_night');
 assert.deepEqual(mapNoTag.body.items,[],'unverified tags never appear on map');
 const nearby=await get('/api/v1/restaurants/nearby?lat=37.5711&lon=126.9800&radius_km=0.5&hl=en');
