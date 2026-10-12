@@ -1,0 +1,59 @@
+name: WhatEatO Remove Closed Records
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-closed-data.yml'
+      - 'scripts/filter_closed_localdata.py'
+      - 'scripts/test_filter_closed_localdata.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate deletion rules on synthetic CSV
+        run: python -m unittest discover -s scripts -p 'test_filter_closed_localdata.py'
+      - name: Install Drive downloader
+        run: python -m pip install --disable-pip-version-check 'gdown==5.2.0'
+      - name: Download original to temporary GitHub runner
+        run: |
+          mkdir -p /tmp/whateato
+          python -m gdown --id 10jzGEJQsZwYKqCw9QTPqy08UoUwUNqnQ --no-cookies --output /tmp/whateato/input.csv
+          test "$(stat -c %s /tmp/whateato/input.csv)" -eq 699103898
+      - name: Remove only 폐업 and independently validate counts
+        run: |
+          python scripts/filter_closed_localdata.py \
+            --source /tmp/whateato/input.csv \
+            --output whateato-cleaned/WhatEatO_active_only.csv \
+            --report whateato-cleaned/WhatEatO_cleaning_report.json \
+            --expected-rows 2303303 --expected-open 676107 --expected-closed 1627196
+      - name: Save verified active-only CSV and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whateato-active-only
+          path: |
+            whateato-cleaned/WhatEatO_active_only.csv
+            whateato-cleaned/WhatEatO_cleaning_report.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Remove old audit artifact containing 폐업 sample rows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/11731394445" \
+            && echo 'Prior audit artifact removed' \
+            || echo 'Prior audit artifact cannot be deleted automatically; manual deletion required.'
+      - name: Remove temporary original CSV from runner
+        if: always()
+        run: rm -rf /tmp/whateato
