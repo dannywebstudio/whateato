@@ -1,7 +1,6 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
 import type {Map as MapLibreMap,GeoJSONSource} from 'maplibre-gl';
 
 // Map data is ALWAYS fetched from WhatEatO. The base map style uses MapTiler
@@ -44,7 +43,6 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   q?:string;filter?:string;locale?:string;
 }){
   const ui=localizedCopy(locale);
-  const router=useRouter();
   const host=useRef<HTMLDivElement>(null);
   const map=useRef<MapLibreMap|null>(null);
   const lastRequest=useRef<AbortController|null>(null);
@@ -112,7 +110,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         style:STYLE_BASE+'?key='+encodeURIComponent(key),
         center:[126.978,37.567],zoom:12.5,
         minZoom:8,maxZoom:18,
-        attributionControl:true,
+        attributionControl:{compact:true},
         cooperativeGestures:true
       });
       const m=instance;
