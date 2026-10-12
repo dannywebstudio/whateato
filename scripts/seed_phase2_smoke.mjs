@@ -41,11 +41,30 @@ try{
     ('11111111-1111-4111-8111-111111111111','테스트카페','서울특별시 종로구 샘플로 1','서울특별시','종로구','카페',37.5711,126.9800,'active','published'),
     ('22222222-2222-4222-8222-222222222222','테스트식당','서울특별시 종로구 샘플로 2','서울특별시','종로구','한식',37.5780,126.9900,'active','published'),
     ('33333333-3333-4333-8333-333333333333','테스트비공개','서울특별시 종로구 샘플로 3','서울특별시','종로구','기타',37.5712,126.9801,'active','hidden'),
-    ('44444444-4444-4444-8444-444444444444','테스트폐업','서울특별시 종로구 샘플로 4','서울특별시','종로구','기타',37.5713,126.9802,'closed','published')
+    ('44444444-4444-4444-8444-444444444444','테스트폐업','서울특별시 종로구 샘플로 4','서울특별시','종로구','기타',37.5713,126.9802,'closed','published',
+    ('77777777-7777-4777-8777-777777777777','지번전용식당',NULL,'서울특별시 종로구 적선동 9-1','서울특별시','종로구','기타',37.6101,127.0500,'active','published'),
+    ('88888888-8888-4888-8888-888888888888','보류검증식당','서울특별시 종로구 가상로 8',NULL,'서울특별시','종로구','기타',37.5712,126.9795,'active','published')
   `);
-  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql']){
+  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql','008_restaurant_quality_review.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
+  // Explicitly human-confirmed synthetic hold; original restaurant row remains
+  // present and unchanged. Pending flags may NEVER suppress public listings.
+  await client.query(`
+    INSERT INTO restaurant_data_quality_reviews(
+      restaurant_id,issue_code,severity,review_state,evidence_ref,
+      evidence_summary,reviewer_ref,reviewed_at
+    ) VALUES
+    ('88888888-8888-4888-8888-888888888888',
+      'NAME_IDENTITY_MISMATCH','high','confirmed_hold',
+      'ci://confirmed-restaurant-identity-hold',
+      'Synthetic signed reviewer hold for temporary visibility regression only.',
+      'ci-reviewer',now()),
+    ('77777777-7777-4777-8777-777777777777',
+      'ADDRESS_MISSING','medium','pending',NULL,
+      'Synthetic missing road address warning; lot address exists and must be visible.',
+      NULL,NULL)
+  `);
   const localeCoverage=await client.query(`
     SELECT COUNT(*)::int AS labels FROM restaurant_tag_localizations`);
   if(localeCoverage.rows[0]?.labels!==64)
@@ -119,5 +138,5 @@ try{
     ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
       5,'Synthetic pending CI review for approve testing three; not a real opinion.','pending')
   `);
-  console.log('Synthetic Phase 2 fixture ready (localhost only; 4 rows)');
+  console.log('Synthetic Phase 2 fixture ready (localhost only; 6 rows; quality hold+lot fallback)');
 }finally{await client.end()}
