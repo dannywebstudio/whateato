@@ -1,0 +1,57 @@
+name: WhatEatO Drive CSV Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      drive_file_id:
+        description: 'Google Drive CSV file ID'
+        required: true
+        type: string
+      limit_rows:
+        description: 'Rows to scan: 0 means entire CSV'
+        required: true
+        default: '0'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run parser unit tests
+        run: python -m unittest discover -s scripts -p 'test_audit_*.py'
+      - name: Install downloader
+        run: python -m pip install --disable-pip-version-check 'gdown==5.2.0'
+      - name: Download Google Drive CSV on ephemeral runner
+        env:
+          DRIVE_FILE_ID: ${{ inputs.drive_file_id }}
+        run: |
+          if ! [[ "$DRIVE_FILE_ID" =~ ^[a-zA-Z0-9_-]{10,120}$ ]]; then echo 'Invalid Google Drive file ID'; exit 1; fi
+          mkdir -p /tmp/whateato-data
+          python -m gdown --id "$DRIVE_FILE_ID" --output /tmp/whateato-data/source.csv --no-cookies
+          test "$(stat -c %s /tmp/whateato-data/source.csv)" -ge 1000000 || { echo 'Download failed; check viewer permission'; exit 1; }
+      - name: Stream CSV analysis (never writes to Neon)
+        env:
+          LIMIT_ROWS: ${{ inputs.limit_rows }}
+        run: |
+          if ! [[ "$LIMIT_ROWS" =~ ^[0-9]{1,9}$ ]]; then echo 'Invalid row limit'; exit 1; fi
+          python scripts/audit_localdata_csv.py --file /tmp/whateato-data/source.csv --out audit-output --max-rows "$LIMIT_ROWS"
+      - name: Upload small reports (never the 699 MB source)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whateato-csv-audit
+          path: |
+            audit-output/WhatEatO_CSV_audit.json
+            audit-output/WhatEatO_sample_200.csv
+          retention-days: 7
+      - name: Delete temporary source copy
+        if: always()
+        run: rm -rf /tmp/whateato-data
