@@ -5,6 +5,7 @@ import {getRestaurantCatalogDetail,type RestaurantDetailResponse} from '@/lib/re
 import {isUuid,normalizeLocale,normalizeText,normalizeTags} from '@/lib/platform-v1';
 import {getPublicReviews,getOwnReviewSummary,getLicensedReviewInsights} from '@/lib/reviews';
 import ReviewForm from '@/components/ReviewForm';
+import VerifiedRestaurantPhoto from '@/components/VerifiedRestaurantPhoto';
 import {notFound} from 'next/navigation';
 
 export const runtime='nodejs';
@@ -51,6 +52,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   return <main className="content">
     <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
     <h1>{r.name}</h1>
+    <VerifiedRestaurantPhoto image={detail.images[0]} restaurantName={r.name} variant="detail"/>
     <p className="hint">{r.category_code||t.category} · {t.license}</p>
     {r.editorial_score!==null&&<p className="hint">★ {r.editorial_score.toFixed(1)} / 5 · {t.score}</p>}
     {(r.short_description||r.full_description)&&<>
