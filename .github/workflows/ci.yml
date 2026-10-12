@@ -16,6 +16,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: node --check scripts/verify_phase15_staging.mjs
+      - run: node --check scripts/verify_phase25_deployed.mjs
       - run: npm run build
         env:
           NEXT_PUBLIC_LAUNCH_READY: 'false'
