@@ -1,0 +1,56 @@
+name: WhatEatO Phase 2 HTTP smoke
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  phase2-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_ci_only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:local_ci_only@127.0.0.1:5432/postgres
+      WHATEATO_CI_LOCAL_FIXTURE: ONLY_LOCAL_EPHEMERAL
+      WHATEATO_ANALYTICS_ENABLED: 'false'
+      NEXT_PUBLIC_LAUNCH_READY: 'false'
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Validate test scripts
+        run: |
+          node --check scripts/seed_phase2_smoke.mjs
+          node --check scripts/test_phase2_http.mjs
+      - name: Create isolated synthetic fixtures and apply real migrations
+        run: node scripts/seed_phase2_smoke.mjs
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Start Next.js and check real HTTP + SSR
+        run: |
+          npm run start -- --hostname 127.0.0.1 --port 3000 > /tmp/whateato-phase2-next.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then break; fi
+            sleep 2
+          done
+          node scripts/test_phase2_http.mjs
+      - name: Report server logs on failure
+        if: failure()
+        run: cat /tmp/whateato-phase2-next.log || true
