@@ -1,0 +1,56 @@
+name: WhatEatO Render Staging Live QA
+
+on:
+  push:
+    branches:
+      - feature/i18n-analytics-backend-v1
+    paths:
+      - '.github/workflows/render-staging-live-qa.yml'
+      - 'scripts/verify_phase25_deployed.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-staging:
+    name: Render staging live read-only smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      WHATEATO_STAGING_BASE_URL: https://whateato.onrender.com
+      WHATEATO_STAGING_ACK: PREVIEW_ONLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for Next.js and Neon staging readiness (read-only)
+        run: |
+          python3 - <<'PY'
+          import json
+          import time
+          import urllib.error
+          import urllib.request
+          url='https://whateato.onrender.com/api/ready'
+          for attempt in range(1, 25):
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(url,headers={'Accept':'application/json'}),timeout=14) as response:
+                      body=json.load(response)
+                      print(f"Staging readiness attempt {attempt}: HTTP {response.status}, ready={body.get('ready')}, DB={body.get('database')}",flush=True)
+                      if response.status==200 and body.get('ready') is True:
+                          break
+              except urllib.error.HTTPError as e:
+                  try:
+                      data=json.loads(e.read(1000))
+                  except Exception:
+                      data={}
+                  print(f"Staging readiness attempt {attempt}: HTTP {e.code}, DB={data.get('database','not_ready')}",flush=True)
+              except Exception as e:
+                  print(f"Staging readiness attempt {attempt}: {type(e).__name__}",flush=True)
+              if attempt==24:
+                  raise SystemExit('FAIL: Neon staging / Next.js readiness not reached')
+              time.sleep(10)
+          PY
+      - name: Live HTTP, DB, Search, detail and SSR verification (GET only)
+        run: node scripts/verify_phase25_deployed.mjs
