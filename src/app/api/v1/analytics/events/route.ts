@@ -18,6 +18,10 @@ function deviceClass(ua:string){
   return ua?'desktop':'unknown';
 }
 export async function POST(request:NextRequest){
+  // Explicit server-side launch gate. No anonymous event collection by default.
+  // Enable only after rate limiting, disclosure and retention jobs are verified.
+  if(process.env.WHATEATO_ANALYTICS_ENABLED!=='true')
+    return new NextResponse(null,{status:204,headers});
   if(!sameOrigin(request))return NextResponse.json({error:'invalid_origin'},{status:403,headers});
   if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))
     return NextResponse.json({error:'json_required'},{status:415,headers});
