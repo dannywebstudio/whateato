@@ -37,6 +37,7 @@ export default async function AccountPage(){
         </form>
       </section>
     </>}
+    <p className="hint">로그인 전에 <Link className="simple-link" href="/privacy">개인정보 처리 안내</Link>를 확인해 주세요.</p>
     <Link className="simple-link" href="/">← WhatEatO 홈</Link>
   </main>;
 }
