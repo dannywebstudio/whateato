@@ -85,6 +85,25 @@ try{
   const score=await client.query('SELECT score::float8 AS score,approval_state FROM restaurant_editorial_scores WHERE restaurant_id=$1',[id]);
   assert.equal(score.rows[0].score,4.5,'approved rating must not be overwritten');
   assert.equal(score.rows[0].approval_state,'approved');
+  const legacyMenu=await client.query(`INSERT INTO restaurant_menus
+    (restaurant_id,position,publication_state,evidence_ref) VALUES($1,19,'draft',$2)
+    RETURNING id`,[id,source]);
+  await client.query(`INSERT INTO restaurant_menu_localizations(menu_id,locale,name)
+    VALUES($1,'ko','기존 수동 이관 메뉴')`,[legacyMenu.rows[0].id]);
+  const sameFromOtherImporter=structuredClone(base);
+  sameFromOtherImporter.localizations=[];
+  sameFromOtherImporter.tags=[];
+  sameFromOtherImporter.images=[];
+  sameFromOtherImporter.editorial_score=null;
+  sameFromOtherImporter.menus=[{
+    name_ko:'기존 수동 이관 메뉴',position:19,price_krw:null,
+    source_url:source,checked_at:NOW
+  }];
+  await stagePacket(sameFromOtherImporter);
+  const migrated=await client.query(`SELECT COUNT(*)::int AS num FROM restaurant_menus m
+    JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale='ko'
+    WHERE m.restaurant_id=$1 AND ml.name='기존 수동 이관 메뉴' AND m.position=19`,[id]);
+  assert.equal(migrated.rows[0].num,1,'adopt existing staging menu from a prior importer');
   const broken=structuredClone(base);broken.name_ko='다른 상호명';
   await assert.rejects(stagePacket(broken),/identity\/address mismatch/);
   const after=await client.query('SELECT count(*)::int AS count FROM restaurant_menus WHERE restaurant_id=$1 AND evidence_ref=$2',[id,source]);
