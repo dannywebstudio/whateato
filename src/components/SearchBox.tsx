@@ -1,12 +1,14 @@
 'use client';
 import {useEffect,useState,type FormEvent} from 'react';
 import {useRouter} from 'next/navigation';
+import {parseFilters} from '@/lib/search-query';
 const filters=[['date_night','데이트','Date night'],['bar','술집','Bars'],['lunch','점심','Lunch'],['dinner','저녁','Dinner'],['solo_dining','혼밥','Solo dining'],['family_dining','가족 외식','Family'],['cafe','카페','Cafes'],['dessert','디저트','Dessert'],['budget_friendly','가성비','Value'],['good_atmosphere','분위기','Atmosphere'],['local_pick','현지인 추천','Local picks'],['traveler_friendly','여행자 편의','Travel friendly']];
-export default function SearchBox({target='search',initial=''}:{target?:'search'|'map';initial?:string}){
+export default function SearchBox({target='search',initial='',initialFilters=''}:{target?:'search'|'map';initial?:string;initialFilters?:string}){
   const [q,setQ]=useState(initial);
-  const [selected,setSelected]=useState<string[]>([]);
+  const [selected,setSelected]=useState<string[]>(()=>parseFilters(initialFilters));
   const [lang,setLang]=useState('en');
   const router=useRouter();
+  useEffect(()=>{setQ(initial);setSelected(parseFilters(initialFilters))},[initial,initialFilters]);
   useEffect(()=>{
     const sync=()=>{const choice=localStorage.getItem('we_language')||'auto';setLang(choice==='auto'?(navigator.language||'en').split('-')[0]:choice)};
     sync();window.addEventListener('we_preferences',sync);return()=>window.removeEventListener('we_preferences',sync);
