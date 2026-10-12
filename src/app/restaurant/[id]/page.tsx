@@ -111,7 +111,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
         <span>익명 이용자 · {new Date(rev.created_at).toLocaleDateString('ko-KR')}</span>
       </article>):<div className="empty">{t.noReviews}</div>}</div>
     <h2>{t.write}</h2>
-    <ReviewForm restaurantId={id} canWrite={Boolean(session?.user?.id)}/>
+    <ReviewForm restaurantId={id} canWrite={Boolean(session?.user?.id)} locale={locale}/>
     {external.length>0&&<>
       <h2>{t.external}</h2>
       <div className="results">{external.map(x=><div className="result" key={x.provider}>
