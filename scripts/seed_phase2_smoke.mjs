@@ -87,5 +87,25 @@ try{
     ('11111111-1111-4111-8111-111111111111',4.5,'ci-fixture-v1','Synthetic review evidence solely for isolated local CI, not a real rating.','approved',now()),
     ('22222222-2222-4222-8222-222222222222',4.9,'ci-fixture-v1','Synthetic draft must not be visible to the public.','draft',NULL)
   `);
+  // Fake local test reviewers; no real Google identities, and only approved reviews count.
+  await client.query(`
+    INSERT INTO whateato_review_accounts(id,google_subject) VALUES
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1','ci_review_subject_0000001'),
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2','ci_review_subject_0000002'),
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3','ci_review_subject_0000003'),
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4','ci_review_subject_0000004')
+  `);
+  await client.query(`
+    INSERT INTO whateato_user_reviews(restaurant_id,account_id,rating,body,moderation_status,reviewed_at)
+    VALUES
+    ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+      5,'Synthetic approved CI review number one; not a real restaurant opinion.','published',now()),
+    ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
+      4,'Synthetic approved CI review number two; not a real restaurant opinion.','published',now()),
+    ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+      3,'Synthetic approved CI review number three; not a real restaurant opinion.','published',now()),
+    ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',
+      1,'Synthetic unapproved CI review that must never appear in search or summary.','pending',NULL)
+  `);
   console.log('Synthetic Phase 2 fixture ready (localhost only; 4 rows)');
 }finally{await client.end()}
