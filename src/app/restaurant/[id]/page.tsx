@@ -2,7 +2,7 @@ import Link from 'next/link';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import {auth,authReady} from '@/auth';
 import {getRestaurantCatalogDetail,type RestaurantDetailResponse} from '@/lib/restaurant-catalog';
-import {isUuid,normalizeLocale} from '@/lib/platform-v1';
+import {isUuid,normalizeLocale,normalizeText,normalizeTags} from '@/lib/platform-v1';
 import {getPublicReviews,getOwnReviewSummary,getLicensedReviewInsights} from '@/lib/reviews';
 import ReviewForm from '@/components/ReviewForm';
 import {notFound} from 'next/navigation';
@@ -11,7 +11,7 @@ export const runtime='nodejs';
 export const dynamic='force-dynamic';
 type Params={
   params:Promise<{id:string}>;
-  searchParams:Promise<{hl?:string}>;
+  searchParams:Promise<{hl?:string;q?:string;f?:string;region?:string;offset?:string}>;
 };
 const labels={
   ko:{heading:'Restaurant details',unavailable:'음식점 DB 연결을 확인하고 있습니다.',category:'일반음식점',license:'인허가 영업 상태 (현재 영업 중이라는 의미 아님)',address:'주소',noAddress:'주소 정보 없음',description:'식당 소개',menus:'대표 메뉴',noPrice:'가격 확인 전',tags:'식당 태그',score:'WhatEatO 독립 평가',reviews:'WhatEatO 이용자 리뷰',reviewNote:'실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.',reviewCount:'승인된 리뷰',subjective:'이용자의 주관적인 평가',noReviews:'아직 승인된 리뷰가 없습니다.',write:'방문 후기 작성',external:'이용허락을 받은 외부 리뷰 참고 정보',negative:'직원 응대 관련 불만 언급',positive:'긍정 언급',back:'← 검색 결과로'},
@@ -26,11 +26,21 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   const query=await searchParams;
   const locale=normalizeLocale(query.hl);
   const t=labels[locale];
+  const backParams=new URLSearchParams({hl:locale});
+  const backQ=normalizeText(query.q,100);
+  const backRegion=normalizeText(query.region,60);
+  const backTags=normalizeTags(query.f||'');
+  const backOffset=Number.parseInt(query.offset||'0',10);
+  if(backQ)backParams.set('q',backQ);
+  if(backRegion)backParams.set('region',backRegion);
+  if(backTags.length)backParams.set('f',backTags.join(','));
+  if(Number.isInteger(backOffset)&&backOffset>0&&backOffset<=2000)backParams.set('offset',String(backOffset));
+  const backHref='/search?'+backParams.toString();
   let detail:RestaurantDetailResponse|null;
   try{detail=await getRestaurantCatalogDetail(id,locale)}
   catch{
     return <main className="content"><h1>{t.heading}</h1><p className="hint">{t.unavailable}</p>
-      <Link className="simple-link" href={'/search?hl='+locale}>{t.back}</Link></main>;
+      <Link className="simple-link" href={backHref}>{t.back}</Link></main>;
   }
   if(!detail)notFound();
   const r=detail.restaurant;
@@ -82,6 +92,6 @@ export default async function RestaurantDetail({params,searchParams}:Params){
         <span>{x.note}</span>
       </div>)}</div>
     </>}
-    <Link className="simple-link" href={'/search?hl='+locale}>{t.back}</Link>
+    <Link className="simple-link" href={backHref}>{t.back}</Link>
   </main>;
 }
