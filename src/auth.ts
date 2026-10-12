@@ -43,10 +43,8 @@ export const {handlers,auth,signIn,signOut}=NextAuth({
     },
     async session({session,token}){
       if(typeof token.sub==='string'&&session.user){
-        session.user.id=token.sub;
-        session.user.email=undefined;
-        session.user.name=undefined;
-        session.user.image=undefined;
+        // Return only the internal UUID to the browser. No identity attributes.
+        session.user={id:token.sub};
       }
       return session;
     }
