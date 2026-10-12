@@ -114,7 +114,8 @@ export async function getGeoCatalog(input:QueryParams & {
         WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND r.latitude BETWEEN $2 AND $3 AND r.longitude BETWEEN $4 AND $5
       AND ($6::text='' OR r.name_ko ILIKE $7 OR r.road_address_ko ILIKE $7
-        OR r.lot_address_ko ILIKE $7 OR r.region_sigungu ILIKE $7 OR r.region_dong ILIKE $7
+        OR r.lot_address_ko ILIKE $7 OR r.category_code ILIKE $7
+        OR r.region_sigungu ILIKE $7 OR r.region_dong ILIKE $7
         OR l.display_name ILIKE $7 OR k.display_name ILIKE $7
         OR EXISTS(SELECT 1 FROM restaurant_menus m
           JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id
