@@ -72,10 +72,10 @@ try{
     INSERT INTO restaurant_menu_localizations(menu_id,locale,name) VALUES($1,'en','Unverified Price Item')`,
     [unverifiedPriceMenu.rows[0].id]);
   await client.query(`
-    INSERT INTO restaurant_images(restaurant_id,storage_key,source_reference,usage_rights_reference,
+    INSERT INTO restaurant_images(id,restaurant_id,storage_key,source_reference,usage_rights_reference,
      rights_status,publication_state,rights_verified_at,alt_ko) VALUES
-    ('11111111-1111-4111-8111-111111111111','media/ci-only/licensed.png','CI synthetic fixture','CI-only mock approval','approved','published',now(),'테스트용 이미지 메타데이터'),
-    ('22222222-2222-4222-8222-222222222222','media/ci-only/unverified.png','CI synthetic fixture',NULL,'pending','draft',NULL,'비공개')
+    ('55555555-5555-4555-8555-555555555555','11111111-1111-4111-8111-111111111111','media/ci-only/licensed.png','CI synthetic fixture','CI-only mock approval','approved','published',now(),'테스트용 이미지 메타데이터'),
+    ('66666666-6666-4666-8666-666666666666','22222222-2222-4222-8222-222222222222','media/ci-only/unverified.png','CI synthetic fixture',NULL,'pending','draft',NULL,'비공개')
   `);
   await client.query(`
     INSERT INTO restaurant_editorial_scores(restaurant_id,score,methodology_version,evidence_summary,approval_state,verified_at)
