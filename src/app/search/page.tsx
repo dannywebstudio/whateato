@@ -12,10 +12,10 @@ export const runtime='nodejs';
 export const metadata:Metadata={robots:{index:false,follow:false},alternates:{canonical:'/search'}};
 type Params={q?:string;f?:string;hl?:string;region?:string;offset?:string};
 const labels={
-  ko:{heading:'Search restaurants',ready:'검증된 데이터베이스 검색 결과',unavailable:'식당 데이터베이스 연결을 확인하고 있습니다.',empty:'검색 조건과 일치하는 검증된 식당 정보가 없습니다.',initial:'음식점 이름, 지역, 메뉴를 입력하거나 필터를 선택해 주세요.',intro:'식당 소개',menu:'대표 메뉴',score:'WhatEatO 독립 평가',next:'다음 결과 →',map:'지도에서 보기 →',address:'주소 정보 없음'},
-  en:{heading:'Search restaurants',ready:'Verified database search results',unavailable:'The restaurant database is unavailable.',empty:'No verified restaurant matches these criteria.',initial:'Enter a restaurant, location or menu, or select a filter.',intro:'About',menu:'Main menu',score:'Independent WhatEatO score',next:'Next results →',map:'View on Map →',address:'Address not available'},
-  ja:{heading:'レストランを探す',ready:'確認済みの店舗データ',unavailable:'データベースに接続できません。',empty:'条件に一致する確認済みの店舗はありません。',initial:'店名・地域・料理名を入力するか、フィルターを選択してください。',intro:'紹介',menu:'主なメニュー',score:'WhatEatO独自評価',next:'次の結果 →',map:'地図で見る →',address:'住所情報なし'},
-  'zh-CN':{heading:'搜索餐厅',ready:'已核实的餐厅数据',unavailable:'餐厅数据库暂时不可用。',empty:'没有符合条件的已核实餐厅。',initial:'输入餐厅、地区或菜品，或选择筛选条件。',intro:'简介',menu:'主要菜品',score:'WhatEatO独立评分',next:'下一页 →',map:'在地图上查看 →',address:'暂无地址'}
+  ko:{heading:'Search restaurants',ready:'공공 인허가 자료 기반 검색 결과 · 현재 영업 여부는 별도 확인이 필요합니다.',unavailable:'식당 데이터베이스 연결을 확인하고 있습니다.',empty:'검색 조건과 일치하는 등록 식당이 없습니다.',initial:'음식점 이름, 지역, 메뉴를 입력하거나 필터를 선택해 주세요.',intro:'식당 소개',menu:'대표 메뉴',score:'WhatEatO 독립 평가',next:'다음 결과 →',map:'지도에서 보기 →',address:'주소 정보 없음'},
+  en:{heading:'Search restaurants',ready:'Search results from permit records · current opening status is not verified.',unavailable:'The restaurant database is unavailable.',empty:'No registered restaurant matches these criteria.',initial:'Enter a restaurant, location or menu, or select a filter.',intro:'About',menu:'Main menu',score:'Independent WhatEatO score',next:'Next results →',map:'View on Map →',address:'Address not available'},
+  ja:{heading:'レストランを探す',ready:'営業許可記録に基づく検索結果（現在の営業状況は未確認）',unavailable:'データベースに接続できません。',empty:'条件に一致する登録店舗はありません。',initial:'店名・地域・料理名を入力するか、フィルターを選択してください。',intro:'紹介',menu:'主なメニュー',score:'WhatEatO独自評価',next:'次の結果 →',map:'地図で見る →',address:'住所情報なし'},
+  'zh-CN':{heading:'搜索餐厅',ready:'根据经营许可资料提供的搜索结果（当前营业状态未核实）',unavailable:'餐厅数据库暂时不可用。',empty:'没有符合条件的登记餐厅。',initial:'输入餐厅、地区或菜品，或选择筛选条件。',intro:'简介',menu:'主要菜品',score:'WhatEatO独立评分',next:'下一页 →',map:'在地图上查看 →',address:'暂无地址'}
 } as const;
 function linkToSearch(q:string,f:string,hl:string,region:string,offset:number){
   const p=new URLSearchParams();
