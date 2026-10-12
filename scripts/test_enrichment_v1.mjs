@@ -106,7 +106,7 @@ try{
   assert.equal(migrated.rows[0].num,1,'adopt existing staging menu from a prior importer');
   const broken=structuredClone(base);broken.name_ko='다른 상호명';
   await assert.rejects(stagePacket(broken),/identity\/address mismatch/);
-  const after=await client.query('SELECT count(*)::int AS count FROM restaurant_menus WHERE restaurant_id=$1 AND evidence_ref=$2',[id,source]);
+  const after=await client.query(`SELECT count(*)::int AS count FROM restaurant_menus m JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale='ko' WHERE m.restaurant_id=$1 AND m.evidence_ref=$2 AND ml.name='검토 중인 CI 메뉴'`,[id,source]);
   assert.equal(after.rows[0].count,1,'mismatch must roll back');
   // A second, previously unscored restaurant only receives a review-state score.
   const other=structuredClone(base);
