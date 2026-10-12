@@ -50,6 +50,20 @@ assert.equal(detail.body.menus.find(x=>x.name==='Coffee').price_krw,7500);
 assert.equal(detail.body.menus.find(x=>x.name==='Unverified Price Item').price_krw,null);
 assert.equal(detail.body.tags.length,1);
 assert.equal(detail.body.images.length,1);
+assert.equal(detail.body.images[0].url,'/api/v1/images/55555555-5555-4555-8555-555555555555');
+assert.equal(matched.body.items[0].featured_image_metadata.url,detail.body.images[0].url);
+const imageResponse=await fetch(base+detail.body.images[0].url);
+assert.equal(imageResponse.status,200,'licensed media delivered');
+assert.equal(imageResponse.headers.get('content-type'),'image/png');
+assert.equal(imageResponse.headers.get('cache-control'),'no-store');
+assert.equal(imageResponse.headers.get('x-content-type-options'),'nosniff');
+const imageBytes=new Uint8Array(await imageResponse.arrayBuffer());
+assert.ok(imageBytes.length>16);
+assert.deepEqual(Array.from(imageBytes.slice(0,8)),[137,80,78,71,13,10,26,10]);
+assert.equal((await get('/api/v1/images/66666666-6666-4666-8666-666666666666')).status,404,
+  'unlicensed or unpublished photo must never be delivered');
+assert.equal((await get('/api/v1/images/not-a-uuid')).status,400);
+
 assert.equal((await get('/api/v1/restaurants/bad-id')).status,400);
 assert.equal((await get('/api/v1/restaurants/ffffffff-ffff-4fff-8fff-ffffffffffff')).status,404);
 const secondDetail=await get('/api/v1/restaurants/22222222-2222-4222-8222-222222222222?hl=en');
