@@ -1,0 +1,66 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "8c28bddb-8739-42db-a4c5-748b12cdf913",
+  "name_ko": "서촌명가",
+  "road_address_ko": "서울특별시 종로구 자하문로 112, 지하1층 (청운동)",
+  "identity_evidence": {
+    "url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+    "checked_at": "2026-10-12T13:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "서촌명가",
+      "short_description": "청운동 자하문로에 있는 한식당으로, 청국장과 생선구이, 제육정식 등이 메뉴에 소개되어 있다.",
+      "source_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Seochon Myeongga",
+      "short_description": "A Korean restaurant on Jahamun-ro in Cheongun-dong, where the listed dishes include cheonggukjang, grilled fish and spicy pork set meals.",
+      "source_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "ソチョン名家",
+      "short_description": "清雲洞の紫霞門路にある韓国料理店。チョングッチャン、焼き魚、豚肉の辛味炒め定食などがメニューで案内されている。",
+      "source_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "西村名家",
+      "short_description": "位于青云洞紫霞门路的韩餐厅，公开菜单列有清麹酱汤、烤鱼及辣炒猪肉套餐等。",
+      "source_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "청국장",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "name_ko": "생선구이",
+      "position": 1,
+      "price_krw": null,
+      "source_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "name_ko": "제육정식",
+      "position": 2,
+      "price_krw": null,
+      "source_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}
