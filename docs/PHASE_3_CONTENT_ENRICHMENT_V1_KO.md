@@ -46,7 +46,16 @@ export WHATEATO_EXPECTED_NEON_BRANCH_ID=br-autumn-pine-b36z3utm
 # DATABASE_URL=해당 Neon staging 접속 문자열 (직접 로컬 비밀로 설정)
 node scripts/enrichment_v1.mjs stage data/enrichment-packets/review/on-the-border-gwanghwamun-20261012.json
 ```
-두 번째 명령은 네트워크로 실제 staging DB에 쓰므로 검증 도구의 현재 연결/권한과 대상 분리 상태를 먼저 확인할 것. 사용자 식당 데이터는 이 커밋에서 변경하지 않았음.
+두 번째 명령은 네트워크로 실제 staging DB에 쓰므로 검증 도구의 현재 연결/권한과 대상 분리 상태를 먼저 확인할 것.
+
+## 2026-10-12 실데이터 Neon staging 검토 초안 반영 결과
+- 연결 브랜치: `br-autumn-pine-b36z3utm` (**staging**, 운영 브랜치 아님). SQL 트랜잭션 내에서 `current_setting('neon.branch_id',true)` 확인, 식당 UUID·상호명·주소·공개/인허가 상태 일치 검사 통과.
+- **온더보더 광화문 D타워점, 호호식당 대학로 2개 식당**에 `restaurant_localizations` 8행 (각 한국어/영어/일본어/중국어), 모두 `publication_state=review`, `verified_at=NULL`.
+- `restaurant_menus` 4행 / 한국어 메뉴명 4행, 모두 `publication_state=draft`, 가격 및 가격 검증 시각 NULL.
+- 검증·승인된 새 태그, 사진, 독립 별점: **0건**. 이번 단계에서 공개 전환 **0건**.
+- 별도 `production` 브랜치 재조회: 총 식당 **10,000건 유지**, 두 연구 대상의 신규 번역 **0행**, 메뉴 **0행**. 운영 브랜치에 해당 초안 변경 없음.
+- 이번 staging 검토 초안은 웹사이트 공개 정보가 아니고 독립적인 사실/저작권 검토 절차 전까지 `review`/`draft` 상태를 유지함.
+
 
 ## 다음 Phase 3 작업
 - 나머지 **18/20곳**의 공식 메뉴/지점/주소·영업 상태 연구 및 출처 대조.
