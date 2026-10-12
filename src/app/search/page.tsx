@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type {Metadata} from 'next';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import SearchBoxSynced from '@/components/SearchBoxSynced';
 import VerifiedRestaurantPhoto from '@/components/VerifiedRestaurantPhoto';
@@ -7,6 +8,8 @@ import {normalizeLocale,normalizeTags,normalizeText} from '@/lib/platform-v1';
 
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
+// Query/filter combinations should never become thin, duplicate indexed pages.
+export const metadata:Metadata={robots:{index:false,follow:false},alternates:{canonical:'/search'}};
 type Params={q?:string;f?:string;hl?:string;region?:string;offset?:string};
 const labels={
   ko:{heading:'Search restaurants',ready:'검증된 데이터베이스 검색 결과',unavailable:'식당 데이터베이스 연결을 확인하고 있습니다.',empty:'검색 조건과 일치하는 검증된 식당 정보가 없습니다.',initial:'음식점 이름, 지역, 메뉴를 입력하거나 필터를 선택해 주세요.',intro:'식당 소개',menu:'대표 메뉴',score:'WhatEatO 독립 평가',next:'다음 결과 →',map:'지도에서 보기 →',address:'주소 정보 없음'},
