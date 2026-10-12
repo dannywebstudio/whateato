@@ -50,6 +50,10 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
     {found&&<>
       <div className="results">{found.items.map(r=>{
         const detailParams=new URLSearchParams({hl:locale});
+        if(q)detailParams.set('q',q);
+        if(filterString)detailParams.set('f',filterString);
+        if(region)detailParams.set('region',region);
+        if(offset)detailParams.set('offset',String(offset));
         const href='/restaurant/'+r.id+'?'+detailParams.toString();
         return <Link className="result" href={href} key={r.id}>
           <strong>{r.name}</strong>
