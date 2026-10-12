@@ -5,7 +5,7 @@ This change extends the **existing Next.js backend**. A disruptive NestJS migrat
 ## Migration dependency
 - `db/migrations/004_i18n_analytics.sql` requires existing `restaurants(id uuid,...)` and deployed 001/002 schema.
 - 003 moderated user reviews remains independent.
-- Run 004 ONLY after a snapshot/backup and a review of the actual production schema. This PR does not run SQL against Neon.
+- Migration 004 was validated on Neon staging and then applied non-destructively to the production database on 2026-10-12 after an independent recovery branch was created. See `docs/PHASE_1_5_DB_QA_20261012_KO.md`. GitHub PR #6 remains Draft and its Next.js API/UI code is **not yet deployed**.
 - Localizations are `draft` by default. Verified tags, licensed photos, published menus and approved independent scores are gated; no machine-invented public facts are seeded.
 - Locale list: `ko, en, ja, zh-CN`. Restaurant primary IDs are shared across languages; URL localization and translated UI remain subsequent work.
 
@@ -25,11 +25,11 @@ This change extends the **existing Next.js backend**. A disruptive NestJS migrat
 - Do not collect raw referrer URLs or search strings with likely personally identifying patterns.
 
 ## Operational QA
-1. Verify migration 004 in a nonproduction DB and back up production separately.
+1. DONE (2026-10-12): Verified migration 004 in a staging branch, created a separate Neon recovery branch, and verified production migration with 10,000 unique restaurant records intact.
 2. Confirm `/api/ready` before testing `/api/v1/restaurants`.
 3. Confirm filters only match `verification_state='verified'` and only published restaurant/menu content is served.
 4. Verify anonymous events are accepted without cookies and invalid/cross-site submissions are rejected.
 5. Verify admin endpoint denies unauthorized requests and reports counts with clear labels.
 6. Verify design-lock CI stays green; no locked layout, header, home, CSS, or preview files were changed.
 
-**Deployment status:** This PR only stages code. It does not migrate or publish the production DB.
+**Deployment status (2026-10-12):** The production database has migration 004; GitHub PR #6 is still Draft and new API/UI code has **not** been merged/deployed. Analytics ingestion, secrets and cleanup are **not** enabled.
