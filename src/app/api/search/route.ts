@@ -4,8 +4,10 @@ export const runtime='nodejs';
 export const dynamic='force-dynamic';
 export async function GET(request:NextRequest){
   const q=request.nextUrl.searchParams.get('q')||'';
-  const result=await findRestaurants(q);
-  return NextResponse.json({query:q.slice(0,150),databaseReady:result.ready,restaurants:result.items},{
-    headers:{'Cache-Control':'no-store'}
+  const f=request.nextUrl.searchParams.get('f')||'';
+  const result=await findRestaurants(q,f);
+  const status=result.ready?200:503;
+  return NextResponse.json({query:q.slice(0,150),filters:result.filters,databaseReady:result.ready,restaurants:result.items,error:result.error||null},{
+    status,headers:{'Cache-Control':'no-store'}
   });
 }
