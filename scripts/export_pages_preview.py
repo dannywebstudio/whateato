@@ -87,7 +87,7 @@ def export(output: Path):
         shutil.copyfile(PREVIEW_ROOT / asset, output / asset)
     # Mirror canonical Search / Map / Blog architecture as distinct static routes.
     shell = (PREVIEW_ROOT / "index.html").read_text(encoding="utf-8")
-    for page in ("search", "map", "blog"):
+    for page in ("search", "map", "blog", "restaurant"):
         directory = output / page
         directory.mkdir(exist_ok=True)
         html = (shell.replace('data-page="home"', f'data-page="{page}"')
