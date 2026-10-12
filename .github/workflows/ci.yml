@@ -20,6 +20,7 @@ jobs:
       - run: node scripts/verify_enrichment_queue.mjs
       - run: node scripts/enrichment_v1.mjs inspect data/enrichment-packets/review/on-the-border-gwanghwamun-20261012.json
       - run: node scripts/enrichment_v1.mjs inspect data/enrichment-packets/review/hoho-daehangno-20261012.json
+      - run: node scripts/report_enrichment_progress.mjs
       - run: npm run build
         env:
           NEXT_PUBLIC_LAUNCH_READY: 'false'
