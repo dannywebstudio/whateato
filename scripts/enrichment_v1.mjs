@@ -194,7 +194,16 @@ export async function stagePacket(packet){
         [parsed.restaurant_id,t.code,t.source]);
     }
     for(const m of parsed.menus){
-      const mid=stableUuid(parsed.restaurant_id,'menu',m.name,m.position);
+      // Adopt an already-staged matching menu (e.g. a validated staging SQL
+      // transfer) rather than creating a duplicate with a new deterministic ID.
+      // A published menu is never downgraded or overwritten.
+      const prior=await client.query(`SELECT m.id::text AS id FROM restaurant_menus m
+        JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale='ko'
+        WHERE m.restaurant_id=$1 AND m.position=$2 AND ml.name=$3
+        ORDER BY CASE WHEN m.publication_state='published' THEN 0 ELSE 1 END,
+          m.created_at,m.id LIMIT 1`,
+        [parsed.restaurant_id,m.position,m.name]);
+      const mid=prior.rows[0]?.id||stableUuid(parsed.restaurant_id,'menu',m.name,m.position);
       await client.query(`INSERT INTO restaurant_menus
         (id,restaurant_id,price_krw,position,publication_state,evidence_ref,price_verified_at)
         VALUES($1,$2,$3,$4,'draft',$5,NULL)
