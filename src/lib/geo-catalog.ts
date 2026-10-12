@@ -114,16 +114,24 @@ export async function getGeoCatalog(input:QueryParams & {
         WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND r.latitude BETWEEN $2 AND $3 AND r.longitude BETWEEN $4 AND $5
       AND ($6::text='' OR r.name_ko ILIKE $7 OR r.road_address_ko ILIKE $7
-        OR r.lot_address_ko ILIKE $7 OR l.display_name ILIKE $7 OR k.display_name ILIKE $7
+        OR r.lot_address_ko ILIKE $7 OR r.region_sigungu ILIKE $7 OR r.region_dong ILIKE $7
+        OR l.display_name ILIKE $7 OR k.display_name ILIKE $7
         OR EXISTS(SELECT 1 FROM restaurant_menus m
           JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id
           WHERE m.restaurant_id=r.id AND m.publication_state='published'
             AND NULLIF(BTRIM(m.evidence_ref),'') IS NOT NULL
             AND ml.locale IN ($1,'ko') AND ml.name ILIKE $7))
-      AND NOT EXISTS(SELECT 1 FROM unnest($8::text[]) required_tag WHERE NOT EXISTS(
-        SELECT 1 FROM restaurant_tag_assignments a
-        WHERE a.restaurant_id=r.id AND a.tag_code=required_tag AND a.verification_state='verified'
-          AND a.verified_at IS NOT NULL AND NULLIF(BTRIM(a.evidence_ref),'') IS NOT NULL))
+      -- Keep viewport and search-page filters aligned. The only permit-
+      -- derived shortcuts are explicit cafe / pub classifications.
+      AND NOT EXISTS(SELECT 1 FROM unnest($8::text[]) required_tag WHERE NOT (
+        EXISTS(SELECT 1 FROM restaurant_tag_assignments a
+          WHERE a.restaurant_id=r.id AND a.tag_code=required_tag
+            AND a.verification_state='verified'
+            AND a.verified_at IS NOT NULL AND NULLIF(BTRIM(a.evidence_ref),'') IS NOT NULL)
+        OR (required_tag='cafe' AND r.category_code IN ('카페','까페'))
+        OR (required_tag='bar' AND r.category_code IN (
+          '정종/대포집/소주방','감성주점','호프/통닭'))
+      ))
       ${nearby?`AND ${haversine} <= $11::float8`:''}
     ORDER BY ${nearby?'distance_km ASC,':''} r.name_ko ASC,r.id ASC
     LIMIT ${nearby?'$12':'$9'}::integer`;
