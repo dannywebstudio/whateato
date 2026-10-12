@@ -95,6 +95,13 @@ const noImageDetail=await get('/restaurant/22222222-2222-4222-8222-222222222222?
 assert.ok(!noImageDetail.body.includes('/api/v1/images/66666666-6666-4666-8666-666666666666'),
   'unapproved media must not appear in SSR HTML');
 
+const mapHtml=await get('/map?q='+encodeURIComponent('테스트')+'&f=cafe&hl=en');
+assert.equal(mapHtml.status,200,'map page remains SSR-capable');
+assert.match(mapHtml.body,/Map provider not configured/,'do not silently load unlicensed map tiles');
+assert.ok(!mapHtml.body.includes('maptiler.com/maps/streets-v4/style.json?key='),
+  'do not issue tile requests or leak key before map provider opt-in');
+assert.match(mapHtml.body,/aria-pressed="true"/,'map filter state restored after navigation');
+
 const viewport=await get('/api/v1/map/markers?bbox=37.570,126.979,37.572,126.981&hl=en');
 assert.equal(viewport.status,200,'bounded viewport map API');
 assert.equal(viewport.body.mode,'viewport');
