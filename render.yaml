@@ -24,5 +24,3 @@ services:
         value: "false"
       - key: DATABASE_URL
         sync: false
-      - key: NEXT_PUBLIC_SITE_URL
-        sync: false
