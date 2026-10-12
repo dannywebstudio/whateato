@@ -47,6 +47,13 @@ const permitCafe=await get('/api/v1/restaurants?q='+encodeURIComponent('지번�
 assert.equal(permitCafe.status,200);
 assert.equal(permitCafe.body.items.length,1,'old permit 까페 classification should match cafe chip');
 assert.deepEqual(permitCafe.body.items[0].tags,[],'permit category is not a licensed enrichment');
+const categoryKeyword=await get('/api/v1/restaurants?q='+encodeURIComponent('정종/대포집/소주방')+'&hl=ko');
+assert.equal(categoryKeyword.status,200);
+assert.equal(categoryKeyword.body.items.length,1,'official registry classification is a searchable term');
+assert.equal(categoryKeyword.body.items[0].name_ko,'테스트식당');
+const categoryMap=await get('/api/v1/map/markers?bbox=37.57,126.98,37.59,127.01&q='+encodeURIComponent('정종/대포집/소주방'));
+assert.equal(categoryMap.status,200);
+assert.equal(categoryMap.body.items.length,1,'map and search include same permit category keyword');
 const noVerifiedTags=await get('/api/v1/restaurants?hl=ko&f=date_night');
 assert.deepEqual(noVerifiedTags.body.items,[],'proposed tag must not match');
 const ja=await get('/api/v1/restaurants?hl=ja&q='+encodeURIComponent('테스트카페'));
