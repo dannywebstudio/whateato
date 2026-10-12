@@ -1,0 +1,66 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "e368e24d-a125-463b-80ba-2b3b90184f5e",
+  "name_ko": "영덕막회",
+  "road_address_ko": "서울특별시 중구 을지로3길 33 (다동, 3층)",
+  "identity_evidence": {
+    "url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+    "checked_at": "2026-10-12T13:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "영덕막회",
+      "short_description": "다동 을지로3길에 있는 해산물 식당. 물회와 회덮밥, 고등어초절임 등의 메뉴가 소개되어 있다.",
+      "source_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Yeongdeok Makhoe",
+      "short_description": "A seafood restaurant on Eulji-ro 3-gil in Da-dong, listing chilled raw-fish soup, raw-fish rice bowls and cured mackerel.",
+      "source_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "ヨンドクマクフェ",
+      "short_description": "茶洞の乙支路3ギルにある海鮮料理店。ムルフェ（冷たい刺身スープ）、刺身丼、しめ鯖などが案内されている。",
+      "source_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "盈德生鱼片餐馆",
+      "short_description": "位于茶洞乙支路3街的海鲜餐厅，公开菜单包括冷生鱼汤、生鱼拌饭和醋渍青花鱼等。",
+      "source_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "물회",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "name_ko": "회덮밥",
+      "position": 1,
+      "price_krw": null,
+      "source_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "name_ko": "고등어초절임",
+      "position": 2,
+      "price_krw": null,
+      "source_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}
