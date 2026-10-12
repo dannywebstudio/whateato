@@ -34,7 +34,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
   const filterTags=normalizeTags(params.f||'');
   const filterString=filterTags.join(',');
   const requestedOffset=Number.parseInt(params.offset||'0',10);
-  const offset=Math.min(2000,Math.max(0,Number.isFinite(requestedOffset)?requestedOffset:0));
+  const offset=Math.min(10000,Math.max(0,Number.isFinite(requestedOffset)?requestedOffset:0));
   const searched=Boolean(q||region||filterTags.length);
   let found:RestaurantSearchResponse|null=null;
   if(searched){
@@ -62,6 +62,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
         return <Link className="result" href={href} key={r.id}>
           <VerifiedRestaurantPhoto image={r.featured_image_metadata} restaurantName={r.name}/>
           <strong>{r.name}</strong>
+          {r.category_code&&<span>{locale==='ko'?'인허가 업종':locale==='ja'?'営業許可上の業種':locale==='zh-CN'?'许可经营类别':'Permit category'}: {r.category_code}</span>}
           {r.editorial_score!==null&&<span>★ {r.editorial_score.toFixed(1)} / 5 · {t.score}</span>}
           {r.main_menu&&<span>{t.menu}: {r.main_menu}</span>}
           {r.short_description&&<span>{r.short_description}</span>}
@@ -70,7 +71,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
         </Link>
       })}</div>
       {found.items.length===0&&<p className="empty">{t.empty}</p>}
-      {found.has_more&&offset<2000&&
+      {found.has_more&&offset<10000&&
         <Link className="simple-link" href={linkToSearch(q,filterString,locale,region,offset+found.limit)}>{t.next}</Link>}
     </>}
     <Link className="simple-link" href={'/map?'+toMap.toString()}>{t.map}</Link>
