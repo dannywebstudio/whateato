@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type {Metadata} from 'next';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import {auth,authReady} from '@/auth';
 import {getRestaurantCatalogDetail,type RestaurantDetailResponse} from '@/lib/restaurant-catalog';
@@ -20,6 +21,31 @@ const labels={
   ja:{heading:'店舗情報',unavailable:'データベースに接続できません。',category:'飲食店',license:'営業許可情報（現在営業中である保証ではありません）',address:'住所',noAddress:'住所情報なし',description:'店舗の紹介',menus:'主なメニュー',noPrice:'価格未確認',tags:'タグ',score:'WhatEatO独自評価',reviews:'WhatEatOユーザーレビュー',reviewNote:'承認済みレビューのみ表示します。',reviewCount:'承認済みレビュー',subjective:'利用者の主観的な評価',noReviews:'承認済みレビューはまだありません。',write:'レビューを投稿',external:'利用許諾済みの外部レビュー情報',negative:'接客への不満',positive:'肯定的な言及',back:'← 検索結果へ'},
   'zh-CN':{heading:'餐厅详情',unavailable:'餐厅数据库暂时不可用。',category:'餐厅',license:'经营许可记录（不代表当前营业）',address:'地址',noAddress:'暂无地址',description:'餐厅简介',menus:'主要菜品',noPrice:'价格未经核实',tags:'标签',score:'WhatEatO独立评分',reviews:'WhatEatO用户评价',reviewNote:'仅显示已审核的用户评价。',reviewCount:'已审核评价',subjective:'用户主观评价',noReviews:'暂无已审核的评价。',write:'撰写评价',external:'已授权的外部评价信息',negative:'服务投诉',positive:'正面反馈',back:'← 返回搜索'}
 } as const;
+
+// Index only launched, active restaurants with a verified/published editorial
+// description. Permit-only rows do not warrant generated SEO landing pages.
+export async function generateMetadata({params,searchParams}:Params):Promise<Metadata>{
+  const {id}=await params;
+  const blocked:Metadata={robots:{index:false,follow:false}};
+  if(!isUuid(id)||process.env.NEXT_PUBLIC_LAUNCH_READY!=='true')return blocked;
+  const query=await searchParams;
+  try{
+    const detail=await getRestaurantCatalogDetail(id,normalizeLocale(query.hl));
+    const r=detail?.restaurant;
+    if(!r?.short_description||r.short_description.trim().length<35)return blocked;
+    const description=r.short_description.trim().slice(0,155);
+    return {
+      title:r.name,
+      description,
+      alternates:{canonical:'/restaurant/'+id},
+      robots:{index:true,follow:true},
+      openGraph:{
+        type:'website',title:r.name,description,url:'/restaurant/'+id,
+        ...(detail?.images[0]?.url?{images:[{url:detail.images[0].url,alt:detail.images[0].alt_ko||r.name}]}:{})
+      }
+    };
+  }catch{return blocked}
+}
 
 export default async function RestaurantDetail({params,searchParams}:Params){
   const {id}=await params;
