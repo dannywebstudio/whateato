@@ -46,6 +46,10 @@ try{
   for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
+  const localeCoverage=await client.query(`
+    SELECT COUNT(*)::int AS labels FROM restaurant_tag_localizations`);
+  if(localeCoverage.rows[0]?.labels!==64)
+    throw Error('All 16 restaurant tags must have four localized labels; migration 006 not applied');
   await client.query(`
     INSERT INTO restaurant_localizations(restaurant_id,locale,display_name,short_description,full_description,publication_state,verified_at)
     VALUES
