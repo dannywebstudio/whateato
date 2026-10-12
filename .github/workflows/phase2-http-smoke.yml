@@ -27,6 +27,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:local_ci_only@127.0.0.1:5432/postgres
       WHATEATO_CI_LOCAL_FIXTURE: ONLY_LOCAL_EPHEMERAL
       WHATEATO_ENRICHMENT_STAGE_ACK: LOCAL_CI_ONLY
+      WHATEATO_MEDIA_ROOT: ${{ github.workspace }}/ci-media
       WHATEATO_ANALYTICS_ENABLED: 'false'
       NEXT_PUBLIC_LAUNCH_READY: 'false'
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
