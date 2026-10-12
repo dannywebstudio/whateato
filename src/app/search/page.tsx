@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import SearchBoxSynced from '@/components/SearchBoxSynced';
+import VerifiedRestaurantPhoto from '@/components/VerifiedRestaurantPhoto';
 import {searchRestaurantCatalog,type RestaurantSearchResponse} from '@/lib/restaurant-catalog';
 import {normalizeLocale,normalizeTags,normalizeText} from '@/lib/platform-v1';
 
@@ -56,6 +57,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
         if(offset)detailParams.set('offset',String(offset));
         const href='/restaurant/'+r.id+'?'+detailParams.toString();
         return <Link className="result" href={href} key={r.id}>
+          <VerifiedRestaurantPhoto image={r.featured_image_metadata} restaurantName={r.name}/>
           <strong>{r.name}</strong>
           {r.editorial_score!==null&&<span>★ {r.editorial_score.toFixed(1)} / 5 · {t.score}</span>}
           {r.main_menu&&<span>{t.menu}: {r.main_menu}</span>}
