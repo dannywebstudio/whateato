@@ -165,9 +165,9 @@ assert.ok(!noImageDetail.body.includes('/api/v1/images/66666666-6666-4666-8666-6
 
 const mapHtml=await get('/map?q='+encodeURIComponent('테스트')+'&f=cafe&hl=en');
 assert.equal(mapHtml.status,200,'map page remains SSR-capable');
-assert.match(mapHtml.body,/Map provider not configured/,'do not silently load unlicensed map tiles');
+assert.match(mapHtml.body,/Interactive restaurant map/,'commercially permitted free basemap has a container');
 assert.ok(!mapHtml.body.includes('maptiler.com/maps/streets-v4/style.json?key='),
-  'do not issue tile requests or leak key before map provider opt-in');
+  'do not embed a paid map provider without a deliberately configured key');
 assert.match(mapHtml.body,/aria-pressed="true"/,'map filter state restored after navigation');
 
 const viewport=await get('/api/v1/map/markers?bbox=37.570,126.979,37.572,126.981&hl=en');
