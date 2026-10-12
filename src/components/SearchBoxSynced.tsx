@@ -20,9 +20,9 @@ const filters=[
   ['traveler_friendly','여행자 편의','Travel friendly','旅行者向け','游客友好']
 ] as const;
 export default function SearchBoxSynced({
-  initial='',initialFilters=[],initialRegion='',initialLocale='ko'
+  initial='',initialFilters=[],initialRegion='',initialLocale='ko',target='search'
 }:{
-  initial?:string;initialFilters?:string[];initialRegion?:string;initialLocale?:string
+  initial?:string;initialFilters?:string[];initialRegion?:string;initialLocale?:string;target?:'search'|'map'
 }){
   const [q,setQ]=useState(initial);
   const [selected,setSelected]=useState<string[]>(initialFilters);
@@ -49,7 +49,7 @@ export default function SearchBoxSynced({
     let choice='auto';
     try{choice=localStorage.getItem('we_language')||'auto'}catch{}
     p.set('hl',choice==='auto'?(/[가-힣]/.test(q)?'ko':lang):choice);
-    router.push('/search?'+p.toString());
+    router.push('/'+target+'?'+p.toString());
   }
   const normalized=normalizeLocale(lang);
   const labelIndex=normalized==='ko'?1:normalized==='ja'?3:normalized==='zh-CN'?4:2;
