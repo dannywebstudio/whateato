@@ -26,6 +26,8 @@ const ready=await get('/api/ready');
 assert.equal(ready.response.status,200,'Neon connection');
 assert.equal(ready.data.ready,true);
 assert.equal(ready.data.phase_1_5_schema,'ready');
+assert.equal(ready.data.catalog_quality_schema,'ready','Missing data-quality schema 008');
+assert.equal(ready.data.review_moderation_schema,'disabled','Admin review actions must stay off in public test preview');
 assert.equal(ready.data.analytics_collection_enabled,false,'Anonymous events must remain disabled');
 const result=await get('/api/v1/restaurants?hl=ko&limit=2');
 assert.equal(result.response.status,200);
