@@ -87,7 +87,10 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
       AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
         WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND ($2::text='' OR r.name_ko ILIKE $3 OR r.road_address_ko ILIKE $3
-           OR r.lot_address_ko ILIKE $3 OR r.category_code ILIKE $3 OR r.region_sigungu ILIKE $3 OR r.region_dong ILIKE $3
+           OR r.lot_address_ko ILIKE $3 OR r.category_code ILIKE $3
+           OR (lower($2::text)=ANY(ARRAY['카페','까페','cafe','coffee']) AND r.category_code IN ('카페','까페'))
+           OR (lower($2::text)=ANY(ARRAY['술집','bar','pub']) AND r.category_code IN ('정종/대포집/소주방','감성주점','호프/통닭'))
+           OR r.region_sigungu ILIKE $3 OR r.region_dong ILIKE $3
            OR l.display_name ILIKE $3 OR k.display_name ILIKE $3
            OR EXISTS (SELECT 1 FROM restaurant_menus m
              JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id
