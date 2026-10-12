@@ -75,11 +75,18 @@ const searchHtml=await get('/search?q='+encodeURIComponent('테스트')+'&hl=en&
 assert.equal(searchHtml.status,200);
 assert.match(searchHtml.body,/Sunny Table/,'SSR results connected to catalog');
 assert.match(searchHtml.body,/Coffee/,'SSR main menu displayed');
+assert.match(searchHtml.body,/<img[^>]*src="\/api\/v1\/images\/55555555-5555-4555-8555-555555555555"/,
+  'approved media is rendered in search result');
 assert.ok(!searchHtml.body.includes('Draft Bistro'),'draft translation not visible in UI');
 const detailHtml=await get('/restaurant/'+rid+'?hl=en');
 assert.equal(detailHtml.status,200);
 assert.match(detailHtml.body,/Evidence-backed full intro for CI./);
 assert.match(detailHtml.body,/Coffee/);
+assert.match(detailHtml.body,/<img[^>]*src="\/api\/v1\/images\/55555555-5555-4555-8555-555555555555"/,
+  'approved media is rendered in detail page');
+const noImageDetail=await get('/restaurant/22222222-2222-4222-8222-222222222222?hl=ko');
+assert.ok(!noImageDetail.body.includes('/api/v1/images/66666666-6666-4666-8666-666666666666'),
+  'unapproved media must not appear in SSR HTML');
 
 const viewport=await get('/api/v1/map/markers?bbox=37.570,126.979,37.572,126.981&hl=en');
 assert.equal(viewport.status,200,'bounded viewport map API');
