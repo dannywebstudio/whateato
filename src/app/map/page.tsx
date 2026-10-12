@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import SearchBox from '@/components/SearchBox';
+import SearchBoxSynced from '@/components/SearchBoxSynced';
 import RestaurantMap from '@/components/RestaurantMap';
 import {normalizeLocale,normalizeTags,normalizeText} from '@/lib/platform-v1';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -20,7 +20,7 @@ export default async function MapPage({searchParams}:{
   const filter=normalizeTags(raw.f||'').join(',');
   return <main className="content">
     <h1>Explore on Map</h1>
-    <SearchBox target="map" initial={q}/>
+    <SearchBoxSynced target="map" initial={q} initialFilters={filter?filter.split(','):[]} initialLocale={locale}/>
     <RestaurantMap q={q} filter={filter} locale={locale}/>
     <Link className="simple-link" href={'/search?'+new URLSearchParams({
       ...(q?{q}:{}),...(filter?{f:filter}:{}),hl:locale
