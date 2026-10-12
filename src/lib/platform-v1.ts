@@ -8,7 +8,7 @@ export function normalizeLocale(input:unknown):Locale{
   if(value==='zh-cn'||value==='zh'||value.startsWith('zh-hans'))return 'zh-CN';
   return 'ko';
 }
-export const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function isUuid(id:unknown):id is string{return typeof id==='string'&&UUID_RE.test(id);}
 export function normalizeText(input:unknown,max=80):string{
   return typeof input==='string'?input.replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,max):'';
