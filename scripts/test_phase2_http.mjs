@@ -13,6 +13,8 @@ async function get(path){
 const readyp=await get('/api/ready');
 assert.equal(readyp.status,200,'database readiness');
 assert.equal(readyp.body.phase_1_5_schema,'ready');
+assert.equal(readyp.body.catalog_quality_schema,'ready');
+assert.equal(readyp.body.review_moderation_schema,'ready');
 assert.equal(readyp.body.analytics_collection_enabled,false);
 const first=await get('/api/v1/restaurants?q='+encodeURIComponent('테스트')+'&hl=en&limit=1');
 assert.equal(first.status,200);
