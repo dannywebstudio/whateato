@@ -1,0 +1,57 @@
+{
+  "project": "WhatEatO",
+  "batch": "phase25-first20-20261012",
+  "checked_at": "2026-10-12",
+  "policy": "RESEARCH_FLAGS_ARE_NOT_AUTOMATIC_PERMIT_STATUS_UPDATES",
+  "count": 4,
+  "flags": [
+    {
+      "restaurant_id": "1b246b70-bb17-44b9-b121-f9903ebd9331",
+      "name_ko": "살구골",
+      "road_address_ko": "서울특별시 중구 소월로 20-4, 1층 (남대문로5가)",
+      "code": "POSSIBLE_CLOSURE",
+      "severity": "critical",
+      "evidence_url": "https://polle.com/place/1HDts2/%EC%82%B4%EA%B5%AC%EA%B3%A8",
+      "finding": "Public listing marks the venue as 폐점 (closed), while the permit-based table currently records active. Requires authoritative current operating-status confirmation; never recommend as currently open.",
+      "action": "HOLD_FOR_CLOSURE_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "3c47f857-03f1-434b-a42b-21c460999086",
+      "name_ko": "신선원",
+      "road_address_ko": "서울특별시 종로구 종로 263-1 (종로6가,(지상1층))",
+      "code": "NAME_IDENTITY_MISMATCH",
+      "severity": "high",
+      "evidence_url": "https://www.tabling.co.kr/place/677cc7ac66de5f0698752840",
+      "finding": "Permit record says 신선원 at 종로 263-1; matching telephone and vicinity appear as 신신원 at 종로 263. Same business vs distinct/renamed venue not established.",
+      "action": "HOLD_FOR_NAME_AND_BRANCH_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "31adc115-9e51-421d-859c-54e22ce79e0c",
+      "name_ko": "두레유",
+      "road_address_ko": "서울특별시 종로구 평창30길 28 (평창동)",
+      "code": "BRANCH_ADDRESS_COLLISION",
+      "severity": "high",
+      "evidence_url": "https://www.tabling.co.kr/place/677cd0e466de5f069886e8c3",
+      "finding": "Observed 두레유 2호점 at 평창문화로 84 is NOT the same address as permit record 두레유 at 평창30길 28. Do not copy branch menu or operating hours until branch identity checked.",
+      "action": "HOLD_FOR_BRANCH_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "521e43ef-6eb9-469b-91b1-7bca704c1091",
+      "name_ko": "농민 사골 순대국",
+      "road_address_ko": "서울특별시 종로구 종로66길 10 (숭인동)",
+      "code": "PERMIT_CATEGORY_CONFLICT",
+      "severity": "medium",
+      "evidence_url": "https://www.localdata.go.kr/",
+      "finding": "Registry category for 농민 사골 순대국 is 일식 despite a Korean-soup-like name; name alone cannot establish true serving category or open status.",
+      "action": "HOLD_FOR_CATEGORY_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    }
+  ]
+}
