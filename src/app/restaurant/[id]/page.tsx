@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import {auth,authReady} from '@/auth';
 import {getPool} from '@/lib/db';
 import {validUuid,getPublicReviews,getOwnReviewSummary,getLicensedReviewInsights} from '@/lib/reviews';
@@ -31,6 +32,7 @@ export default async function RestaurantDetail({params}:Params){
     getPublicReviews(id),getOwnReviewSummary(id),getLicensedReviewInsights(id)
   ]);
   return <main className="content">
+    <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
     <h1>{r.name_ko}</h1>
     <p className="hint">{r.category_code||'일반음식점'} · 인허가 영업 상태 (현재 영업 중이라는 의미 아님)</p>
     <section className="result">
