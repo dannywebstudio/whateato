@@ -2,7 +2,7 @@ import {getPool} from '@/lib/db';
 import {escapeLike,isUuid,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
 
 export type CatalogTag={code:string;label:string};
-export type FeaturedImageMetadata={id:string;alt_ko:string|null};
+export type FeaturedImageMetadata={id:string;alt_ko:string|null;url:string};
 export type RestaurantSearchItem={
   id:string;name:string;name_ko:string;address_ko:string|null;
   region_sido:string|null;region_sigungu:string|null;short_description:string|null;
@@ -63,7 +63,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
            AND NULLIF(BTRIM(m.evidence_ref),'') IS NOT NULL
            AND COALESCE(ml.name,kl.name) IS NOT NULL
          ORDER BY m.position,m.id LIMIT 1) AS main_menu,
-      (SELECT json_build_object('id',im.id::text,'alt_ko',im.alt_ko)
+      (SELECT json_build_object('id',im.id::text,'alt_ko',im.alt_ko,'url','/api/v1/images/'||im.id::text)
          FROM restaurant_images im
          WHERE im.restaurant_id=r.id AND im.publication_state='published'
            AND im.rights_status='approved'
@@ -155,12 +155,12 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
         AND NULLIF(BTRIM(a.evidence_ref),'') IS NOT NULL AND a.verified_at IS NOT NULL
       ORDER BY a.tag_code`,[id,locale]),
     pool.query<FeaturedImageMetadata>(`
-      SELECT id::text,alt_ko FROM restaurant_images
+      SELECT id::text,alt_ko,('/api/v1/images/'||id::text) AS url FROM restaurant_images
       WHERE restaurant_id=$1 AND publication_state='published' AND rights_status='approved'
         AND NULLIF(BTRIM(usage_rights_reference),'') IS NOT NULL AND rights_verified_at IS NOT NULL
       ORDER BY position,id LIMIT 25`,[id])
   ]);
   return {locale,restaurant:row.rows[0],menus:menus.rows,tags:tags.rows,images:images.rows,
-    image_note:'Licensed media metadata only. Photo delivery is not activated.',
+    image_note:'Licensed media delivered via internal route only when server-owned media storage is configured.',
     rating_note:'Independent editorial score is not a Google/Naver or user-review average.'};
 }
