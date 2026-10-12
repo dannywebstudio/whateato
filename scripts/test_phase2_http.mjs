@@ -71,6 +71,38 @@ assert.equal(secondDetail.body.restaurant.name,'테스트식당','draft translat
 assert.equal(secondDetail.body.restaurant.editorial_score,null,'draft score must be hidden');
 assert.equal(secondDetail.body.tags.length,0,'proposed tag must be hidden');
 assert.equal(secondDetail.body.images.length,0,'unlicensed images must be hidden');
+// Public permit catalog is read-only: no auto-deletion of suspected duplicate
+// or unverifiable records. Only an evidenced MANUAL confirmed_hold blocks display.
+const heldId='88888888-8888-4888-8888-888888888888';
+const lotId='77777777-7777-4777-8777-777777777777';
+const holdSearch=await get('/api/v1/restaurants?q='+encodeURIComponent('보류검증식당')+'&hl=ko');
+assert.equal(holdSearch.status,200);
+assert.deepEqual(holdSearch.body.items,[],'human-confirmed hold must be absent from search');
+assert.equal((await get('/api/v1/restaurants/'+heldId)).status,404,
+  'held restaurant must be absent from direct public details');
+const lotSearch=await get('/api/v1/restaurants?q='+encodeURIComponent('지번전용식당')+'&hl=ko');
+assert.equal(lotSearch.status,200);
+assert.equal(lotSearch.body.items.length,1,'pending issue must not hide otherwise public venue');
+assert.equal(lotSearch.body.items[0].id,lotId);
+assert.equal(lotSearch.body.items[0].address_ko,'서울특별시 종로구 적선동 9-1',
+  'lot address should safely replace missing road address');
+assert.equal((await get('/api/v1/restaurants?q='+encodeURIComponent('적선동'))).body.items[0].id,lotId,
+  'search must match lot address when road address is absent');
+const lotDetail=await get('/api/v1/restaurants/'+lotId);
+assert.equal(lotDetail.status,200);
+assert.equal(lotDetail.body.restaurant.road_address_ko,null);
+assert.equal(lotDetail.body.restaurant.lot_address_ko,'서울특별시 종로구 적선동 9-1');
+const lotGeo=await get('/api/v1/map/markers?bbox=37.60,127.04,37.62,127.06&q='+encodeURIComponent('지번전용식당'));
+assert.equal(lotGeo.status,200);
+assert.equal(lotGeo.body.items.length,1);
+assert.equal(lotGeo.body.items[0].id,lotId);
+assert.equal(lotGeo.body.items[0].address_ko,'서울특별시 종로구 적선동 9-1');
+const lotHtml=await get('/search?q='+encodeURIComponent('지번전용식당'));
+assert.match(lotHtml.body,/서울특별시 종로구 적선동 9-1/);
+const heldHtml=await get('/search?q='+encodeURIComponent('보류검증식당'));
+assert.ok(!heldHtml.body.includes('보류검증식당'),'held record must not leak into SSR search');
+assert.equal((await get('/restaurant/'+heldId)).status,404);
+
 const searchHtml=await get('/search?q='+encodeURIComponent('테스트')+'&hl=en&f=cafe');
 assert.equal(searchHtml.status,200);
 assert.match(searchHtml.body,/Sunny Table/,'SSR results connected to catalog');
