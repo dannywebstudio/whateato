@@ -92,7 +92,7 @@ export async function getGeoCatalog(input:QueryParams & {
   const distance=nearby?haversine:'NULL::float8';
   const sql=`
     SELECT r.id::text AS id,COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
-      r.name_ko,r.road_address_ko AS address_ko,r.latitude,r.longitude,
+      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,r.latitude,r.longitude,
       r.category_code,r.region_sigungu,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
@@ -110,9 +110,11 @@ export async function getGeoCatalog(input:QueryParams & {
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
+      AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
+        WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND r.latitude BETWEEN $2 AND $3 AND r.longitude BETWEEN $4 AND $5
       AND ($6::text='' OR r.name_ko ILIKE $7 OR r.road_address_ko ILIKE $7
-        OR l.display_name ILIKE $7 OR k.display_name ILIKE $7
+        OR r.lot_address_ko ILIKE $7 OR l.display_name ILIKE $7 OR k.display_name ILIKE $7
         OR EXISTS(SELECT 1 FROM restaurant_menus m
           JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id
           WHERE m.restaurant_id=r.id AND m.publication_state='published'
