@@ -8,8 +8,9 @@ assert.equal(process.env.WHATEATO_STAGING_ACK,'PREVIEW_ONLY','Explicit staging v
 assert.ok(raw,'Set WHATEATO_STAGING_BASE_URL');
 const url=new URL(raw);
 assert.equal(url.protocol,'https:','Preview requires HTTPS');
-assert.ok(!/(^|\.)((localhost)|(github\.io)|(whateato\.com))$/i.test(url.hostname),
-  'Do not use GitHub Pages, local host, or the final domain');
+assert.ok(!/(^|\.)((localhost)|(github\.io)|(whateato\.com))$/i.test(url.hostname)
+  && !/^(127\.|10\.|192\.168\.|169\.254\.|0\.|::1$)/.test(url.hostname),
+  'Do not use GitHub Pages, private/local hosts, or the final domain');
 assert.ok(!url.username&&!url.password&&!url.search&&!url.hash,'Use plain preview origin URL');
 const base=url.origin;
 async function get(path) {
