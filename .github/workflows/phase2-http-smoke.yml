@@ -47,6 +47,7 @@ jobs:
           node --check scripts/test_phase25_browser.mjs
           node --check scripts/enrichment_v1.mjs
           node --check scripts/test_enrichment_v1.mjs
+          node --check scripts/test_review_moderation_http.mjs
       - name: Create isolated synthetic fixtures and apply real migrations
         run: node scripts/seed_phase2_smoke.mjs
       - name: Verify evidence-backed staging intake and publication isolation
@@ -66,6 +67,7 @@ jobs:
           done
           node scripts/test_phase2_http.mjs
           node scripts/test_phase25_browser.mjs
+          node scripts/test_review_moderation_http.mjs
       - name: Upload desktop/mobile QA screenshots
         if: always()
         uses: actions/upload-artifact@v4
