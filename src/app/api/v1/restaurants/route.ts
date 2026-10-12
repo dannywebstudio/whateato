@@ -19,6 +19,21 @@ export async function GET(request:NextRequest){
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       r.name_ko,r.road_address_ko AS address_ko,r.region_sido,r.region_sigungu,
       COALESCE(l.short_description,k.short_description) AS short_description,
+      (SELECT COALESCE(ml.name,kl.name)
+         FROM restaurant_menus m
+         LEFT JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale=$1
+         LEFT JOIN restaurant_menu_localizations kl ON kl.menu_id=m.id AND kl.locale='ko'
+         WHERE m.restaurant_id=r.id AND m.publication_state='published'
+           AND NULLIF(BTRIM(m.evidence_ref),'') IS NOT NULL
+           AND COALESCE(ml.name,kl.name) IS NOT NULL
+         ORDER BY m.position,m.id LIMIT 1) AS main_menu,
+      (SELECT json_build_object('id',im.id::text,'alt_ko',im.alt_ko)
+         FROM restaurant_images im
+         WHERE im.restaurant_id=r.id AND im.publication_state='published'
+           AND im.rights_status='approved'
+           AND NULLIF(BTRIM(im.usage_rights_reference),'') IS NOT NULL
+           AND im.rights_verified_at IS NOT NULL
+         ORDER BY im.position,im.id LIMIT 1) AS featured_image_metadata,
       CASE WHEN sc.approval_state='approved' THEN sc.score::float8 ELSE NULL END AS editorial_score,
       COALESCE((SELECT json_agg(json_build_object('code',a.tag_code,'label',COALESCE(tl.label,ko_tl.label,a.tag_code)) ORDER BY a.tag_code)
         FROM restaurant_tag_assignments a
