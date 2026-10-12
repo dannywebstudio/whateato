@@ -53,7 +53,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
   const sql=`
     SELECT r.id::text AS id,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
-      r.name_ko,r.road_address_ko AS address_ko,r.region_sido,r.region_sigungu,
+      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,r.region_sido,r.region_sigungu,
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name)
          FROM restaurant_menus m
@@ -84,8 +84,10 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
+      AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
+        WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND ($2::text='' OR r.name_ko ILIKE $3 OR r.road_address_ko ILIKE $3
-           OR r.region_sigungu ILIKE $3 OR r.region_dong ILIKE $3
+           OR r.lot_address_ko ILIKE $3 OR r.region_sigungu ILIKE $3 OR r.region_dong ILIKE $3
            OR l.display_name ILIKE $3 OR k.display_name ILIKE $3
            OR EXISTS (SELECT 1 FROM restaurant_menus m
              JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id
@@ -131,7 +133,9 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$2 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
-    WHERE r.id=$1 AND r.publication_status='published' AND r.business_status='active'`,[id,locale]);
+    WHERE r.id=$1 AND r.publication_status='published' AND r.business_status='active'
+      AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
+        WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')`,[id,locale]);
   if(!row.rows[0])return null;
   const [menus,tags,images]=await Promise.all([
     pool.query<RestaurantMenu>(`
