@@ -124,12 +124,12 @@ export async function getGeoCatalog(input:QueryParams & {
           AND a.verified_at IS NOT NULL AND NULLIF(BTRIM(a.evidence_ref),'') IS NOT NULL))
       ${nearby?`AND ${haversine} <= $11::float8`:''}
     ORDER BY ${nearby?'distance_km ASC,':''} r.name_ko ASC,r.id ASC
-    LIMIT $12::integer`;
-  const params=[
-    locale,bounds.south,bounds.north,bounds.west,bounds.east,
-    q,'%'+escapeLike(q)+'%',filters,nearby?.latitude??null,nearby?.longitude??null,
-    nearby?.radiusKm??null,limit+1
-  ];
+    LIMIT ${nearby?'$12':'$9'}::integer`;
+  const params=nearby
+    ?[locale,bounds.south,bounds.north,bounds.west,bounds.east,
+      q,'%'+escapeLike(q)+'%',filters,nearby.latitude,nearby.longitude,nearby.radiusKm,limit+1]
+    :[locale,bounds.south,bounds.north,bounds.west,bounds.east,
+      q,'%'+escapeLike(q)+'%',filters,limit+1];
   const res=await db.query<GeoMarker>(sql,params);
   const items=res.rows.slice(0,limit).map(r=>({
     ...r,...(nearby?{distance_km:Number(r.distance_km)}:{}),
