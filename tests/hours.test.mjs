@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {getScheduleStatus} from '../src/lib/hours.ts';
+const verified='2026-10-10T03:00:00Z';
+const t=(iso,weekly,exceptions=[],stamp=verified)=>getScheduleStatus(new Date(iso),stamp,weekly,exceptions);
+const mon=[{weekday:1,opens_minute:660,closes_minute:900},{weekday:1,opens_minute:1020,closes_minute:1320}];
+test('no schedule is unknown, not invented open/closed',()=>assert.equal(t('2026-10-12T03:00:00Z',[]).state,'unknown'));
+test('verified time between opening and break is estimated open',()=>assert.equal(t('2026-10-12T03:00:00Z',mon).state,'estimated_open'));
+test('break time is estimated closed',()=>assert.equal(t('2026-10-12T06:30:00Z',mon).state,'estimated_closed'));
+test('evening reopening is estimated open',()=>assert.equal(t('2026-10-12T09:00:00Z',mon).state,'estimated_open'));
+test('midnight crossing remains open next day',()=>assert.equal(t('2026-10-12T16:00:00Z',[{weekday:1,opens_minute:1200,closes_minute:1560}]).state,'estimated_open'));
+test('exception closure overrides regular hours',()=>assert.equal(t('2026-10-12T03:00:00Z',mon,[{service_date:'2026-10-12',is_closed:true,intervals:[]}]).state,'estimated_closed'));
+test('custom exception time overrides regular',()=>assert.equal(t('2026-10-12T03:00:00Z',mon,[{service_date:'2026-10-12',is_closed:false,intervals:[{opens_minute:1080,closes_minute:1380}]}]).state,'estimated_closed'));
+test('stale schedule never claims estimated open',()=>assert.equal(t('2026-10-12T03:00:00Z',mon,[],'2025-01-01T00:00:00Z').state,'unknown'));
+test('future and unverified schedules are unknown',()=>{assert.equal(t('2026-10-12T03:00:00Z',mon,[],'2026-11-01T00:00:00Z').state,'unknown');assert.equal(t('2026-10-12T03:00:00Z',mon,[],null).state,'unknown');});
+test('next-day close time is normalized',()=>assert.equal(t('2026-10-12T16:00:00Z',[{weekday:1,opens_minute:1200,closes_minute:1560}]).closesAt,'02:00'));
