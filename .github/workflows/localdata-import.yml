@@ -1,0 +1,79 @@
+name: WhatEatO LOCALDATA Import v1
+
+on:
+  push:
+    branches: ['feature/localdata-import-v1']
+    paths:
+      - 'scripts/import_localdata.py'
+      - 'scripts/test_import_localdata.py'
+      - '.github/workflows/localdata-import.yml'
+  workflow_dispatch:
+    inputs:
+      sample_rows:
+        description: 'Source rows to scan (max 10,000 for Neon commit)'
+        type: number
+        required: true
+        default: 10000
+      commit_to_neon:
+        description: 'Write tested rows to Neon? Default false (dry run)'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned-compatible data tools
+        run: python -m pip install --disable-pip-version-check 'pyproj>=3.6,<4' 'psycopg[binary]>=3.2,<4'
+      - name: Run localdata importer safety tests
+        run: python -m unittest discover -s scripts -p 'test_import_localdata.py' -v
+      - name: Download existing verified active-only artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/whateato-active
+          gh run download 38217967995 --repo "$GITHUB_REPOSITORY" --name whateato-active-only --dir /tmp/whateato-active
+          test -s /tmp/whateato-active/WhatEatO_active_only.csv
+          echo 'b3aa8b1c6e8ea108bd6ecbd06a4f46c1211d2c996265384570e0e0b1d207deec  /tmp/whateato-active/WhatEatO_active_only.csv' | sha256sum --check
+      - name: Stream and validate; only write on explicit manual request
+        env:
+          SAMPLE_ROWS: ${{ inputs.sample_rows || 10000 }}
+          COMMIT_TO_NEON: ${{ inputs.commit_to_neon || false }}
+          EVENT_NAME: ${{ github.event_name }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$SAMPLE_ROWS" =~ ^[0-9]+$ ]]; then echo "Invalid sample_rows"; exit 1; fi
+          if [ "$SAMPLE_ROWS" -gt 10000 ]; then echo "Safety guard: maximum 10,000 rows"; exit 1; fi
+          FLAGS=()
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$COMMIT_TO_NEON" = "true" ]; then
+            test -n "$NEON_DATABASE_URL" || { echo "Add NEON_DATABASE_URL as repository secret first"; exit 1; }
+            test "$SAMPLE_ROWS" -gt 0 || { echo "Zero-row unlimited commits are prohibited"; exit 1; }
+            FLAGS+=(--commit)
+          fi
+          python scripts/import_localdata.py \
+            --file /tmp/whateato-active/WhatEatO_active_only.csv \
+            --limit "$SAMPLE_ROWS" \
+            --expected-sha256 b3aa8b1c6e8ea108bd6ecbd06a4f46c1211d2c996265384570e0e0b1d207deec \
+            --report report/WhatEatO_import_qa.json "${FLAGS[@]}"
+      - name: Upload QA results only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whateato-localdata-import-qa
+          path: report/WhatEatO_import_qa.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Remove temporary CSV from runner
+        if: always()
+        run: rm -rf /tmp/whateato-active
