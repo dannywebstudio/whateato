@@ -5,7 +5,9 @@ export const dynamic='force-dynamic';
 export default async function RestaurantDetail({params}:{params:Promise<{id:string}>}){
   const {id}=await params;
   if(!process.env.DATABASE_URL)return <main className="content"><h1>Restaurant detail</h1><p className="hint">Preview mode · restaurant database not connected yet.</p><Link className="simple-link" href="/search">← Search</Link></main>;
-  const restaurant=await getRestaurantDetail(id);
+  let restaurant;
+  try { restaurant=await getRestaurantDetail(id); }
+  catch { return <main className="content"><h1>Restaurant detail</h1><p className="hint">The restaurant database is temporarily unavailable.</p><Link className="simple-link" href="/search">← Search</Link></main>; }
   if(!restaurant)notFound();
   const r=restaurant;
   const safeUrl=(url:string)=>{try{const u=new URL(url);return u.protocol==='https:'||u.protocol==='http:'?u.href:null}catch{return null}};
