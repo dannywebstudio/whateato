@@ -122,6 +122,17 @@ assert.equal((await get('/api/v1/map/markers?bbox=33,124,39,132')).status,400,'e
 assert.equal((await get('/api/v1/restaurants/nearby?lat=100&lon=126')).status,400,'Korea coordinate bounds');
 assert.equal((await get('/api/v1/restaurants/nearby?lat=37.57&lon=126.98&radius_km=200')).status,400,'radius cap');
 
+const robotsTxt=await get('/robots.txt');
+assert.equal(robotsTxt.status,200);
+assert.match(robotsTxt.body,/Disallow:\s*\//,'staging robots must block crawlers');
+const sitemapXml=await get('/sitemap.xml');
+assert.equal(sitemapXml.status,200);
+assert.ok(!sitemapXml.body.includes('/restaurant/'+rid),'unlaunched permits must not be in sitemap');
+assert.match(searchHtml.body,/<meta name="robots" content="noindex/,
+  'search keyword/filter pages must be non-indexable');
+assert.match(detailHtml.body,/<meta name="robots" content="noindex/,
+  'restaurant page must stay noindex before launch');
+
 const disabledAnalytics=await fetch(base+'/api/v1/analytics/events',{
   method:'POST',headers:{'Origin':base,'Content-Type':'application/json'},
   body:JSON.stringify({event_type:'page_view',page_type:'search',locale:'ko'})
