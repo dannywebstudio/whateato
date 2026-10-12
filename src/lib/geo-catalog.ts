@@ -115,6 +115,8 @@ export async function getGeoCatalog(input:QueryParams & {
       AND r.latitude BETWEEN $2 AND $3 AND r.longitude BETWEEN $4 AND $5
       AND ($6::text='' OR r.name_ko ILIKE $7 OR r.road_address_ko ILIKE $7
         OR r.lot_address_ko ILIKE $7 OR r.category_code ILIKE $7
+        OR (lower($6::text)=ANY(ARRAY['카페','까페','cafe','coffee']) AND r.category_code IN ('카페','까페'))
+        OR (lower($6::text)=ANY(ARRAY['술집','bar','pub']) AND r.category_code IN ('정종/대포집/소주방','감성주점','호프/통닭'))
         OR r.region_sigungu ILIKE $7 OR r.region_dong ILIKE $7
         OR l.display_name ILIKE $7 OR k.display_name ILIKE $7
         OR EXISTS(SELECT 1 FROM restaurant_menus m
