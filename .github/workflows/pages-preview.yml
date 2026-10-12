@@ -47,7 +47,7 @@ jobs:
           import json
           from pathlib import Path
           root=Path('_site')
-          for path in ('index.html','styles.css','app.js','.nojekyll','data/restaurants.json','search/index.html','map/index.html','blog/index.html'):
+          for path in ('index.html','styles.css','app.js','.nojekyll','data/restaurants.json','search/index.html','map/index.html','blog/index.html','restaurant/index.html'):
               assert (root/path).exists(), path
           d=json.loads((root/'data/restaurants.json').read_text(encoding='utf-8'))
           assert d['count'] == len(d['items'])
@@ -55,13 +55,15 @@ jobs:
           assert not any(('password' in r or 'source_key' in r or 'owner' in r) for r in d['items'])
           assert all(r.get('name') and r.get('id') for r in d['items'])
           assert 'data-page="home"' in (root/'index.html').read_text()
-          for page in ('search','map','blog'):
+          for page in ('search','map','blog','restaurant'):
               doc=(root/page/'index.html').read_text()
               assert f'data-page="{page}"' in doc
               assert 'src="../app.js"' in doc
           script=(root/'app.js').read_text()
           for marker in ('date_night','solo_dining','family_dining','budget_friendly','traveler_friendly','WhatEatO Blog'):
               assert marker in script
+          assert 'function showDetail()' in script
+          assert "root+'restaurant/?'" in script
           print('PASS: static site and public-only records',d['count'])
           PY
       - name: Package Pages bundle
