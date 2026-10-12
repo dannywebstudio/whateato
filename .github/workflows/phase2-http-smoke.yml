@@ -48,8 +48,11 @@ jobs:
           node --check scripts/enrichment_v1.mjs
           node --check scripts/test_enrichment_v1.mjs
           node --check scripts/test_review_moderation_http.mjs
+          node --check scripts/audit_restaurant_quality.mjs
       - name: Create isolated synthetic fixtures and apply real migrations
         run: node scripts/seed_phase2_smoke.mjs
+      - name: Audit source-preserving permit data and human visibility gates
+        run: node scripts/audit_restaurant_quality.mjs
       - name: Verify evidence-backed staging intake and publication isolation
         run: node scripts/test_enrichment_v1.mjs
       - run: npm run typecheck
