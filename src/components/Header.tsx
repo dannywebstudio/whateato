@@ -16,7 +16,7 @@ export default function Header(){
     }catch{}
   },[]);
   return <header className="topbar"><nav className="navcontent" aria-label="Primary">
-    <div className="header-left"><Link href="/" className="brand-logo" aria-label="WhattoEatO 홈으로 이동"><span className="brand-word">Whatto</span><span className="brand-accent">EatO</span></Link><div className="navlinks"><Link href="/">Search</Link><Link href="/map">Map</Link><Link href="/blog">Blog</Link></div></div>
+    <div className="header-left"><Link href="/" className="brand-logo" aria-label="WhattoEatO 홈으로 이동"><span className="brand-word">Whatto</span><span className="brand-accent">EatO</span></Link><div className="navlinks"><Link href="/map">Map</Link><Link href="/blog">Blog</Link></div></div>
     <div className="preferences"><span aria-hidden="true">🌐</span>
       <label className="sr-only" htmlFor="country">Country</label>
       <select id="country" value={country} onChange={e=>{setCountry(e.target.value);try{localStorage.setItem('we_country',e.target.value)}catch{}}}>{countries.map(([code,label])=><option value={code} key={code}>{label}</option>)}</select>
