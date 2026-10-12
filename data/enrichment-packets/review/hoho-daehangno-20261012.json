@@ -1,0 +1,59 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "58a03e79-6fe5-4076-a097-367caf150dec",
+  "name_ko": "호호식당 대학로",
+  "road_address_ko": "서울특별시 종로구 대학로9길 35, 1층 (명륜4가)",
+  "identity_evidence": {
+    "url": "https://www.tabling.co.kr/place/677ccb2966de5f06987cbde8",
+    "checked_at": "2026-10-12T12:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "호호식당 대학로",
+      "short_description": "대학로9길에 있는 일본 가정식 전문 식당. 돈가스와 가츠나베 등 일본식 식사 메뉴를 소개한다.",
+      "source_url": "https://www.tabling.co.kr/place/677ccb2966de5f06987cbde8",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Hoho Sikdang Daehangno",
+      "short_description": "A Japanese home-style restaurant on Daehangno 9-gil serving dishes such as pork cutlets and katsunabe.",
+      "source_url": "https://www.tabling.co.kr/place/677ccb2966de5f06987cbde8",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "ホホ食堂 大学路",
+      "short_description": "大学路9ギルにある日本の家庭料理を扱う飲食店。とんかつやカツ鍋などが紹介されている。",
+      "source_url": "https://www.tabling.co.kr/place/677ccb2966de5f06987cbde8",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "Hoho食堂 大学路店",
+      "short_description": "位于大学路9街的日式家常菜餐厅，菜单介绍了炸猪排和猪排锅等料理。",
+      "source_url": "https://www.tabling.co.kr/place/677ccb2966de5f06987cbde8",
+      "checked_at": "2026-10-12T12:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "로스가츠정식",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.hotple.com/place/%ED%98%B8%ED%98%B8%EC%8B%9D%EB%8B%B9-%EB%8C%80%ED%95%99%EB%A1%9C-%EA%B1%B0%EB%A6%AC-%EC%9D%BC%EC%8B%9D-85806567",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "name_ko": "가츠나베정식",
+      "position": 1,
+      "price_krw": null,
+      "source_url": "https://www.hotple.com/place/%ED%98%B8%ED%98%B8%EC%8B%9D%EB%8B%B9-%EB%8C%80%ED%95%99%EB%A1%9C-%EA%B1%B0%EB%A6%AC-%EC%9D%BC%EC%8B%9D-85806567",
+      "checked_at": "2026-10-12T12:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}
