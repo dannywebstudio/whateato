@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Read-only, staging-only database contract test for WhatEatO Phase 1.5.
-// Usage: WHATEATO_STAGING_DATABASE_URL=... WHATEATO_PHASE15_STAGING_ACK=I_ACK_STAGING_ONLY node scripts/verify_phase15_staging.mjs
+// Usage: WHATEATO_STAGING_DATABASE_URL=... WHATEATO_PHASE15_STAGING_ACK=I_ACK_STAGING_ONLY WHATEATO_EXPECTED_NEON_BRANCH_ID=br-... node scripts/verify_phase15_staging.mjs
 import pg from 'pg';
 import { performance } from 'node:perf_hooks';
 
@@ -10,6 +10,11 @@ if (!process.env.WHATEATO_STAGING_DATABASE_URL) {
 }
 if (process.env.WHATEATO_PHASE15_STAGING_ACK !== 'I_ACK_STAGING_ONLY') {
   console.error('Refusing to connect without explicit staging-only acknowledgement.');
+  process.exit(2);
+}
+
+if (!/^br-[a-z0-9-]+$/.test(process.env.WHATEATO_EXPECTED_NEON_BRANCH_ID || '')) {
+  console.error('Set WHATEATO_EXPECTED_NEON_BRANCH_ID to your staging branch ID.');
   process.exit(2);
 }
 
@@ -32,8 +37,12 @@ let client;
 try {
   client = await pool.connect();
   await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
-  const prodFlag = await client.query("SELECT current_database() AS db, inet_server_addr()::text AS host");
-  console.log('Checking database:', prodFlag.rows[0].db, '(staging must be verified externally)');
+  const branchCheck = await client.query(
+    "SELECT current_setting('neon.branch_id',true) AS branch_id, current_database() AS db"
+  );
+  ensure(branchCheck.rows[0]?.branch_id === process.env.WHATEATO_EXPECTED_NEON_BRANCH_ID,
+    'connected database is exactly the declared staging Neon branch');
+  console.log('Checking database:', branchCheck.rows[0].db, 'branch:', branchCheck.rows[0].branch_id);
   const tables = await client.query(
     "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name = ANY($1::text[])",
     [requiredTables],
