@@ -21,6 +21,8 @@ export default function Privacy(){
     <div className="result">
       <strong>외부 지도 자료</strong>
       <span>지도 배경은 OpenFreeMap에서 제공하며, 브라우저가 해당 지도 서버에 요청합니다. 세부 사항은 지도 제공자의 개인정보 처리방침과 이용약관을 참고하세요. 식당 위치 정보는 WhatEatO 인허가 자료를 사용합니다.</span>
+    </div>
+    <div className="result">
       <strong>외부 리뷰 분석</strong>
       <span>계약이나 명시적 이용허락을 확인한 외부 자료만 요약에 사용합니다. 타 사이트 리뷰 원문을 무단 수집·재게시하지 않습니다.</span>
     </div>
