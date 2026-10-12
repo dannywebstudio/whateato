@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:hours": "node --experimental-strip-types --test tests/hours.test.mjs"
+    "test:hours": "node --experimental-strip-types --test tests/hours.test.mjs",
+    "test:search": "node --experimental-strip-types --test tests/search-query.test.mjs"
   },
   "dependencies": {
     "next": "^15.5.27",
