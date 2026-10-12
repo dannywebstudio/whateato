@@ -43,7 +43,7 @@ try{
     ('33333333-3333-4333-8333-333333333333','테스트비공개','서울특별시 종로구 샘플로 3','서울특별시','종로구','기타',37.5712,126.9801,'active','hidden'),
     ('44444444-4444-4444-8444-444444444444','테스트폐업','서울특별시 종로구 샘플로 4','서울특별시','종로구','기타',37.5713,126.9802,'closed','published')
   `);
-  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql']){
+  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
   await client.query(`
