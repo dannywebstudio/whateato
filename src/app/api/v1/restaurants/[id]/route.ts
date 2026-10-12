@@ -29,7 +29,8 @@ export async function GET(request:NextRequest,{params}:Context){
       pool.query(`SELECT m.id::text AS id,
         COALESCE(ml.name,kl.name) AS name,
         COALESCE(ml.description,kl.description) AS description,
-        m.price_krw,m.price_verified_at
+        CASE WHEN m.price_verified_at IS NOT NULL THEN m.price_krw ELSE NULL END AS price_krw,
+        m.price_verified_at
         FROM restaurant_menus m
         LEFT JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale=$2
         LEFT JOIN restaurant_menu_localizations kl ON kl.menu_id=m.id AND kl.locale='ko'
