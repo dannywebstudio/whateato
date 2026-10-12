@@ -43,7 +43,7 @@ try{
     ('33333333-3333-4333-8333-333333333333','테스트비공개','서울특별시 종로구 샘플로 3','서울특별시','종로구','기타',37.5712,126.9801,'active','hidden'),
     ('44444444-4444-4444-8444-444444444444','테스트폐업','서울특별시 종로구 샘플로 4','서울특별시','종로구','기타',37.5713,126.9802,'closed','published')
   `);
-  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql']){
+  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
   const localeCoverage=await client.query(`
@@ -106,6 +106,18 @@ try{
       3,'Synthetic approved CI review number three; not a real restaurant opinion.','published',now()),
     ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',
       1,'Synthetic unapproved CI review that must never appear in search or summary.','pending',NULL)
+  `);
+  // Second restaurant has three additional PENDING reviews for administrative
+  // moderation: none should be counted before manual approval.
+  await client.query(`
+    INSERT INTO whateato_user_reviews(restaurant_id,account_id,rating,body,moderation_status)
+    VALUES
+    ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+      2,'Synthetic pending CI review for approve testing one; not a real opinion.','pending'),
+    ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
+      4,'Synthetic pending CI review for approve testing two; not a real opinion.','pending'),
+    ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+      5,'Synthetic pending CI review for approve testing three; not a real opinion.','pending')
   `);
   console.log('Synthetic Phase 2 fixture ready (localhost only; 4 rows)');
 }finally{await client.end()}
