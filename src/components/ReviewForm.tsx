@@ -9,6 +9,19 @@ export default function ReviewForm({restaurantId,canWrite}:{restaurantId:string;
   if(!canWrite)return <p className="hint">
     후기를 작성하려면 <Link className="simple-link" href="/account">Google 로그인 →</Link>이 필요합니다.
   </p>;
+  async function removeOwnReview(){
+    if(busy)return;
+    const confirmed=window.confirm('이 식당에 직접 작성한 리뷰를 삭제하시겠어요?');
+    if(!confirmed)return;
+    setBusy(true);setMessage('');
+    try{
+      const response=await fetch('/api/restaurants/'+encodeURIComponent(restaurantId)+'/reviews',{
+        method:'DELETE',credentials:'same-origin'
+      });
+      setMessage(response.ok?'내 리뷰가 삭제됐습니다.':'삭제하지 못했습니다. 로그인 상태를 확인해 주세요.');
+    }catch{setMessage('네트워크 연결을 확인해 주세요.')}
+    finally{setBusy(false)}
+  }
   async function submit(event:FormEvent){
     event.preventDefault();
     if(busy)return;
@@ -42,6 +55,7 @@ export default function ReviewForm({restaurantId,canWrite}:{restaurantId:string;
       placeholder="방문 경험을 사실에 기반해 적어주세요. 최소 30자, 최대 1,500자입니다."/>
     <span>민감한 개인정보, 허위사실, 타 사이트 리뷰 복제는 작성하지 마세요.</span>
     <button className="chip" type="submit" disabled={busy}>{busy?'접수 중…':'후기 제출 (검토 후 공개)'}</button>
+    <button className="chip" type="button" onClick={removeOwnReview} disabled={busy}>내 리뷰 삭제</button>
     {message&&<p role="status" className="hint">{message}</p>}
   </form>;
 }
