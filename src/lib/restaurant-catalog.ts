@@ -5,7 +5,7 @@ export type CatalogTag={code:string;label:string};
 export type FeaturedImageMetadata={id:string;alt_ko:string|null;url:string};
 export type RestaurantSearchItem={
   id:string;name:string;name_ko:string;address_ko:string|null;
-  region_sido:string|null;region_sigungu:string|null;short_description:string|null;
+  category_code:string|null;region_sido:string|null;region_sigungu:string|null;short_description:string|null;
   main_menu:string|null;featured_image_metadata:FeaturedImageMetadata|null;
   editorial_score:number|null;tags:CatalogTag[];
 };
@@ -47,13 +47,13 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     ?normalizeTags(input.filters.filter(v=>typeof v==='string').join(','))
     :normalizeTags(typeof input.filters==='string'?input.filters:'');
   const limit=Math.min(30,Math.max(1,Math.trunc(Number.isFinite(input.limit)?Number(input.limit):20)));
-  const offset=Math.min(2000,Math.max(0,Math.trunc(Number.isFinite(input.offset)?Number(input.offset):0)));
+  const offset=Math.min(10000,Math.max(0,Math.trunc(Number.isFinite(input.offset)?Number(input.offset):0)));
   const pool=getPool();
   if(!pool)throw new CatalogDatabaseUnavailable();
   const sql=`
     SELECT r.id::text AS id,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
-      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,r.region_sido,r.region_sigungu,
+      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,r.category_code,r.region_sido,r.region_sigungu,
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name)
          FROM restaurant_menus m
@@ -95,14 +95,23 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
                AND NULLIF(BTRIM(m.evidence_ref),'') IS NOT NULL
                AND ml.locale IN ($1,'ko') AND ml.name ILIKE $3))
       AND ($4::text='' OR r.region_sido ILIKE $5 OR r.region_sigungu ILIKE $5 OR r.region_dong ILIKE $5)
+      -- Only classifications supported directly by official permit data can
+      -- serve as a category-based fallback; never invent lifestyle tags.
       AND NOT EXISTS (
         SELECT 1 FROM unnest($6::text[]) required_tag
-        WHERE NOT EXISTS (
-          SELECT 1 FROM restaurant_tag_assignments ra
-          WHERE ra.restaurant_id=r.id AND ra.tag_code=required_tag
-            AND ra.verification_state='verified'
-            AND NULLIF(BTRIM(ra.evidence_ref),'') IS NOT NULL
-            AND ra.verified_at IS NOT NULL))
+        WHERE NOT (
+          EXISTS (
+            SELECT 1 FROM restaurant_tag_assignments ra
+            WHERE ra.restaurant_id=r.id AND ra.tag_code=required_tag
+              AND ra.verification_state='verified'
+              AND NULLIF(BTRIM(ra.evidence_ref),'') IS NOT NULL
+              AND ra.verified_at IS NOT NULL
+          )
+          OR (required_tag='cafe' AND r.category_code IN ('카페','까페'))
+          OR (required_tag='bar' AND r.category_code IN (
+            '정종/대포집/소주방','감성주점','호프/통닭'))
+        )
+      )
     ORDER BY CASE WHEN lower(r.name_ko)=lower($2) OR lower(l.display_name)=lower($2) THEN 0 ELSE 1 END,
       r.name_ko ASC,r.id ASC
     LIMIT ($7::integer + 1) OFFSET $8`;
