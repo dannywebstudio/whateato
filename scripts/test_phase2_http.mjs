@@ -92,6 +92,13 @@ assert.match(reviewSummaryText,/Approved reviews\s*3[^]*?★\s*4(?:\.0)?\s*\/\s*
 
 assert.match(detailHtml.body,/<img[^>]*src="\/api\/v1\/images\/55555555-5555-4555-8555-555555555555"/,
   'approved media is rendered in detail page');
+assert.match(detailHtml.body,/Sign in with Google/,'English review login prompt');
+const japaneseDetail=await get('/restaurant/'+rid+'?hl=ja');
+assert.equal(japaneseDetail.status,200);
+assert.match(japaneseDetail.body,/Googleでログイン/,'Japanese review login prompt');
+const chineseDetail=await get('/restaurant/'+rid+'?hl=zh-CN');
+assert.equal(chineseDetail.status,200);
+assert.match(chineseDetail.body,/使用 Google 登录/,'Chinese review login prompt');
 const noImageDetail=await get('/restaurant/22222222-2222-4222-8222-222222222222?hl=ko');
 assert.ok(!noImageDetail.body.includes('/api/v1/images/66666666-6666-4666-8666-666666666666'),
   'unapproved media must not appear in SSR HTML');
