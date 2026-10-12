@@ -2,6 +2,8 @@
 // Synthetic and destructive fixture strictly for ephemeral localhost PostgreSQL CI.
 // Refuses Neon/cloud and any non-local host. NEVER run against user restaurant data.
 import {readFileSync} from 'node:fs';
+import {mkdir,writeFile} from 'node:fs/promises';
+import {isAbsolute,join,basename} from 'node:path';
 import pg from 'pg';
 const url=process.env.DATABASE_URL||'';
 let parsed;
@@ -10,6 +12,13 @@ if(!['localhost','127.0.0.1'].includes(parsed.hostname)||
    process.env.WHATEATO_CI_LOCAL_FIXTURE!=='ONLY_LOCAL_EPHEMERAL'){
   throw Error('Fixture refused: local ephemeral database and explicit CI acknowledgement required');
 }
+// Synthetic 1x1 PNG stored only in an isolated CI runner directory.
+const mediaRoot=process.env.WHATEATO_MEDIA_ROOT||'';
+if(!isAbsolute(mediaRoot)||basename(mediaRoot)!=='ci-media')
+  throw Error('CI image root must be an isolated absolute ci-media directory');
+await mkdir(join(mediaRoot,'media','ci-only'),{recursive:true});
+await writeFile(join(mediaRoot,'media','ci-only','licensed.png'),
+  Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9FHMs1oAAAAASUVORK5CYII=','base64'));
 const client=new pg.Client({connectionString:url,connectionTimeoutMillis:7000});
 await client.connect();
 try{
@@ -65,8 +74,8 @@ try{
   await client.query(`
     INSERT INTO restaurant_images(restaurant_id,storage_key,source_reference,usage_rights_reference,
      rights_status,publication_state,rights_verified_at,alt_ko) VALUES
-    ('11111111-1111-4111-8111-111111111111','ci-only/synthetic-fixture.jpg','CI synthetic fixture','CI-only mock approval','approved','published',now(),'테스트용 이미지 메타데이터'),
-    ('22222222-2222-4222-8222-222222222222','ci-only/unverified.jpg','CI synthetic fixture',NULL,'pending','draft',NULL,'비공개')
+    ('11111111-1111-4111-8111-111111111111','media/ci-only/licensed.png','CI synthetic fixture','CI-only mock approval','approved','published',now(),'테스트용 이미지 메타데이터'),
+    ('22222222-2222-4222-8222-222222222222','media/ci-only/unverified.png','CI synthetic fixture',NULL,'pending','draft',NULL,'비공개')
   `);
   await client.query(`
     INSERT INTO restaurant_editorial_scores(restaurant_id,score,methodology_version,evidence_summary,approval_state,verified_at)
