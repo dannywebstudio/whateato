@@ -82,6 +82,13 @@ const detailHtml=await get('/restaurant/'+rid+'?hl=en');
 assert.equal(detailHtml.status,200);
 assert.match(detailHtml.body,/Evidence-backed full intro for CI./);
 assert.match(detailHtml.body,/Coffee/);
+assert.match(detailHtml.body,/Synthetic approved CI review number one/);
+assert.match(detailHtml.body,/Synthetic approved CI review number two/);
+assert.match(detailHtml.body,/Synthetic approved CI review number three/);
+assert.ok(!detailHtml.body.includes('Synthetic unapproved CI review'));
+assert.match(detailHtml.body,/Approved reviews.*?3/);
+assert.match(detailHtml.body,/4(?:\\.0)?\\s*\\/\\s*5/);
+
 assert.match(detailHtml.body,/<img[^>]*src="\/api\/v1\/images\/55555555-5555-4555-8555-555555555555"/,
   'approved media is rendered in detail page');
 const noImageDetail=await get('/restaurant/22222222-2222-4222-8222-222222222222?hl=ko');
