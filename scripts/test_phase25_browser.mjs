@@ -48,6 +48,9 @@ try{
     await page.locator('a.result').first().waitFor({state:'visible'});
     assert.equal(await page.locator('.results a.result').count(),1,'verified cafe filter');
     assert.equal(await page.locator('.chips button.chip[aria-pressed="true"]').count(),1,'filter state restored');
+    const licensedSearchPhoto=page.locator('.results a.result img[src^="/api/v1/images/"]');
+    assert.equal(await licensedSearchPhoto.count(),1,'approved result photo rendered');
+    await licensedSearchPhoto.first().waitFor({state:'visible'});
     await check(page,device.name+' filtered search');
     await page.screenshot({path:out+'/'+device.name+'-search.png',fullPage:true});
 
@@ -56,6 +59,10 @@ try{
     await check(page,device.name+' restaurant');
     assert.ok((await page.locator('main h1').textContent())?.includes('테스트카페'));
     assert.equal(await page.locator('main').getByText('커피',{exact:true}).count(),1);
+    const licensedDetailPhoto=page.locator('main img[src^="/api/v1/images/"]');
+    assert.equal(await licensedDetailPhoto.count(),1,'approved detail photo rendered');
+    await licensedDetailPhoto.first().waitFor({state:'visible'});
+
     await page.screenshot({path:out+'/'+device.name+'-detail.png',fullPage:true});
 
     await page.locator('main a.simple-link').last().click();
