@@ -1,0 +1,52 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "855904c3-aaaf-404b-b9ca-755097e76444",
+  "name_ko": "카페르뷰",
+  "road_address_ko": "서울특별시 중구 퇴계로 282, 1층 (쌍림동)",
+  "identity_evidence": {
+    "url": "https://www.daangn.com/kr/local-profile/%EC%B9%B4%ED%8E%98%EB%A5%B4%EB%B7%B0-w99efytsdisy/",
+    "checked_at": "2026-10-12T13:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "카페르뷰",
+      "short_description": "퇴계로 282 대흥빌딩 1층에 있는 카페. 공개 매장 메뉴에는 아메리카노가 소개돼 있다.",
+      "source_url": "https://www.daangn.com/kr/local-profile/%EC%B9%B4%ED%8E%98%EB%A5%B4%EB%B7%B0-w99efytsdisy/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Cafe Le View",
+      "short_description": "A café on the first floor of Daeheung Building at 282 Toegye-ro, with Americano listed on its public menu.",
+      "source_url": "https://www.daangn.com/kr/local-profile/%EC%B9%B4%ED%8E%98%EB%A5%B4%EB%B7%B0-w99efytsdisy/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "カフェ・ルビュー",
+      "short_description": "退渓路282番地の大興ビル1階にあるカフェ。公開メニューにアメリカーノが掲載されている。",
+      "source_url": "https://www.daangn.com/kr/local-profile/%EC%B9%B4%ED%8E%98%EB%A5%B4%EB%B7%B0-w99efytsdisy/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "Cafe Le View",
+      "short_description": "位于退溪路282号大兴大厦一层的咖啡馆，公开菜单中列有美式咖啡。",
+      "source_url": "https://www.daangn.com/kr/local-profile/%EC%B9%B4%ED%8E%98%EB%A5%B4%EB%B7%B0-w99efytsdisy/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "아메리카노",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.daangn.com/kr/local-profile/%EC%B9%B4%ED%8E%98%EB%A5%B4%EB%B7%B0-w99efytsdisy/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}
