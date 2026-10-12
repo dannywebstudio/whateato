@@ -1,0 +1,52 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "d959900f-fe99-4a9a-8fb0-9b27278fb214",
+  "name_ko": "다도회집",
+  "road_address_ko": "서울특별시 중구 마른내로6길 38 (충무로4가)",
+  "identity_evidence": {
+    "url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
+    "checked_at": "2026-10-12T14:30:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "다도회집",
+      "short_description": "중구 마른내로6길 38에 등록된 해산물 식당. 같은 주소의 공개 식당 안내에는 '다도회'라는 이름으로 쥐치회와 생선회가 소개되어 있다. 상호 표기와 메뉴 최신성은 최종 확인 전이다.",
+      "source_url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
+      "checked_at": "2026-10-12T14:30:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Dadohoe Seafood Restaurant",
+      "short_description": "A seafood venue registered at 38 Mareunnae-ro 6-gil. A listing at the same address uses the name Dadohoe and mentions raw filefish and sashimi. Store-name identity and menu freshness need review.",
+      "source_url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
+      "checked_at": "2026-10-12T14:30:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "ダドフェ（ダドフェチプ）",
+      "short_description": "中区マルンネ路6ギル38番地に登録された海鮮料理店。同住所の公開情報では「ダドフェ」という名称でカワハギの刺身などが紹介されている。屋号とメニューの最新情報は確認中。",
+      "source_url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
+      "checked_at": "2026-10-12T14:30:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "Dadohoe 海鲜餐厅",
+      "short_description": "登记于中区马伦内路6街38号的海鲜餐厅。相同地址的公开资料使用“Dadohoe”名称，并提到剥皮鱼生鱼片等菜品；店名一致性与菜单更新情况仍待核实。",
+      "source_url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
+      "checked_at": "2026-10-12T14:30:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "쥐치회",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
+      "checked_at": "2026-10-12T14:30:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}
