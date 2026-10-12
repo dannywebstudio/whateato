@@ -7,6 +7,10 @@ on:
     paths:
       - '.github/workflows/render-staging-live-qa.yml'
       - 'scripts/verify_phase25_deployed.mjs'
+      - 'scripts/verify_render_visual.mjs'
+      - 'src/lib/restaurant-catalog.ts'
+      - 'src/lib/geo-catalog.ts'
+      - 'src/components/RestaurantMap.tsx'
   workflow_dispatch:
 
 permissions:
@@ -54,3 +58,17 @@ jobs:
           PY
       - name: Live HTTP, DB, Search, detail and SSR verification (GET only)
         run: node scripts/verify_phase25_deployed.mjs
+      - name: Install Chromium for real Render visual QA
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Desktop and mobile browser QA against Render (GET only)
+        run: node scripts/verify_render_visual.mjs
+      - name: Upload staging screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-live-visual-qa
+          path: render-staging-visual-qa/
+          if-no-files-found: ignore
+          retention-days: 7
