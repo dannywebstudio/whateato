@@ -54,6 +54,14 @@ assert.equal(categoryKeyword.body.items[0].name_ko,'테스트식당');
 const categoryMap=await get('/api/v1/map/markers?bbox=37.57,126.98,37.59,127.01&q='+encodeURIComponent('정종/대포집/소주방'));
 assert.equal(categoryMap.status,200);
 assert.equal(categoryMap.body.items.length,1,'map and search include same permit category keyword');
+const colloquialCafe=await get('/api/v1/restaurants?q='+encodeURIComponent('카페')+'&hl=ko');
+assert.equal(colloquialCafe.status,200);
+assert.ok(colloquialCafe.body.items.some(x=>x.id==='77777777-7777-4777-8777-777777777777'),
+  '카페 keyword finds original permit code 까페 without creating tags');
+const colloquialPub=await get('/api/v1/restaurants?q='+encodeURIComponent('술집')+'&hl=ko');
+assert.equal(colloquialPub.status,200);
+assert.ok(colloquialPub.body.items.some(x=>x.id==='22222222-2222-4222-8222-222222222222'),
+  '술집 keyword matches only explicit permitted pub classifications');
 const noVerifiedTags=await get('/api/v1/restaurants?hl=ko&f=date_night');
 assert.deepEqual(noVerifiedTags.body.items,[],'proposed tag must not match');
 const ja=await get('/api/v1/restaurants?hl=ja&q='+encodeURIComponent('테스트카페'));
