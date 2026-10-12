@@ -87,7 +87,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
       AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
         WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND ($2::text='' OR r.name_ko ILIKE $3 OR r.road_address_ko ILIKE $3
-           OR r.lot_address_ko ILIKE $3 OR r.region_sigungu ILIKE $3 OR r.region_dong ILIKE $3
+           OR r.lot_address_ko ILIKE $3 OR r.category_code ILIKE $3 OR r.region_sigungu ILIKE $3 OR r.region_dong ILIKE $3
            OR l.display_name ILIKE $3 OR k.display_name ILIKE $3
            OR EXISTS (SELECT 1 FROM restaurant_menus m
              JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id
@@ -112,7 +112,16 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
             '정종/대포집/소주방','감성주점','호프/통닭'))
         )
       )
-    ORDER BY CASE WHEN lower(r.name_ko)=lower($2) OR lower(l.display_name)=lower($2) THEN 0 ELSE 1 END,
+    -- Name matches outrank address, neighborhood and registry-category matches.
+    ORDER BY CASE
+      WHEN $2::text='' THEN 0
+      WHEN lower(r.name_ko)=lower($2) OR lower(l.display_name)=lower($2) THEN 0
+      WHEN r.name_ko ILIKE ($2 || '%') OR l.display_name ILIKE ($2 || '%') THEN 1
+      WHEN r.name_ko ILIKE $3 OR l.display_name ILIKE $3 THEN 2
+      WHEN r.road_address_ko ILIKE $3 OR r.lot_address_ko ILIKE $3 THEN 3
+      WHEN r.region_sigungu ILIKE $3 OR r.region_dong ILIKE $3 THEN 4
+      ELSE 5
+    END,
       r.name_ko ASC,r.id ASC
     LIMIT ($7::integer + 1) OFFSET $8`;
   const res=await pool.query<RestaurantSearchItem>(sql,
