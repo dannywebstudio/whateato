@@ -12,7 +12,7 @@ assert.equal(report.policy,'RESEARCH_FLAGS_ARE_NOT_AUTOMATIC_PERMIT_STATUS_UPDAT
 assert.equal(report.count,report.flags.length);
 assert.ok(report.count>0);
 const flaggedIds=new Set();
-const critical=new Set(['POSSIBLE_CLOSURE','NAME_IDENTITY_MISMATCH','BRANCH_ADDRESS_COLLISION','PERMIT_CATEGORY_CONFLICT']);
+const critical=new Set(['POSSIBLE_CLOSURE','NAME_IDENTITY_MISMATCH','BRANCH_ADDRESS_COLLISION','PERMIT_CATEGORY_CONFLICT','INSUFFICIENT_CURRENT_MENU_EVIDENCE']);
 for(const flag of report.flags){
   assert.match(flag.restaurant_id,/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i);
   assert.ok(known.has(flag.restaurant_id),'flagged item not in source registry queue');
