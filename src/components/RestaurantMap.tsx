@@ -3,9 +3,11 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import type {Map as MapLibreMap,GeoJSONSource} from 'maplibre-gl';
 
-// Map data is ALWAYS fetched from WhatEatO. The base map style uses MapTiler
-// ONLY after an origin-restricted, properly licensed public browser key exists.
-// Without a configured key the component displays an honest offline state.
+// Restaurant marker data is ALWAYS sourced from the verified WhatEatO catalog.
+// OpenFreeMap's public MapLibre basemap is free for commercial use without a
+// browser API key (see https://openfreemap.org/ and its ToS); MapTiler is optional
+// if an owner-supplied origin-restricted key is deliberately configured.
+// Attribution is mandatory. Outages fall back to a genuine DB-powered directory.
 type Place={
   id:string;name:string;address_ko:string|null;latitude:number;longitude:number;
   editorial_score:number|null;region_sigungu:string|null;tags:{code:string;label:string}[];
@@ -16,9 +18,12 @@ type Feature={
   properties:{id:string;name:string};
 };
 type FeatureCollection={type:'FeatureCollection';features:Feature[]};
-const STYLE_BASE='https://api.maptiler.com/maps/streets-v4/style.json';
+const MAPTILER_STYLE='https://api.maptiler.com/maps/streets-v4/style.json';
+const OPENFREE_STYLE='https://tiles.openfreemap.org/styles/liberty';
 const key=(process.env.NEXT_PUBLIC_MAPTILER_API_KEY||'').trim();
-const available=/^[a-zA-Z0-9_-]{12,160}$/.test(key);
+const useMapTiler=/^[a-zA-Z0-9_-]{12,160}$/.test(key);
+const styleUrl=useMapTiler?MAPTILER_STYLE+'?key='+encodeURIComponent(key):OPENFREE_STYLE;
+const attribution='© OpenFreeMap · © OpenMapTiles · © OpenStreetMap contributors';
 const markerSource='whateato-approved-restaurants';
 const markerLayer='whateato-location-markers';
 const emptyData:FeatureCollection={type:'FeatureCollection',features:[]};
@@ -49,7 +54,8 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const requestId=useRef(0);
   const queryRef=useRef({q,filter,locale});
   const [items,setItems]=useState<Place[]>([]);
-  const [state,setState]=useState<'disabled'|'loading'|'zoom'|'ready'|'error'>(available?'loading':'disabled');
+  const [state,setState]=useState<'loading'|'zoom'|'ready'|'error'>('loading');
+  const [basemapFailed,setBasemapFailed]=useState(false);
   const [limited,setLimited]=useState(false);
   const [selected,setSelected]=useState<string|null>(null);
   queryRef.current={q,filter,locale};
@@ -99,23 +105,29 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     }
   },[]);
   useEffect(()=>{
-    if(!available||!host.current)return;
+    if(!host.current)return;
     let cancelled=false;
     let instance:MapLibreMap|null=null;
     let removeMapEvents:()=>void=()=>{};
-    void import('maplibre-gl').then(({Map,NavigationControl})=>{
+    void import('maplibre-gl').then(({Map,NavigationControl,AttributionControl})=>{
       if(cancelled||!host.current)return;
       instance=new Map({
         container:host.current,
-        style:STYLE_BASE+'?key='+encodeURIComponent(key),
+        style:styleUrl,
         center:[126.978,37.567],zoom:12.5,
         minZoom:8,maxZoom:18,
-        attributionControl:{compact:true},
+        attributionControl:false,
         cooperativeGestures:true
       });
       const m=instance;
       map.current=m;
       m.addControl(new NavigationControl({showCompass:false}),'top-right');
+      // Never omit attribution even if a provider style's source metadata
+      // does not include credits.
+      m.addControl(new AttributionControl({
+        compact:true,
+        customAttribution:useMapTiler?'© OpenStreetMap contributors':attribution
+      }),'bottom-right');
       const onLoad=()=>{
         if(!m.getSource(markerSource)){
           m.addSource(markerSource,{type:'geojson',data:emptyData});
@@ -130,7 +142,10 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         const id=ev.features?.[0]?.properties?.id;
         if(typeof id==='string'&&/^[a-f0-9-]{36}$/i.test(id))setSelected(id);
       };
-      const onError=()=>setState(current=>current==='loading'?'error':current);
+      const onError=()=>{
+        setBasemapFailed(true);
+        setState(current=>current==='loading'?'error':current);
+      };
       m.on('load',onLoad);
       m.on('moveend',onMove);
       m.on('click',markerLayer,onClick);
@@ -139,17 +154,17 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         m.off('load',onLoad);m.off('moveend',onMove);
         m.off('click',markerLayer,onClick);m.off('error',onError);
       };
-    }).catch(()=>{if(!cancelled)setState('error')});
+    }).catch(()=>{if(!cancelled){setBasemapFailed(true);setState('error')}});
     return ()=>{
       cancelled=true;lastRequest.current?.abort();requestId.current++;
       removeMapEvents();instance?.remove();map.current=null;
     };
   },[load]);
-  useEffect(()=>{if(available&&map.current?.isStyleLoaded())void load(map.current);},[q,filter,locale,load]);
+  useEffect(()=>{if(map.current?.isStyleLoaded())void load(map.current);},[q,filter,locale,load]);
   // Licensed basemap unavailable? Offer a useful, genuine permit-coordinate
   // directory for the Seoul coverage area. It does not impersonate a tiled map.
   useEffect(()=>{
-    if(available)return;
+    if(!basemapFailed)return;
     const controller=new AbortController();
     const params=new URLSearchParams({
       bbox:'37.47,126.78,37.68,127.14',limit:'40',hl:locale
@@ -174,21 +189,20 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       setState('ready');
     }).catch(()=>{if(!controller.signal.aborted){setItems([]);setState('error')}});
     return ()=>controller.abort();
-  },[q,filter,locale]);
+  },[q,filter,locale,basemapFailed]);
 
   const pick=items.find(x=>x.id===selected)||null;
   const params=new URLSearchParams({hl:locale});
   if(q)params.set('q',q);
   if(filter)params.set('f',filter);
   return <div>
-    {!available
-      ?<section className="empty-map" aria-label="Map provider not configured">{ui.disabled}</section>
-      :<div ref={host} role="application" aria-label="Interactive restaurant map"
+    <div ref={host} role="application" aria-label="Interactive restaurant map"
         style={{width:'100%',height:'min(62vh,540px)',minHeight:350,borderRadius:18,overflow:'hidden',
-          border:'1px solid #e5ece8',marginTop:24}}/>}
+          border:'1px solid #e5ece8',marginTop:24}}/>
+    {basemapFailed&&<section className="empty-map" aria-label="Basemap unavailable">{ui.disabled}</section>}
     {<p className="hint" role="status" aria-live="polite">
       {state==='loading'?ui.loading:state==='error'?ui.error:state==='zoom'?ui.zoom:
-        state==='ready'?(available?ui.count:locale==='ko'?'지도 없이 탐색 가능한 등록 식당':ui.count)+': '+items.length:''}
+        state==='ready'?(basemapFailed&&locale==='ko'?'지도 없이 탐색 가능한 등록 식당':ui.count)+': '+items.length:''}
       {limited?' · '+ui.limit:''}
     </p>}
     {pick&&<section className="result" aria-live="polite">
