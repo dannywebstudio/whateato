@@ -46,7 +46,7 @@
     const header=el('header','topbar');
     header.innerHTML = '<nav class="navcontent" aria-label="Primary">'+
      '<div class="header-left"><a class="brand-logo" href="'+root+'" aria-label="WhatEatO home"><span class="brand-word">Whatto</span><span class="brand-accent">EatO</span></a>'+
-     '<div class="navlinks"><a href="'+root+'" data-nav="home">Search</a><a href="'+root+'map/" data-nav="map">Map</a><a href="'+root+'blog/" data-nav="blog">Blog</a></div></div>'+
+     '<div class="navlinks"><a href="'+root+'map/" data-nav="map">Map</a><a href="'+root+'blog/" data-nav="blog">Blog</a></div></div>'+
      '<div class="preferences"><span aria-hidden="true">🌐</span><label class="sr-only" for="country">Country</label>'+
      '<select id="country"></select><span class="sep">|</span><label class="sr-only" for="language">Language</label>'+
      '<select id="language"></select></div></nav>';
