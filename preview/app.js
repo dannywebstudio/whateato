@@ -163,9 +163,8 @@
       '<a href="'+root+'" class="simple-link">← Back to Search</a>';
     return main;
   }
-  // Public Pages snapshot detail: registry fields only, no fake menus,
-  // photos, reviews or editorial ratings. Live Next.js detail is separate.
   function renderDetail(){
+    // Registry-only snapshot: no unsupported menus, photos or ratings.
     const main=el('main','content');main.id='main';
     const heading=el('h1','',t('식당 상세 정보','Restaurant details'));
     const hint=el('p','hint',t(
