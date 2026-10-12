@@ -163,12 +163,76 @@
       '<a href="'+root+'" class="simple-link">← Back to Search</a>';
     return main;
   }
+  // Public Pages snapshot detail: registry fields only, no fake menus,
+  // photos, reviews or editorial ratings. Live Next.js detail is separate.
+  function renderDetail(){
+    const main=el('main','content');main.id='main';
+    const heading=el('h1','',t('식당 상세 정보','Restaurant details'));
+    const hint=el('p','hint',t(
+      '공공 인허가 등록 정보 · 현재 영업 상태, 메뉴, 가격, 별점은 확인되지 않았습니다.',
+      'Public permit registry record · current opening hours, menu, prices and ratings are unverified.'
+    ));
+    const content=el('div','results');content.id='detail-data';
+    const back=el('a','simple-link',t('← 검색으로 돌아가기','← Back to Search'));
+    const search=new URLSearchParams();
+    if(ui.q)search.set('q',ui.q);
+    if(ui.selected.size)search.set('f',[...ui.selected].join(','));
+    search.set('hl',getPref('we_language','auto'));
+    back.href=root+'search/?'+search.toString();
+    main.append(heading,hint,content,back);
+    return main;
+  }
+  function showDetail(){
+    const list=$('#detail-data');
+    if(!list)return;
+    list.replaceChildren();
+    const id=params.get('id')||'';
+    if(!/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(id)){
+      list.append(el('div','empty',t('유효하지 않은 식당 링크입니다.','Invalid restaurant link.')));
+      return;
+    }
+    const r=ui.restaurants.find(x=>x.id===id);
+    if(!r){
+      list.append(el('div','empty',t('식당 정보를 찾지 못했습니다.','Restaurant record not found.')));
+      return;
+    }
+    const card=el('section','result');
+    card.append(el('h2','',r.name));
+    const metadata=[r.category,r.district,r.region].filter(Boolean).join(' · ');
+    if(metadata)card.append(el('span','',metadata));
+    const road=el('p','',t('도로명 주소: ','Road address: ')+(r.road||t('등록되지 않음','Not recorded')));
+    const lot=el('p','',t('지번 주소: ','Lot address: ')+(r.lot||t('등록되지 않음','Not recorded')));
+    card.append(road,lot);
+    if(Number.isFinite(r.lat)&&Number.isFinite(r.lon)){
+      const coordinate=el('span','',t('인허가 자료상 좌표: ','Permit coordinates: ')+
+        r.lat.toFixed(5)+', '+r.lon.toFixed(5));
+      card.append(coordinate);
+    }else{
+      card.append(el('span','',t('등록된 지도 좌표 없음','No registered map coordinates')));
+    }
+    const mapLink=el('a','simple-link',t('지도에서 이 식당 찾기 →','Find on map →'));
+    const qp=new URLSearchParams({q:r.name,hl:getPref('we_language','auto')});
+    mapLink.href=root+'map/?'+qp.toString();
+    card.append(mapLink);
+    list.append(card);
+    const notice=el('div','empty',t(
+      '현재 공개 검증된 사진·대표 메뉴·독립 평점이 없어 표시하지 않습니다. 정식 리뷰·로그인은 서버 배포 후 제공됩니다.',
+      'No approved photos, featured menus or independent rating have been published. Reviews and sign-in require the live server deployment.'
+    ));
+    list.append(notice);
+  }
   function makeRow(r,withMap=false){
     const node=el('article','result');
     node.append(el('strong','',r.name));
     node.append(el('span','',r.road||r.lot||t('주소 미확인','Address unavailable')));
     const meta=el('span','',[r.district,r.category].filter(Boolean).join(' · ')+' · '+t('인허가 영업','Permit active'));
     node.append(meta);
+    const detailLink=el('a','simple-link',t('식당 상세 보기 →','Restaurant details →'));
+    const q=new URLSearchParams({id:r.id,hl:getPref('we_language','auto')});
+    if(ui.q)q.set('q',ui.q);
+    if(ui.selected.size)q.set('f',[...ui.selected].join(','));
+    detailLink.href=root+'restaurant/?'+q.toString();
+    node.append(detailLink);
     if(withMap&&r.lat!=null&&r.lon!=null){
       const b=el('button','map-focus-btn',t('위치 보기 ↗','Locate ↗'));
       b.addEventListener('click',()=>focusMarker(r));
@@ -190,6 +254,7 @@
     } else if(notice) notice.hidden=true;
     if(page==='search')showSearch();
     if(page==='map')showMap();
+    if(page==='restaurant')showDetail();
   }
   function showSearch(){
     const list=$('#results');list.replaceChildren();
@@ -249,13 +314,14 @@
   }
   function mount(){
     app.replaceChildren();
-    app.append(renderHeader(),page==='home'?renderHome():page==='search'?renderSearch():page==='map'?renderMap():renderBlog(),renderFooter());
+    app.append(renderHeader(),page==='home'?renderHome():page==='search'?renderSearch():page==='map'?renderMap():page==='restaurant'?renderDetail():renderBlog(),renderFooter());
     bindForm(app);
     if(page==='search'){
       $('#load-more').addEventListener('click',()=>{ui.visible+=24;showSearch()});
       loadRestaurants();
     }
     if(page==='map')loadRestaurants();
+    if(page==='restaurant')loadRestaurants();
   }
   mount();
 })();
