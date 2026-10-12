@@ -129,6 +129,10 @@ export function validatePacket(packet){
     };
     if(score.methodology.length<3||score.summary.length<10)throw Error('editorial score needs a substantial independent evidence summary');
     date(s.checked_at,'editorial_score.checked_at');
+    // Preserve traceability of proposed ratings; a reviewer must still inspect
+    // the independent methodology and source before approving publication.
+    score.summary=score.summary+' | Evidence: '+score.source;
+    if(score.summary.length>2000)throw Error('editorial_score: evidence summary and source exceed DB limit');
   }
   const count=localizations.length+tags.length+menus.length+images.length+(score?1:0);
   if(!count)throw Error('Empty packet: no new content to stage');
