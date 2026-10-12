@@ -25,7 +25,7 @@ SELECT
 FROM public.restaurants
 WHERE publication_status = 'published'
   AND business_status = 'active'
-  AND sbiz_source_key LIKE 'localdata:%'
+  AND sbiz_source_key LIKE %s
 ORDER BY name_ko, id
 LIMIT %s
 """
@@ -75,7 +75,7 @@ def export(output: Path):
     import psycopg
     with psycopg.connect(url, connect_timeout=20) as connection:
         with connection.cursor() as cursor:
-            cursor.execute(QUERY, (MAX_RECORDS,))
+            cursor.execute(QUERY, ('localdata:%', MAX_RECORDS))
             records = build_records(cursor.fetchall())
 
     if len(records) < 1000:
