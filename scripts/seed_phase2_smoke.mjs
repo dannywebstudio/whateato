@@ -37,13 +37,22 @@ try{
     publication_status text NOT NULL DEFAULT 'published'
   )`);
   await client.query(`
-    INSERT INTO restaurants(id,name_ko,road_address_ko,region_sido,region_sigungu,category_code,latitude,longitude,business_status,publication_status) VALUES
-    ('11111111-1111-4111-8111-111111111111','테스트카페','서울특별시 종로구 샘플로 1','서울특별시','종로구','카페',37.5711,126.9800,'active','published'),
-    ('22222222-2222-4222-8222-222222222222','테스트식당','서울특별시 종로구 샘플로 2','서울특별시','종로구','한식',37.5780,126.9900,'active','published'),
-    ('33333333-3333-4333-8333-333333333333','테스트비공개','서울특별시 종로구 샘플로 3','서울특별시','종로구','기타',37.5712,126.9801,'active','hidden'),
-    ('44444444-4444-4444-8444-444444444444','테스트폐업','서울특별시 종로구 샘플로 4','서울특별시','종로구','기타',37.5713,126.9802,'closed','published',
-    ('77777777-7777-4777-8777-777777777777','지번전용식당',NULL,'서울특별시 종로구 적선동 9-1','서울특별시','종로구','기타',37.6101,127.0500,'active','published'),
-    ('88888888-8888-4888-8888-888888888888','보류검증식당','서울특별시 종로구 가상로 8',NULL,'서울특별시','종로구','기타',37.5712,126.9795,'active','published')
+    INSERT INTO restaurants(
+      id,name_ko,road_address_ko,lot_address_ko,region_sido,region_sigungu,
+      category_code,latitude,longitude,business_status,publication_status
+    ) VALUES
+    ('11111111-1111-4111-8111-111111111111','테스트카페',
+      '서울특별시 종로구 샘플로 1',NULL,'서울특별시','종로구','카페',37.5711,126.9800,'active','published'),
+    ('22222222-2222-4222-8222-222222222222','테스트식당',
+      '서울특별시 종로구 샘플로 2',NULL,'서울특별시','종로구','한식',37.5780,126.9900,'active','published'),
+    ('33333333-3333-4333-8333-333333333333','테스트비공개',
+      '서울특별시 종로구 샘플로 3',NULL,'서울특별시','종로구','기타',37.5712,126.9801,'active','hidden'),
+    ('44444444-4444-4444-8444-444444444444','테스트폐업',
+      '서울특별시 종로구 샘플로 4',NULL,'서울특별시','종로구','기타',37.5713,126.9802,'closed','published'),
+    ('77777777-7777-4777-8777-777777777777','지번전용식당',
+      NULL,'서울특별시 종로구 적선동 9-1','서울특별시','종로구','기타',37.6101,127.0500,'active','published'),
+    ('88888888-8888-4888-8888-888888888888','보류검증식당',
+      '서울특별시 종로구 가상로 8',NULL,'서울특별시','종로구','기타',37.5712,126.9795,'active','published')
   `);
   for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql','008_restaurant_quality_review.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
