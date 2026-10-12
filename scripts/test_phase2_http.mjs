@@ -100,7 +100,7 @@ assert.equal(lotGeo.body.items[0].address_ko,'서울특별시 종로구 적선�
 const lotHtml=await get('/search?q='+encodeURIComponent('지번전용식당'));
 assert.match(lotHtml.body,/서울특별시 종로구 적선동 9-1/);
 const heldHtml=await get('/search?q='+encodeURIComponent('보류검증식당'));
-assert.ok(!heldHtml.body.includes('보류검증식당'),'held record must not leak into SSR search');
+assert.ok(!heldHtml.body.includes('/restaurant/'+heldId),'held restaurant card must not appear in SSR search (query text may remain in input)');
 assert.equal((await get('/restaurant/'+heldId)).status,404);
 
 const searchHtml=await get('/search?q='+encodeURIComponent('테스트')+'&hl=en&f=cafe');
