@@ -42,7 +42,14 @@ try{
       if(req.url().startsWith('https://api.maptiler.com/'))paidTiles.push(req.url());
       if(req.url().startsWith('https://tiles.openfreemap.org/'))freeTileRequests.push(req.url());
     });
-    await page.goto(base+'/map?hl=ko&f=cafe',{waitUntil:'networkidle'});
+    // Third-party vector tiles can continuously stream; networkidle is not a
+    // meaningful readiness signal for an interactive map. Await its DOM and
+    // the first provider request instead.
+    const styleRequested=page.waitForRequest(req=>
+      req.url().startsWith('https://tiles.openfreemap.org/styles/liberty'),
+      {timeout:20000});
+    await page.goto(base+'/map?hl=ko&f=cafe',{waitUntil:'domcontentloaded',timeout:30000});
+    await styleRequested;
     await check(page,device.name+' map');
     assert.equal(await page.locator('[aria-label="Interactive restaurant map"]').count(),1,
       'commercial-use-allowed OpenFreeMap is the default basemap');
