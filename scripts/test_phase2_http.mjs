@@ -66,6 +66,41 @@ const detailHtml=await get('/restaurant/'+rid+'?hl=en');
 assert.equal(detailHtml.status,200);
 assert.match(detailHtml.body,/Evidence-backed full intro for CI./);
 assert.match(detailHtml.body,/Coffee/);
+
+const viewport=await get('/api/v1/map/markers?bbox=37.570,126.979,37.572,126.981&hl=en');
+assert.equal(viewport.status,200,'bounded viewport map API');
+assert.equal(viewport.body.mode,'viewport');
+assert.equal(viewport.body.items.length,1,'closed and unpublished points are excluded');
+assert.equal(viewport.body.items[0].id,rid);
+assert.equal(viewport.body.items[0].name,'Sunny Table');
+assert.equal(viewport.body.items[0].latitude,37.5711);
+assert.equal(viewport.body.items[0].longitude,126.98);
+assert.equal(viewport.body.items[0].editorial_score,4.5);
+assert.equal(viewport.body.items[0].tags[0].code,'cafe');
+assert.ok(!('distance_km' in viewport.body.items[0]) || viewport.body.items[0].distance_km===null);
+assert.ok(!('storage_key' in viewport.body.items[0]));
+const mapAll=await get('/api/v1/map/markers?bbox=37.56,126.97,37.59,127.01&hl=ja&limit=1');
+assert.equal(mapAll.status,200);
+assert.equal(mapAll.body.items.length,1);
+assert.equal(mapAll.body.has_more,true,'viewport marker cap surfaces truncated state');
+const mapNoTag=await get('/api/v1/map/markers?bbox=37.56,126.97,37.59,127.01&f=date_night');
+assert.deepEqual(mapNoTag.body.items,[],'unverified tags never appear on map');
+const nearby=await get('/api/v1/restaurants/nearby?lat=37.5711&lon=126.9800&radius_km=0.5&hl=en');
+assert.equal(nearby.status,200);
+assert.equal(nearby.body.mode,'nearby');
+assert.equal(nearby.body.items.length,1,'farther restaurant excluded from radius');
+assert.equal(nearby.body.items[0].id,rid);
+assert.equal(nearby.body.items[0].distance_km,0);
+const nearbyTwo=await get('/api/v1/restaurants/nearby?lat=37.5711&lon=126.98&radius_km=2&limit=1');
+assert.equal(nearbyTwo.status,200);
+assert.equal(nearbyTwo.body.items.length,1);
+assert.equal(nearbyTwo.body.has_more,true);
+assert.equal((await get('/api/v1/map/markers')).status,400,'bbox required');
+assert.equal((await get('/api/v1/map/markers?bbox=37.58,127.0,37.57,126.97')).status,400,'inverted bbox');
+assert.equal((await get('/api/v1/map/markers?bbox=33,124,39,132')).status,400,'excessive viewport');
+assert.equal((await get('/api/v1/restaurants/nearby?lat=100&lon=126')).status,400,'Korea coordinate bounds');
+assert.equal((await get('/api/v1/restaurants/nearby?lat=37.57&lon=126.98&radius_km=200')).status,400,'radius cap');
+
 const disabledAnalytics=await fetch(base+'/api/v1/analytics/events',{
   method:'POST',headers:{'Origin':base,'Content-Type':'application/json'},
   body:JSON.stringify({event_type:'page_view',page_type:'search',locale:'ko'})
