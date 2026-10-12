@@ -3,7 +3,7 @@
   "batch": "phase25-first20-20261012",
   "checked_at": "2026-10-12",
   "policy": "RESEARCH_FLAGS_ARE_NOT_AUTOMATIC_PERMIT_STATUS_UPDATES",
-  "count": 4,
+  "count": 7,
   "flags": [
     {
       "restaurant_id": "1b246b70-bb17-44b9-b121-f9903ebd9331",
@@ -50,6 +50,42 @@
       "evidence_url": "https://www.localdata.go.kr/",
       "finding": "Registry category for 농민 사골 순대국 is 일식 despite a Korean-soup-like name; name alone cannot establish true serving category or open status.",
       "action": "HOLD_FOR_CATEGORY_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "ba36c7fb-532d-4f3d-aaa3-71100edd0a16",
+      "name_ko": "copper coffee",
+      "road_address_ko": "서울특별시 종로구 혜화로9길 7 (명륜1가,지상1층)",
+      "code": "POSSIBLE_CLOSURE",
+      "severity": "critical",
+      "evidence_url": "https://polle.com/place/4kqkEX/%EC%BB%A4%ED%8D%BC%20%EC%BB%A4%ED%94%BC",
+      "finding": "A public listing marks 커퍼 커피 at 혜화로9길 7 as 폐점 (closed), while the permit record remains active as copper coffee and classifies it as 중국식. Store identity, closure date, and true category require confirmation.",
+      "action": "HOLD_FOR_CLOSURE_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "be9ca232-0aaf-41b6-b109-02d7aee4c760",
+      "name_ko": "느티나무",
+      "road_address_ko": "서울특별시 종로구 경희궁길 9 (신문로2가,1층)",
+      "code": "NAME_IDENTITY_MISMATCH",
+      "severity": "high",
+      "evidence_url": "https://www.dongnecoffeenote.com/c/17316",
+      "finding": "At 경희궁길 9, the current publicly indexed brand 카페느티 differs from permit-registered 느티나무. It may be a rename or different operator; business identity has not been established.",
+      "action": "HOLD_FOR_NAME_AND_BRANCH_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "6b69d5f2-c708-45f2-ad0b-8ba26430e6be",
+      "name_ko": "탕화쿵푸마라탕 명동 롯데점",
+      "road_address_ko": "서울특별시 중구 남대문로7길 15, 대호 2층 (소공동)",
+      "code": "BRANCH_ADDRESS_COLLISION",
+      "severity": "high",
+      "evidence_url": "https://polle.com/place/5tVM1c/%ED%83%95%ED%99%94%EC%BF%B5%ED%91%B8%20%EB%A7%88%EB%9D%BC%ED%83%95",
+      "finding": "The public listing at 남대문로7길 15 names a 탕화쿵푸 마라탕 명동5호점 while the permit record calls it 탕화쿵푸마라탕 명동 롯데점. Confirm the legal outlet, signage and location identity before menu association.",
+      "action": "HOLD_FOR_BRANCH_CHECK",
       "review_status": "unresolved",
       "publication_allowed": false
     }
