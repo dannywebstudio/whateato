@@ -1,4 +1,4 @@
-name: WhatEatO Phase 2 HTTP smoke
+name: WhatEatO Phase 2 HTTP + mobile QA
 on:
   pull_request:
   push:
@@ -8,7 +8,7 @@ permissions:
 jobs:
   phase2-http:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16
@@ -39,11 +39,16 @@ jobs:
         run: |
           node --check scripts/seed_phase2_smoke.mjs
           node --check scripts/test_phase2_http.mjs
+          node --check scripts/test_phase25_browser.mjs
       - name: Create isolated synthetic fixtures and apply real migrations
         run: node scripts/seed_phase2_smoke.mjs
       - run: npm run typecheck
       - run: npm run build
-      - name: Start Next.js and check real HTTP + SSR
+      - name: Install isolated Chromium browser for viewport QA
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Start Next.js and check real HTTP + SSR + responsive Chromium
         run: |
           npm run start -- --hostname 127.0.0.1 --port 3000 > /tmp/whateato-phase2-next.log 2>&1 &
           for attempt in $(seq 1 60); do
@@ -51,6 +56,15 @@ jobs:
             sleep 2
           done
           node scripts/test_phase2_http.mjs
+          node scripts/test_phase25_browser.mjs
+      - name: Upload desktop/mobile QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase25-browser-qa
+          path: phase25-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Report server logs on failure
         if: failure()
         run: cat /tmp/whateato-phase2-next.log || true
