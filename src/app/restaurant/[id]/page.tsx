@@ -1,63 +1,87 @@
 import Link from 'next/link';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import {auth,authReady} from '@/auth';
-import {getPool} from '@/lib/db';
-import {validUuid,getPublicReviews,getOwnReviewSummary,getLicensedReviewInsights} from '@/lib/reviews';
+import {getRestaurantCatalogDetail,type RestaurantDetailResponse} from '@/lib/restaurant-catalog';
+import {isUuid,normalizeLocale} from '@/lib/platform-v1';
+import {getPublicReviews,getOwnReviewSummary,getLicensedReviewInsights} from '@/lib/reviews';
 import ReviewForm from '@/components/ReviewForm';
 import {notFound} from 'next/navigation';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
-type Params={params:Promise<{id:string}>};
+type Params={
+  params:Promise<{id:string}>;
+  searchParams:Promise<{hl?:string}>;
+};
+const labels={
+  ko:{heading:'Restaurant details',unavailable:'음식점 DB 연결을 확인하고 있습니다.',category:'일반음식점',license:'인허가 영업 상태 (현재 영업 중이라는 의미 아님)',address:'주소',noAddress:'주소 정보 없음',description:'식당 소개',menus:'대표 메뉴',noPrice:'가격 확인 전',tags:'식당 태그',score:'WhatEatO 독립 평가',reviews:'WhatEatO 이용자 리뷰',reviewNote:'실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.',reviewCount:'승인된 리뷰',subjective:'이용자의 주관적인 평가',noReviews:'아직 승인된 리뷰가 없습니다.',write:'방문 후기 작성',external:'이용허락을 받은 외부 리뷰 참고 정보',negative:'직원 응대 관련 불만 언급',positive:'긍정 언급',back:'← 검색 결과로'},
+  en:{heading:'Restaurant details',unavailable:'The restaurant database is unavailable.',category:'Restaurant',license:'Permitted business record (not a real-time open-status guarantee)',address:'Address',noAddress:'Address unavailable',description:'About this restaurant',menus:'Main menu',noPrice:'Price not verified',tags:'Restaurant tags',score:'Independent WhatEatO score',reviews:'WhatEatO user reviews',reviewNote:'Only approved reviews written by registered users appear.',reviewCount:'Approved reviews',subjective:'Subjective customer opinions',noReviews:'No approved reviews yet.',write:'Write a review',external:'Licensed external review insights',negative:'Service concerns',positive:'Positive service mentions',back:'← Back to search'},
+  ja:{heading:'店舗情報',unavailable:'データベースに接続できません。',category:'飲食店',license:'営業許可情報（現在営業中である保証ではありません）',address:'住所',noAddress:'住所情報なし',description:'店舗の紹介',menus:'主なメニュー',noPrice:'価格未確認',tags:'タグ',score:'WhatEatO独自評価',reviews:'WhatEatOユーザーレビュー',reviewNote:'承認済みレビューのみ表示します。',reviewCount:'承認済みレビュー',subjective:'利用者の主観的な評価',noReviews:'承認済みレビューはまだありません。',write:'レビューを投稿',external:'利用許諾済みの外部レビュー情報',negative:'接客への不満',positive:'肯定的な言及',back:'← 検索結果へ'},
+  'zh-CN':{heading:'餐厅详情',unavailable:'餐厅数据库暂时不可用。',category:'餐厅',license:'经营许可记录（不代表当前营业）',address:'地址',noAddress:'暂无地址',description:'餐厅简介',menus:'主要菜品',noPrice:'价格未经核实',tags:'标签',score:'WhatEatO独立评分',reviews:'WhatEatO用户评价',reviewNote:'仅显示已审核的用户评价。',reviewCount:'已审核评价',subjective:'用户主观评价',noReviews:'暂无已审核的评价。',write:'撰写评价',external:'已授权的外部评价信息',negative:'服务投诉',positive:'正面反馈',back:'← 返回搜索'}
+} as const;
 
-export default async function RestaurantDetail({params}:Params){
+export default async function RestaurantDetail({params,searchParams}:Params){
   const {id}=await params;
-  if(!validUuid(id))notFound();
-  const pool=getPool();
-  if(!pool)return <main className="content">
-    <h1>Restaurant details</h1><p className="hint">음식점 DB 연결 준비 중입니다.</p>
-    <Link className="simple-link" href="/search">← Search</Link>
-  </main>;
-  const found=await pool.query<{
-    name_ko:string;road_address_ko:string|null;lot_address_ko:string|null;
-    category_code:string|null;business_status:string;
-  }>(
-    "SELECT name_ko,road_address_ko,lot_address_ko,category_code,business_status "+
-    "FROM restaurants WHERE id=$1 AND business_status='active' AND publication_status='published'",
-    [id]
-  );
-  const r=found.rows[0];if(!r)notFound();
+  if(!isUuid(id))notFound();
+  const query=await searchParams;
+  const locale=normalizeLocale(query.hl);
+  const t=labels[locale];
+  let detail:RestaurantDetailResponse|null;
+  try{detail=await getRestaurantCatalogDetail(id,locale)}
+  catch{
+    return <main className="content"><h1>{t.heading}</h1><p className="hint">{t.unavailable}</p>
+      <Link className="simple-link" href={'/search?hl='+locale}>{t.back}</Link></main>;
+  }
+  if(!detail)notFound();
+  const r=detail.restaurant;
   const session=authReady()?await auth():null;
   const [reviews,summary,external]=await Promise.all([
     getPublicReviews(id),getOwnReviewSummary(id),getLicensedReviewInsights(id)
   ]);
   return <main className="content">
     <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
-    <h1>{r.name_ko}</h1>
-    <p className="hint">{r.category_code||'일반음식점'} · 인허가 영업 상태 (현재 영업 중이라는 의미 아님)</p>
+    <h1>{r.name}</h1>
+    <p className="hint">{r.category_code||t.category} · {t.license}</p>
+    {r.editorial_score!==null&&<p className="hint">★ {r.editorial_score.toFixed(1)} / 5 · {t.score}</p>}
+    {(r.short_description||r.full_description)&&<>
+      <h2>{t.description}</h2>
+      <section className="result"><span>{r.full_description||r.short_description}</span></section>
+    </>}
     <section className="result">
-      <strong>주소</strong><span>{r.road_address_ko||r.lot_address_ko||'주소 정보 없음'}</span>
+      <strong>{t.address}</strong><span>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
     </section>
-    <h2>WhatEatO 이용자 리뷰</h2>
-    <p className="hint">실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.</p>
-    {summary&&<p className="hint">승인된 리뷰 {summary.reviewCount}건 · 평균 {summary.averageRating} / 5점
-      <span> · 이용자의 주관적인 평가</span></p>}
+    {detail.tags.length>0&&<>
+      <h2>{t.tags}</h2>
+      <section className="result"><span>{detail.tags.map(tag=>tag.label).join(' · ')}</span></section>
+    </>}
+    {detail.menus.length>0&&<>
+      <h2>{t.menus}</h2>
+      <div className="results">{detail.menus.map(menu=><section className="result" key={menu.id}>
+        <strong>{menu.name}</strong>
+        {menu.description&&<span>{menu.description}</span>}
+        {menu.price_krw!==null&&<span>₩{menu.price_krw.toLocaleString('ko-KR')}</span>}
+      </section>)}</div>
+    </>}
+    <h2>{t.reviews}</h2>
+    <p className="hint">{t.reviewNote}</p>
+    {summary&&<p className="hint">{t.reviewCount} {summary.reviewCount} · ★ {summary.averageRating} / 5
+      <span> · {t.subjective}</span></p>}
     <div className="results">{reviews.length?reviews.map(rev=>
       <article className="result" key={rev.id}>
-        <strong>{rev.rating} / 5점</strong>
+        <strong>★ {rev.rating} / 5</strong>
         <p>{rev.body}</p>
         <span>익명 이용자 · {new Date(rev.created_at).toLocaleDateString('ko-KR')}</span>
-      </article>):<div className="empty">아직 승인된 리뷰가 없습니다.</div>}</div>
-    <h2>방문 후기 작성</h2>
+      </article>):<div className="empty">{t.noReviews}</div>}</div>
+    <h2>{t.write}</h2>
     <ReviewForm restaurantId={id} canWrite={Boolean(session?.user?.id)}/>
     {external.length>0&&<>
-      <h2>이용허락을 받은 외부 리뷰 참고 정보</h2>
+      <h2>{t.external}</h2>
       <div className="results">{external.map(x=><div className="result" key={x.provider}>
-        <strong>{x.provider} · {x.reviewCount}건의 허가된 리뷰 신호</strong>
-        <span>직원 응대 관련 불만 언급 {x.serviceConcernMentions}건 · 긍정 언급 {x.servicePraiseMentions}건</span>
+        <strong>{x.provider} · {x.reviewCount}</strong>
+        <span>{t.negative} {x.serviceConcernMentions} · {t.positive} {x.servicePraiseMentions}</span>
         <span>{x.note}</span>
       </div>)}</div>
     </>}
-    <Link className="simple-link" href="/search">← 검색 결과로</Link>
+    <Link className="simple-link" href={'/search?hl='+locale}>{t.back}</Link>
   </main>;
 }
