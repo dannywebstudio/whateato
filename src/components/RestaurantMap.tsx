@@ -146,6 +146,36 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     };
   },[load]);
   useEffect(()=>{if(available&&map.current?.isStyleLoaded())void load(map.current);},[q,filter,locale,load]);
+  // Licensed basemap unavailable? Offer a useful, genuine permit-coordinate
+  // directory for the Seoul coverage area. It does not impersonate a tiled map.
+  useEffect(()=>{
+    if(available)return;
+    const controller=new AbortController();
+    const params=new URLSearchParams({
+      bbox:'37.47,126.78,37.68,127.14',limit:'40',hl:locale
+    });
+    if(q)params.set('q',q);
+    if(filter)params.set('f',filter);
+    setState('loading');
+    void fetch('/api/v1/map/markers?'+params.toString(),{
+      signal:controller.signal,cache:'no-store',credentials:'same-origin'
+    }).then(async response=>{
+      if(!response.ok)throw Error('Fallback marker catalog unavailable');
+      return response.json() as Promise<Response>;
+    }).then(payload=>{
+      if(controller.signal.aborted)return;
+      const safe=(Array.isArray(payload.items)?payload.items:[]).filter(x=>
+        typeof x.id==='string'&&typeof x.name==='string'&&
+        Number.isFinite(x.latitude)&&Number.isFinite(x.longitude) &&
+        x.latitude>=33&&x.latitude<=39.5&&x.longitude>=124&&x.longitude<=132
+      ).slice(0,40);
+      setItems(safe);
+      setLimited(Boolean(payload.has_more));
+      setState('ready');
+    }).catch(()=>{if(!controller.signal.aborted){setItems([]);setState('error')}});
+    return ()=>controller.abort();
+  },[q,filter,locale]);
+
   const pick=items.find(x=>x.id===selected)||null;
   const params=new URLSearchParams({hl:locale});
   if(q)params.set('q',q);
@@ -156,9 +186,9 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       :<div ref={host} role="application" aria-label="Interactive restaurant map"
         style={{width:'100%',height:'min(62vh,540px)',minHeight:350,borderRadius:18,overflow:'hidden',
           border:'1px solid #e5ece8',marginTop:24}}/>}
-    {available&&<p className="hint" role="status" aria-live="polite">
+    {<p className="hint" role="status" aria-live="polite">
       {state==='loading'?ui.loading:state==='error'?ui.error:state==='zoom'?ui.zoom:
-        state==='ready'?ui.count+': '+items.length:''}
+        state==='ready'?(available?ui.count:locale==='ko'?'지도 없이 탐색 가능한 등록 식당':ui.count)+': '+items.length:''}
       {limited?' · '+ui.limit:''}
     </p>}
     {pick&&<section className="result" aria-live="polite">
