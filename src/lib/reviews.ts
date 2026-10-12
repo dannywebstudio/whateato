@@ -55,3 +55,21 @@ export async function getLicensedReviewInsights(restaurantId:string){
     note:'적법하게 허가된 외부 리뷰 신호의 요약입니다. 주관적인 이용자 경험이며 사실이 독립적으로 입증된 것은 아닙니다.'
   }));
 }
+
+
+export async function getOwnReviewSummary(restaurantId:string){
+  if(!validUuid(restaurantId))return null;
+  const pool=getPool();
+  if(!pool)return null;
+  const result=await pool.query<{review_count:string;average_rating:string}>(
+    "SELECT count(*)::text AS review_count,round(avg(rating)::numeric,1)::text AS average_rating "+
+    "FROM whateato_user_reviews WHERE restaurant_id=$1 AND moderation_status='published'",
+    [restaurantId]
+  );
+  const count=Number(result.rows[0]?.review_count||0);
+  if(count<3)return null;
+  return {
+    reviewCount:count,averageRating:Number(result.rows[0].average_rating),
+    disclaimer:'WhatEatO에서 승인된 이용자 리뷰에 기반한 평균이며 객관적인 식당 품질 판정이 아닙니다.'
+  };
+}
