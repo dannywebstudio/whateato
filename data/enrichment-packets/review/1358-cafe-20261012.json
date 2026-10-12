@@ -1,0 +1,52 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "e1a72bf5-7698-4136-8952-8cbfc0b5dc6d",
+  "name_ko": "1358",
+  "road_address_ko": "서울특별시 종로구 돈화문로8길 26, 1층 (묘동)",
+  "identity_evidence": {
+    "url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
+    "checked_at": "2026-10-12T14:30:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "1358",
+      "short_description": "종로구 돈화문로8길 26에 등록된 카페로, 공개 매장 안내에 커피 메뉴가 소개되어 있다. 실제 영업 여부와 메뉴는 방문 전 다시 확인이 필요하다.",
+      "source_url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
+      "checked_at": "2026-10-12T14:30:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "1358 Cafe",
+      "short_description": "A café registered at 26 Donhwamun-ro 8-gil in Jongno-gu. Coffee appears in a public venue listing; current hours and menu should be confirmed before visiting.",
+      "source_url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
+      "checked_at": "2026-10-12T14:30:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "1358カフェ",
+      "short_description": "鍾路区敦化門路8ギル26番地に登録されているカフェ。公開店舗情報にはコーヒーが記載されており、営業状況やメニューは来店前の確認が必要。",
+      "source_url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
+      "checked_at": "2026-10-12T14:30:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "1358咖啡馆",
+      "short_description": "登记地址位于钟路区敦化门路8街26号的咖啡馆。公开店铺资料提到咖啡，实际营业状况及菜单需在到访前再次确认。",
+      "source_url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
+      "checked_at": "2026-10-12T14:30:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "커피",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
+      "checked_at": "2026-10-12T14:30:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}
