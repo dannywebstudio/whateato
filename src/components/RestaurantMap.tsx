@@ -38,10 +38,10 @@ const bboxQuery=(map:MapLibreMap)=>{
 };
 function localizedCopy(locale:string){
   switch(locale){
-    case 'en':return {disabled:'Interactive maps require an approved map-provider key. Restaurant search remains available.',loading:'Loading restaurant markers…',error:'Map markers could not be loaded.',zoom:'Zoom into central Seoul to load restaurant locations.',count:'Locations in map area',limit:'Only the first 200 matching locations are shown. Zoom in for more.',open:'Restaurant details',license:'Map locations come from permit records and do not confirm current operation.',empty:'No matching public restaurant locations in this map area.'};
-    case 'ja':return {disabled:'地図プロバイダーのキーがまだ設定されていません。店舗検索は利用できます。',loading:'店舗の位置を読み込み中…',error:'地図上の店舗を取得できませんでした。',zoom:'ソウル中心部へ拡大してください。',count:'表示中の店舗',limit:'最大200件を表示しています。さらに拡大してください。',open:'店舗情報',license:'場所は営業許可記録に基づき、現在の営業状況を保証しません。',empty:'該当する店舗が見つかりません。'};
-    case 'zh-CN':return {disabled:'尚未配置授权的地图服务密钥。餐厅搜索仍可使用。',loading:'正在加载餐厅位置…',error:'无法加载地图上的餐厅。',zoom:'请放大至首尔市中心。',count:'地图区域内的餐厅',limit:'最多显示200家餐厅，请放大地图查看更多。',open:'餐厅详情',license:'位置来自许可证资料，不代表当前营业。',empty:'地图区域内没有符合条件的餐厅。'};
-    default:return {disabled:'지도 제공자 사용 권한과 API 키를 설정한 뒤 지도가 표시됩니다. 식당 검색은 계속 이용할 수 있어요.',loading:'식당 위치 불러오는 중…',error:'지도 식당 정보를 가져오지 못했어요.',zoom:'서울 중심 지역을 확대하면 식당 위치를 불러옵니다.',count:'현재 지도 내 식당',limit:'최대 200곳을 표시하고 있어요. 더 자세히 보려면 지도를 확대해 주세요.',open:'식당 상세 보기',license:'위치는 인허가 자료 기준이며 현재 영업 여부나 정확한 입구를 보장하지 않습니다.',empty:'현재 지도 영역에서 조건에 맞는 식당이 없어요.'};
+    case 'en':return {disabled:'The basemap is temporarily unavailable. The restaurant directory below uses real permit-record coordinates.',loading:'Loading restaurant markers…',error:'Map markers could not be loaded.',zoom:'Zoom into central Seoul to load restaurant locations.',count:'Locations in map area',limit:'Only the first 200 matching locations are shown. Zoom in for more.',open:'Restaurant details',license:'Map locations come from permit records and do not confirm current operation.',empty:'No matching public restaurant locations in this map area.'};
+    case 'ja':return {disabled:'地図の背景データを取得できません。確認済みの座標に基づく店舗一覧をご利用ください。',loading:'店舗の位置を読み込み中…',error:'地図上の店舗を取得できませんでした。',zoom:'ソウル中心部へ拡大してください。',count:'表示中の店舗',limit:'最大200件を表示しています。さらに拡大してください。',open:'店舗情報',license:'場所は営業許可記録に基づき、現在の営業状況を保証しません。',empty:'該当する店舗が見つかりません。'};
+    case 'zh-CN':return {disabled:'底图暂时不可用。下方仍可浏览来源于登记资料的餐厅位置列表。',loading:'正在加载餐厅位置…',error:'无法加载地图上的餐厅。',zoom:'请放大至首尔市中心。',count:'地图区域内的餐厅',limit:'最多显示200家餐厅，请放大地图查看更多。',open:'餐厅详情',license:'位置来自许可证资料，不代表当前营业。',empty:'地图区域内没有符合条件的餐厅。'};
+    default:return {disabled:'지도 배경을 불러오지 못했어요. 대신 아래 실제 인허가 좌표 기반 식당 목록을 이용할 수 있어요.',loading:'식당 위치 불러오는 중…',error:'지도 식당 정보를 가져오지 못했어요.',zoom:'서울 중심 지역을 확대하면 식당 위치를 불러옵니다.',count:'현재 지도 내 식당',limit:'최대 200곳을 표시하고 있어요. 더 자세히 보려면 지도를 확대해 주세요.',open:'식당 상세 보기',license:'위치는 인허가 자료 기준이며 현재 영업 여부나 정확한 입구를 보장하지 않습니다.',empty:'현재 지도 영역에서 조건에 맞는 식당이 없어요.'};
   }
 }
 export default function RestaurantMap({q='',filter='',locale='ko'}:{
@@ -161,7 +161,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     };
   },[load]);
   useEffect(()=>{if(map.current?.isStyleLoaded())void load(map.current);},[q,filter,locale,load]);
-  // Licensed basemap unavailable? Offer a useful, genuine permit-coordinate
+  // Provider outage? Offer a useful, genuine permit-coordinate
   // directory for the Seoul coverage area. It does not impersonate a tiled map.
   useEffect(()=>{
     if(!basemapFailed)return;
