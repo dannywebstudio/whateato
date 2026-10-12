@@ -36,6 +36,17 @@ try{
     assert.equal(await page.locator('.search-form .chip').count(),12,'locked 12 home filter chips');
     if(device.name==='desktop')await page.screenshot({path:out+'/desktop-home.png',fullPage:true});
 
+    const externalTiles=[];
+    page.on('request',req=>{if(req.url().startsWith('https://api.maptiler.com/'))externalTiles.push(req.url())});
+    await page.goto(base+'/map?hl=ko&f=cafe',{waitUntil:'networkidle'});
+    await check(page,device.name+' map');
+    assert.equal(await page.locator('[aria-label="Map provider not configured"]').count(),1,
+      'provider tiles must stay disabled without a licensed key');
+    assert.equal(await page.locator('.chips button.chip[aria-pressed="true"]').count(),1,
+      'map filter restores selected chip');
+    assert.equal(externalTiles.length,0,'unlicensed external tiles must not load');
+    await page.screenshot({path:out+'/'+device.name+'-map-keyless.png',fullPage:true});
+
     const search='/search?q='+encodeURIComponent('테스트')+'&hl=ko';
     await page.goto(base+search,{waitUntil:'networkidle'});
     await check(page,device.name+' search');
