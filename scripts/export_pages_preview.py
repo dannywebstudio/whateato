@@ -85,6 +85,15 @@ def export(output: Path):
     output.mkdir(parents=True, exist_ok=True)
     for asset in ("index.html", "styles.css", "app.js"):
         shutil.copyfile(PREVIEW_ROOT / asset, output / asset)
+    # Mirror canonical Search / Map / Blog architecture as distinct static routes.
+    shell = (PREVIEW_ROOT / "index.html").read_text(encoding="utf-8")
+    for page in ("search", "map", "blog"):
+        directory = output / page
+        directory.mkdir(exist_ok=True)
+        html = (shell.replace('data-page="home"', f'data-page="{page}"')
+                     .replace('href="./styles.css"', 'href="../styles.css"')
+                     .replace('src="./app.js"', 'src="../app.js"'))
+        (directory / "index.html").write_text(html, encoding="utf-8")
     (output / ".nojekyll").write_text("", encoding="utf-8")
     (output / "data").mkdir(exist_ok=True)
     payload = {
