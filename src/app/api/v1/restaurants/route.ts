@@ -46,9 +46,9 @@ export async function GET(request:NextRequest){
             AND ra.verification_state='verified'))
     ORDER BY CASE WHEN lower(r.name_ko)=lower($2) OR lower(l.display_name)=lower($2) THEN 0 ELSE 1 END,
       r.name_ko ASC,r.id ASC
-    LIMIT $7 OFFSET $8`;
+    LIMIT ($7::integer + 1) OFFSET $8`;
   try{
     const res=await pool.query(sql,[locale,q,'%'+escapeLike(q)+'%',region,'%'+escapeLike(region)+'%',tags,limit,offset]);
-    return NextResponse.json({locale,q,region,filters:tags,items:res.rows,limit,offset,has_more:res.rows.length===limit,ratings_note:'editorial_score is independent; null means unverified'},{headers});
+    return NextResponse.json({locale,q,region,filters:tags,items:res.rows.slice(0,limit),limit,offset,has_more:res.rows.length>limit,ratings_note:'editorial_score is independent; null means unverified'},{headers});
   }catch{return NextResponse.json({error:'restaurant_search_unavailable',hint:'Check migration 004 and database connectivity'}, {status:503,headers})}
 }
