@@ -56,8 +56,8 @@ try{
     INSERT INTO restaurant_menu_localizations(menu_id,locale,name,description) VALUES
     ($1,'ko','커피','CI용 메뉴'),($1,'en','Coffee','CI test menu')`,[approvedMenu.rows[0].id]);
   const unverifiedPriceMenu=await client.query(`
-    INSERT INTO restaurant_menus(restaurant_id,price_krw,publication_state,evidence_ref,price_verified_at)
-    VALUES('11111111-1111-4111-8111-111111111111',9999,'published','local-ci-menu-evidence',NULL)
+    INSERT INTO restaurant_menus(restaurant_id,price_krw,position,publication_state,evidence_ref,price_verified_at)
+    VALUES('11111111-1111-4111-8111-111111111111',9999,1,'published','local-ci-menu-evidence',NULL)
     RETURNING id`);
   await client.query(`
     INSERT INTO restaurant_menu_localizations(menu_id,locale,name) VALUES($1,'en','Unverified Price Item')`,
