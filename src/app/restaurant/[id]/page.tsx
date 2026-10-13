@@ -10,6 +10,7 @@ import RestaurantPhotoGallery from '@/components/RestaurantPhotoGallery';
 import GooglePlacesPhotoPreview from '@/components/GooglePlacesPhotoPreview';
 import {notFound} from 'next/navigation';
 import {groupedOpeningHours} from '@/lib/group-opening-hours';
+import {currentStaff,hasPermission} from '@/lib/owner-cms-auth';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -91,11 +92,18 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   // Use a venue name AND address to reduce incorrect matches. No unverified Place ID is assumed.
   const googleSaveHref='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(googlePlaceQuery);
   const session=authReady()?await auth():null;
+  const staff=await currentStaff();
   const [reviews,summary,external]=await Promise.all([
     getPublicReviews(id),getOwnReviewSummary(id),getLicensedReviewInsights(id)
   ]);
   return <main className="content restaurant-detail-page">
     <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
+    {staff&&hasPermission(staff,'edit')&&<div style={{textAlign:'right',marginBlock:'0 10px'}}>
+      <Link href={'/admin?restaurant='+encodeURIComponent(id)} style={{display:'inline-flex',gap:6,
+        fontSize:12,fontWeight:700,color:'#166b4f',border:'1px solid #c9ded2',padding:'8px 12px',borderRadius:8}}>
+        ✎ 관리자 수정
+      </Link>
+    </div>}
     <header className="restaurant-hero"><div className="restaurant-hero-main"><span className="eyebrow">WhatEatO · {r.category_code||t.category}</span><h1>{r.name}</h1><p className="restaurant-lede">{r.short_description}</p><div className="restaurant-facts"><span className={"status-pill "+(r.opening_hours?.state==="open"?"is-open":r.opening_hours?.state==="closed"?"is-closed":r.opening_hours?.state==="preparing"?"is-preparing":"")}>{hoursLabels[locale][r.opening_hours?.state||"unknown"]}</span>{r.opening_hours?.today_hours&&<span className="meta-chip">◷ {r.opening_hours.today_hours}</span>}{detail.tags.slice(0,3).map(tag=><span className="meta-chip" key={tag.code}>{tag.label}</span>)}{r.ratings.external&&<span className="meta-chip">★ {r.ratings.external.rating.toFixed(1)}</span>}</div></div><div className="hero-location" style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:7}}><div>⌖ <span>{r.address||r.road_address_ko||r.lot_address_ko||t.noAddress}</span></div>{r.opening_hours?.weekly&&r.opening_hours.weekly.length>0&&<div style={{display:'flex',gap:8,alignItems:'baseline',flexWrap:'wrap'}}><strong>{hoursLabels[locale].hours}</strong><span>{groupedOpeningHours(r.opening_hours.weekly,locale).join(' · ')}</span></div>}</div></header>
     <RestaurantPhotoGallery images={detail.images} name={r.name} locale={locale}/>
     {process.env.WHATEATO_GOOGLE_PHOTO_APPROVED==='true' && detail.images.length===0 && <GooglePlacesPhotoPreview restaurantId={id} restaurantName={r.name} locale={locale}/>}
