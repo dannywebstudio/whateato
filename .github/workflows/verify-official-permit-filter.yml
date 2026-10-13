@@ -1,0 +1,23 @@
+name: Verify official permit-number filter
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-official-permit-filter.yml'
+      - 'scripts/check_general_restaurant_filter.mjs'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check if MNG_NO filter really works (2 read-only API calls)
+        env:
+          DATA_GO_KR_SERVICE_KEY: ${{ secrets.DATA_GO_KR_SERVICE_KEY }}
+        run: node scripts/check_general_restaurant_filter.mjs
