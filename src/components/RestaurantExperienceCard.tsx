@@ -1,6 +1,7 @@
+import {cuisineColor,cuisineKey,cuisinePalette} from '@/lib/cuisine-palette';
 import Link from 'next/link';
 type Props={name:string;address?:string|null;description?:string|null;menu?:string|null;
- href:string;locale:string;variant?:'search'|'map';status?:'open'|'closed'|'unknown';
+ href:string;locale:string;category?:string|null;variant?:'search'|'map';status?:'open'|'closed'|'unknown';
  hours?:string|null;rating?:number|null;tags?:string[];imageUrl?:string|null;
  onMapClick?:()=>void;mapButtonLabel?:string};
 const copy={
@@ -9,10 +10,12 @@ const copy={
  ja:{menu:'代表メニュー',details:'詳しく見る',map:'地図で見る',open:'営業中',closed:'営業時間外',unknown:'営業時間未確認',rating:'評価未確認'},
  'zh-CN':{menu:'招牌菜',details:'查看详情',map:'地图定位',open:'营业中',closed:'已打烊',unknown:'营业时间未核实',rating:'暂无评分'}
 } as const;
-export default function RestaurantExperienceCard({name,address,description,menu,href,locale,variant='search',status='unknown',hours,rating,tags=[],imageUrl,onMapClick,mapButtonLabel}:Props){
+export default function RestaurantExperienceCard({name,address,description,menu,href,locale,category,variant='search',status='unknown',hours,rating,tags=[],imageUrl,onMapClick,mapButtonLabel}:Props){
  const t=copy[locale as keyof typeof copy]||copy.ko;
- return <article className={'we-card we-card-'+variant+(variant==='map'?' result map-restaurant-card':' restaurant-card')}>
-   <div className="we-card-visual">{imageUrl?<img src={imageUrl} alt={name} loading="lazy"/>:<div className="we-card-fallback" aria-label="Photo unavailable"><span>W.</span><small>DISCOVER LOCAL</small></div>}<span className="we-card-category">WHATEATO · LOCAL DISCOVERY</span></div>
+ const accent=cuisineColor(category);
+ const cuisine=cuisinePalette[cuisineKey(category)].label;
+ return <article style={{'--cuisine-accent':accent} as React.CSSProperties} className={'we-card we-card-'+variant+(variant==='map'?' result map-restaurant-card':' restaurant-card')}>
+   <div className="we-card-visual">{imageUrl?<img src={imageUrl} alt={name} loading="lazy"/>:<div className="we-card-fallback" aria-label="Photo unavailable"><span>W.</span><small>DISCOVER LOCAL</small></div>}<span className="we-card-category">{cuisine}</span></div>
    <div className="we-card-body"><div className="we-card-head"><h3><Link href={href}>{name}</Link></h3><span className={'status-pill '+(status==='open'?'is-open':status==='closed'?'is-closed':'')}>{t[status]}</span></div>
    {description&&<p className="we-card-desc">{description}</p>}
    <div className="we-card-information">{menu&&<p><span>◈</span><b>{t.menu}</b> {menu}</p>}{hours&&<p><span>◷</span>{hours}</p>}{address&&<p><span>⌖</span>{address}</p>}</div>
