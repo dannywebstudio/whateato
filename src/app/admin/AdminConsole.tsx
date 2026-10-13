@@ -57,7 +57,7 @@ export default function AdminConsole({role}:{role:Role}){
  const [reviews,setReviews]=useState<Review[]>([]);
  const [reason,setReason]=useState('spam');
  const [image,setImage]=useState<File|null>(null);const [rights,setRights]=useState(false);
- const [imageEvidence,setImageEvidence]=useState('');const [imagePosition,setImagePosition]=useState(0);
+ const [imageEvidence,setImageEvidence]=useState('');const [rightsEvidence,setRightsEvidence]=useState('');const [imagePosition,setImagePosition]=useState(0);
  const [imageResult,setImageResult]=useState('');
  const edit=role!=='moderator';const owner=role==='owner';const moderate=role!=='editor';
  const inform=(e:unknown)=>setNotice(e instanceof Error?e.message:String(e));
@@ -208,7 +208,7 @@ export default function AdminConsole({role}:{role:Role}){
    const rows=text.split(/\r?\n/).filter(x=>x.trim()).map(x=>JSON.parse(x));
    if(rows.length>10000)throw Error('한 배치당 최대 10,000건이야.');
    for(let i=0;i<rows.length;i+=50)await post('/api/v1/owner/bulk/batches/'+batchId+'/items',{items:rows.slice(i,i+50)});
-   setImported(rows.length);await loadBatch(batchId);
+   setImported(rows.length);setNotice(rows.length+'건의 데이터를 초안에 추가했어. 승인 전 검수해.');await loadBatch(batchId);
  };
  const loadBatchSafe=(id:string)=>json('/api/v1/owner/bulk/batches/'+id);
  const uploadPhoto=async()=>{
@@ -218,7 +218,8 @@ export default function AdminConsole({role}:{role:Role}){
    const form=new FormData();
    form.set('restaurant_id',selected.restaurant.id);
    form.set('file',image);form.set('source_reference',imageEvidence);
-   form.set('rights_confirmation',rights?'yes':'no');form.set('position',String(imagePosition));
+   form.set('rights_confirmation',rights?'yes':'no');form.set('rights_reference',rightsEvidence);
+   form.set('position',String(imagePosition));
    const resp=await fetch('/api/v1/owner/media',{method:'POST',credentials:'same-origin',body:form});
    const result=await resp.json();
    if(!resp.ok)throw Error(result.error||'upload_failed');
@@ -357,12 +358,15 @@ export default function AdminConsole({role}:{role:Role}){
        <h3>대량 파일 등록</h3>
        <p className={styles.note}>JSON 한 줄에 한 항목인 NDJSON 파일. 먼저 초안 배치를 만들고 파일을 등록해. 최종 승인은 별도로 진행돼.</p>
        <label className={styles.field}>새 초안 이름<input value={batchTitle} onChange={e=>setBatchTitle(e.target.value)} placeholder="Bulk upload"/></label>
-       <button className={styles.button+' '+styles.secondary} onClick={()=>void(async()=>{try{const id=await makeBatch(
-          [{source_key:'initial-'+crypto.randomUUID(),restaurant_id:selected?.restaurant.id||'',kind:'visibility_restore',payload:{}}],
-          batchTitle||'Bulk import');setBatchId(id)}catch(e){inform(e)}})()} disabled={!selected}>선택 식당으로 새 초안 만들기</button>
-       <p className={styles.small}>안전한 빈 배치 생성은 서버가 지원하지 않아. 식당을 선택해 첫 변경 항목을 만들거나 식당 편집에서 초안을 생성해.</p>
+       <button className={styles.button+' '+styles.secondary} onClick={()=>void(async()=>{
+          try{const made=await post('/api/v1/owner/bulk/batches',
+            {client_key:'cms-'+crypto.randomUUID(),title:batchTitle||'Bulk import'});
+            setBatchId(made.id);setNotice('빈 초안 '+made.id+' 생성 완료');await loadBatches()}
+          catch(e){inform(e)}
+        })()}>빈 초안 만들기</button>
+       <p className={styles.small}>빈 초안은 게시할 수 없어. 검증된 항목을 추가한 뒤 검수 요청해.</p>
        <label className={styles.field}>파일 선택<input type="file" accept=".ndjson,.jsonl,application/x-ndjson" onChange={e=>setBulkFile(e.target.files?.[0]||null)}/></label>
-       <button className={styles.button} disabled={!bulkFile||!batchId||busy} onClick={()=>void(async()=>{setBusy(true);try{await importFile();setNotice(imported+'항목 등록 완료')}catch(e){inform(e)}finally{setBusy(false)}})()}>파일을 배치에 추가</button>
+       <button className={styles.button} disabled={!bulkFile||!batchId||busy} onClick={()=>void(async()=>{setBusy(true);try{await importFile()}catch(e){inform(e)}finally{setBusy(false)}})()}>파일을 배치에 추가</button>
      </section>
    </div>}
    {tab==='reviews'&&moderate&&<section className={styles.panel}>
@@ -391,7 +395,8 @@ export default function AdminConsole({role}:{role:Role}){
          <label className={styles.field}>정렬 순서 (0=첫 번째)<input type="number" value={imagePosition} min={0} max={100} onChange={e=>setImagePosition(Number(e.target.value))}/></label>
        </div>
        {image&&<p className={styles.small}>{image.name} · {(image.size/1024/1024).toFixed(2)}MB</p>}
-       <label className={styles.field}>원본 출처 / 사용권 근거 HTTPS<input type="url" value={imageEvidence} onChange={e=>setImageEvidence(e.target.value)}/></label>
+       <label className={styles.field}>이미지 원본 출처 HTTPS<input type="url" value={imageEvidence} onChange={e=>setImageEvidence(e.target.value)}/></label>
+       <label className={styles.field}>사진 사용권 증빙 URL HTTPS (원본 출처와 구분)<input type="url" value={rightsEvidence} onChange={e=>setRightsEvidence(e.target.value)}/></label>
        <label className={styles.chip}><input type="checkbox" checked={rights} onChange={e=>setRights(e.target.checked)}/> 해당 사진을 게시·변환할 사용권을 확인했어.</label>
        <div className={styles.actions}>
          <button className={styles.button} disabled={!image||!rights||busy} onClick={()=>void(async()=>{setBusy(true);try{await uploadPhoto()}catch(e){inform(e)}finally{setBusy(false)}})()}>이미지 업로드 · 승인 대기</button>
