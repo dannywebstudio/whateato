@@ -19,10 +19,10 @@ type Params={
 };
 const hoursLabels={ko:{open:'영업중',closed:'영업종료',preparing:'영업준비중',unknown:'영업시간 미확인',hours:'영업시간'},en:{open:'Open now',closed:'Closed now',preparing:'Preparing to open',unknown:'Hours not verified',hours:'Opening hours'},ja:{open:'営業中',closed:'営業時間外',preparing:'準備中',unknown:'営業時間未確認',hours:'営業時間'},'zh-CN':{open:'营业中',closed:'休息中',preparing:'准备中',unknown:'营业时间未核实',hours:'营业时间'}} as const;
 const labels={
-  ko:{heading:'Restaurant details',unavailable:'음식점 DB 연결을 확인하고 있습니다.',category:'일반음식점',license:'인허가 영업 상태 (현재 영업 중이라는 의미 아님)',address:'주소',noAddress:'주소 정보 없음',description:'식당 소개',menus:'대표 메뉴',noPrice:'가격 확인 전',tags:'식당 태그',score:'WhatEatO 독립 평가',reviews:'WhatEatO 이용자 리뷰',reviewNote:'실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.',reviewCount:'승인된 리뷰',subjective:'이용자의 주관적인 평가',noReviews:'아직 승인된 리뷰가 없습니다.',write:'방문 후기 작성',external:'이용허락을 받은 외부 리뷰 참고 정보',negative:'직원 응대 관련 불만 언급',positive:'긍정 언급',directions:'Google Maps 길찾기 ↗',saveGoogle:'내 Google 지도에 저장하기 ↗',saveHelp:'Google Maps에서 식당을 확인한 뒤 저장을 눌러주세요.',mapSearch:'Google Maps에서 위치 검색 ↗',back:'← 검색 결과로'},
-  en:{heading:'Restaurant details',unavailable:'The restaurant database is unavailable.',category:'Restaurant',license:'Permitted business record (not a real-time open-status guarantee)',address:'Address',noAddress:'Address unavailable',description:'About this restaurant',menus:'Main menu',noPrice:'Price not verified',tags:'Restaurant tags',score:'Independent WhatEatO score',reviews:'WhatEatO user reviews',reviewNote:'Only approved reviews written by registered users appear.',reviewCount:'Approved reviews',subjective:'Subjective customer opinions',noReviews:'No approved reviews yet.',write:'Write a review',external:'Licensed external review insights',negative:'Service concerns',positive:'Positive service mentions',directions:'Directions in Google Maps ↗',saveGoogle:'Save to my Google Maps ↗',saveHelp:'Open the place in Google Maps and tap Save.',mapSearch:'Find on Google Maps ↗',back:'← Back to search'},
-  ja:{heading:'店舗情報',unavailable:'データベースに接続できません。',category:'飲食店',license:'営業許可情報（現在営業中である保証ではありません）',address:'住所',noAddress:'住所情報なし',description:'店舗の紹介',menus:'主なメニュー',noPrice:'価格未確認',tags:'タグ',score:'WhatEatO独自評価',reviews:'WhatEatOユーザーレビュー',reviewNote:'承認済みレビューのみ表示します。',reviewCount:'承認済みレビュー',subjective:'利用者の主観的な評価',noReviews:'承認済みレビューはまだありません。',write:'レビューを投稿',external:'利用許諾済みの外部レビュー情報',negative:'接客への不満',positive:'肯定的な言及',directions:'Googleマップで経路検索 ↗',saveGoogle:'Googleマップに保存 ↗',saveHelp:'Googleマップで店舗を確認して「保存」を押してください。',mapSearch:'Googleマップで検索 ↗',back:'← 検索結果へ'},
-  'zh-CN':{heading:'餐厅详情',unavailable:'餐厅数据库暂时不可用。',category:'餐厅',license:'经营许可记录（不代表当前营业）',address:'地址',noAddress:'暂无地址',description:'餐厅简介',menus:'主要菜品',noPrice:'价格未经核实',tags:'标签',score:'WhatEatO独立评分',reviews:'WhatEatO用户评价',reviewNote:'仅显示已审核的用户评价。',reviewCount:'已审核评价',subjective:'用户主观评价',noReviews:'暂无已审核的评价。',write:'撰写评价',external:'已授权的外部评价信息',negative:'服务投诉',positive:'正面反馈',directions:'Google 地图路线 ↗',saveGoogle:'保存到我的 Google 地图 ↗',saveHelp:'在 Google 地图中核对餐厅后点击“保存”。',mapSearch:'在 Google 地图搜索 ↗',back:'← 返回搜索'}
+  ko:{heading:'Restaurant details',unavailable:'음식점 DB 연결을 확인하고 있습니다.',category:'일반음식점',license:'인허가 영업 상태 (현재 영업 중이라는 의미 아님)',address:'주소',noAddress:'주소 정보 없음',description:'식당 소개',menus:'대표 메뉴',noPrice:'가격 확인 전',tags:'식당 태그',score:'WhatEatO 독립 평가',reviews:'방문후기 리뷰',reviewNote:'실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.',reviewCount:'승인된 리뷰',subjective:'이용자의 주관적인 평가',noReviews:'아직 승인된 리뷰가 없습니다.',write:'방문 후기 작성',external:'이용허락을 받은 외부 리뷰 참고 정보',negative:'직원 응대 관련 불만 언급',positive:'긍정 언급',directions:'Google Maps 길찾기 ↗',saveGoogle:'내 Google 지도에 저장하기 ↗',saveHelp:'Google Maps에서 식당을 확인한 뒤 저장을 눌러주세요.',mapSearch:'Google Maps에서 위치 검색 ↗',back:'← 검색 결과로'},
+  en:{heading:'Restaurant details',unavailable:'The restaurant database is unavailable.',category:'Restaurant',license:'Permitted business record (not a real-time open-status guarantee)',address:'Address',noAddress:'Address unavailable',description:'About this restaurant',menus:'Main menu',noPrice:'Price not verified',tags:'Restaurant tags',score:'Independent WhatEatO score',reviews:'Visitor reviews',reviewNote:'Only approved reviews written by registered users appear.',reviewCount:'Approved reviews',subjective:'Subjective customer opinions',noReviews:'No approved reviews yet.',write:'Write a review',external:'Licensed external review insights',negative:'Service concerns',positive:'Positive service mentions',directions:'Directions in Google Maps ↗',saveGoogle:'Save to my Google Maps ↗',saveHelp:'Open the place in Google Maps and tap Save.',mapSearch:'Find on Google Maps ↗',back:'← Back to search'},
+  ja:{heading:'店舗情報',unavailable:'データベースに接続できません。',category:'飲食店',license:'営業許可情報（現在営業中である保証ではありません）',address:'住所',noAddress:'住所情報なし',description:'店舗の紹介',menus:'主なメニュー',noPrice:'価格未確認',tags:'タグ',score:'WhatEatO独自評価',reviews:'来店レビュー',reviewNote:'承認済みレビューのみ表示します。',reviewCount:'承認済みレビュー',subjective:'利用者の主観的な評価',noReviews:'承認済みレビューはまだありません。',write:'レビューを投稿',external:'利用許諾済みの外部レビュー情報',negative:'接客への不満',positive:'肯定的な言及',directions:'Googleマップで経路検索 ↗',saveGoogle:'Googleマップに保存 ↗',saveHelp:'Googleマップで店舗を確認して「保存」を押してください。',mapSearch:'Googleマップで検索 ↗',back:'← 検索結果へ'},
+  'zh-CN':{heading:'餐厅详情',unavailable:'餐厅数据库暂时不可用。',category:'餐厅',license:'经营许可记录（不代表当前营业）',address:'地址',noAddress:'暂无地址',description:'餐厅简介',menus:'主要菜品',noPrice:'价格未经核实',tags:'标签',score:'WhatEatO独立评分',reviews:'到店评价',reviewNote:'仅显示已审核的用户评价。',reviewCount:'已审核评价',subjective:'用户主观评价',noReviews:'暂无已审核的评价。',write:'撰写评价',external:'已授权的外部评价信息',negative:'服务投诉',positive:'正面反馈',directions:'Google 地图路线 ↗',saveGoogle:'保存到我的 Google 地图 ↗',saveHelp:'在 Google 地图中核对餐厅后点击“保存”。',mapSearch:'在 Google 地图搜索 ↗',back:'← 返回搜索'}
 } as const;
 
 // Index only launched, active restaurants with a verified/published editorial
@@ -115,19 +115,22 @@ export default async function RestaurantDetail({params,searchParams}:Params){
       <h2 className="detail-section-title">{t.description}</h2>
       <p className="restaurant-description-text" style={{margin:'9px 0 22px',lineHeight:1.75,whiteSpace:'pre-line'}}>{r.full_description||r.short_description}</p>
     </>}
-    <section className="result detail-address-panel" style={{display:'grid',gridTemplateColumns:miniMapHref?'repeat(auto-fit,minmax(min(100%,240px),1fr))':'1fr',gap:12,alignItems:'center'}}>
+    <section className="result detail-address-panel" style={{display:'flex',flexDirection:'column',gap:14}}>
       <div style={{minWidth:0}}>
-      <strong>{t.address}</strong><span style={{display:'block',overflowWrap:'anywhere'}}>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
-      {(hasTrustedCoordinate||r.road_address_ko||r.lot_address_ko)&&
-        <a className="simple-link" href={googleHref} target="_blank" rel="noopener noreferrer">
-          {hasTrustedCoordinate?t.directions:t.mapSearch}
-        </a>}
-      {googlePlaceQuery&&<div>
-        <a className="simple-link" href={googleSaveHref} target="_blank" rel="noopener noreferrer">{t.saveGoogle}</a>
-        <p className="hint">{t.saveHelp}</p>
-      </div>}
+        <strong>{t.address}</strong>
+        <span style={{display:'block',overflowWrap:'anywhere',marginTop:4}}>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
       </div>
-      {miniMapHref&&<iframe title={locale==='ko'?'식당 위치 미니맵':'Restaurant location mini map'} src={miniMapHref} loading="lazy" referrerPolicy="no-referrer" style={{width:'100%',height:176,border:0,borderRadius:10}}/>}
+      {miniMapHref&&<iframe title={locale==='ko'?'식당 위치 미니맵':'Restaurant location mini map'} src={miniMapHref} loading="lazy" referrerPolicy="no-referrer" style={{display:'block',width:'100%',height:280,border:0,borderRadius:10}}/>}
+      <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+        {(hasTrustedCoordinate||r.road_address_ko||r.lot_address_ko)&&
+          <a className="simple-link" href={googleHref} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:6,margin:0}}>
+            <span aria-hidden="true">🧭</span>{hasTrustedCoordinate?t.directions:t.mapSearch}
+          </a>}
+        {googlePlaceQuery&&<a className="simple-link" href={googleSaveHref} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:6,margin:0}}>
+          <span aria-hidden="true">🔖</span>{t.saveGoogle}
+        </a>}
+      </div>
+      {googlePlaceQuery&&<p className="hint" style={{margin:0}}>{t.saveHelp}</p>}
     </section>
     <h2>{t.reviews}</h2>
     <p className="hint">{t.reviewNote}</p>
@@ -139,7 +142,6 @@ export default async function RestaurantDetail({params,searchParams}:Params){
         <p>{rev.body}</p>
         <span>익명 이용자 · {new Date(rev.created_at).toLocaleDateString('ko-KR')}</span>
       </article>):<div className="empty">{t.noReviews}</div>}</div>
-    <h2>{t.write}</h2>
     <ReviewForm restaurantId={id} canWrite={Boolean(session?.user?.id)} locale={locale}/>
     {external.length>0&&<>
       <h2>{t.external}</h2>
