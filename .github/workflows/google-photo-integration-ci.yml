@@ -1,0 +1,27 @@
+name: Google photo staging integration build
+on:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths:
+      - 'src/lib/google-place-photos.ts'
+      - 'src/lib/google-photo-quota.ts'
+      - 'src/components/GooglePlacesPhotoPreview.tsx'
+      - 'src/components/GooglePlacesPhotoCredit.tsx'
+      - 'src/app/api/v1/google-photo-preview/**'
+      - 'src/app/restaurant/[id]/page.tsx'
+      - '.github/workflows/google-photo-integration-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  typecheck-and-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npm run typecheck
+      - run: node --test scripts/verify-google-photo-guard.test.mjs
