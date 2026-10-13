@@ -1,0 +1,26 @@
+# WhatEatO TEST ONLY — not a production deployment.
+# Render Blueprint: create from feature/i18n-analytics-backend-v1.
+# Never put Neon connection strings or other credentials in source control.
+services:
+  - type: web
+    name: whateato-staging
+    runtime: node
+    plan: free
+    region: singapore
+    repo: https://github.com/dannywebstudio/whateato
+    branch: feature/i18n-analytics-backend-v1
+    buildCommand: npm install --no-audit --no-fund && npm run build
+    startCommand: npm run start -- --hostname 0.0.0.0 --port $PORT
+    healthCheckPath: /api/ready
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NEXT_PUBLIC_LAUNCH_READY
+        value: "false"
+      - key: WHATEATO_ANALYTICS_ENABLED
+        value: "false"
+      - key: WHATEATO_REVIEW_MODERATION_ENABLED
+        value: "false"
+      - key: DATABASE_URL
+        sync: false

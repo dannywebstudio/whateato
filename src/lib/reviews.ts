@@ -1,8 +1,8 @@
 import {getPool} from '@/lib/db';
 
 export type PublicReview={id:string;rating:number;body:string;created_at:string};
-const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-export function validUuid(id:string){return uuid.test(id)}
+import {isUuid} from '@/lib/platform-v1';
+export function validUuid(id:string){return isUuid(id)}
 export function validateReview(rating:unknown,body:unknown):string|null{
   if(!Number.isInteger(rating)||Number(rating)<1||Number(rating)>5)return 'rating_must_be_1_to_5';
   if(typeof body!=='string'||body.trim().length<30||body.trim().length>1500)

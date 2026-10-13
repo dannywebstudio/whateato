@@ -1,0 +1,93 @@
+{
+  "schema_version": "whateato.source_audit.v1",
+  "checked_on": "2026-10-13",
+  "publication_policy": "EVIDENCE_RESEARCH_ONLY_NO_AUTOPUBLISH",
+  "scope": "Source comparison for two existing review-only packets; non-mutating, not a current-operation or photo-rights attestation",
+  "restaurants": [
+    {
+      "restaurant_id": "58a03e79-6fe5-4076-a097-367caf150dec",
+      "name_ko": "호호식당 대학로",
+      "identity_name_address_corrobated": true,
+      "sources": [
+        {
+          "url": "https://www.tabling.co.kr/place/677ccb2966de5f06987cbde8",
+          "supports": [
+            "name",
+            "road_address",
+            "rosegatsu_menu",
+            "katsunabe_menu"
+          ]
+        },
+        {
+          "url": "https://www.ktriptips.com/kor/food/2826636",
+          "supports": [
+            "name",
+            "road_address",
+            "japanese_home_style_description",
+            "katsunabe_menu"
+          ],
+          "note": "Tourism record last updated 2026-04-14, not live hours evidence"
+        },
+        {
+          "url": "https://emmaru.com/matzip/matzip.do?code=M170406005132874436E&f=1&s=1&t=1",
+          "supports": [
+            "road_address",
+            "menu_names"
+          ],
+          "note": "Menu prices differ from Tableling; no price autoapproval"
+        }
+      ],
+      "menus_name_corrobated": [
+        "로스가츠정식",
+        "가츠나베정식"
+      ],
+      "price_verified": false,
+      "photos_license_verified": false,
+      "editorial_score_approved": false,
+      "current_open_verified": false,
+      "editorial_review_required": true
+    },
+    {
+      "restaurant_id": "b90a773c-e405-423b-ae44-7b340501b024",
+      "name_ko": "온더보더 광화문 D타워점",
+      "identity_name_address_corrobated": true,
+      "sources": [
+        {
+          "url": "https://www.tabling.co.kr/place/677ccac066de5f06987be562",
+          "supports": [
+            "name",
+            "road_address",
+            "mexican_cuisine",
+            "quesadilla_menu"
+          ]
+        },
+        {
+          "url": "https://polle.com/place/40IXKT/%EC%98%A8%EB%8D%94%EB%B3%B4%EB%8D%94",
+          "supports": [
+            "name",
+            "road_address",
+            "mexican_cuisine",
+            "quesadilla_menu"
+          ]
+        },
+        {
+          "url": "https://ontheborder.co.kr/main/",
+          "supports": [
+            "brand",
+            "ultimate_fajita_menu"
+          ],
+          "note": "Brand-level page, does not confirm branch-specific price"
+        }
+      ],
+      "menus_name_corrobated": [
+        "얼티밋 화이타",
+        "더블스텍클럽 퀘사디아"
+      ],
+      "price_verified": false,
+      "photos_license_verified": false,
+      "editorial_score_approved": false,
+      "current_open_verified": false,
+      "editorial_review_required": true
+    }
+  ]
+}

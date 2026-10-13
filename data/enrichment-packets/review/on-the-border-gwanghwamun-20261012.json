@@ -1,0 +1,59 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "b90a773c-e405-423b-ae44-7b340501b024",
+  "name_ko": "온더보더 광화문 D타워점",
+  "road_address_ko": "서울특별시 종로구 종로3길 17, 2층 204호 (청진동)",
+  "identity_evidence": {
+    "url": "https://www.tablenjoy.com/store/S3942999",
+    "checked_at": "2026-10-12T12:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "온더보더 광화문 D타워점",
+      "short_description": "광화문 D타워 2층에 있는 멕시칸 레스토랑. 화이타와 퀘사디아 등의 메뉴가 소개되어 있다.",
+      "source_url": "https://www.tablenjoy.com/store/S3942999",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "On The Border Gwanghwamun D Tower",
+      "short_description": "A Mexican restaurant on the second floor of Gwanghwamun D Tower, with fajitas and quesadillas on its listed menu.",
+      "source_url": "https://www.tablenjoy.com/store/S3942999",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "オン・ザ・ボーダー 光化門Dタワー店",
+      "short_description": "光化門Dタワー2階にあるメキシコ料理店。ファヒータやケサディーヤなどがメニューに掲載されている。",
+      "source_url": "https://www.tablenjoy.com/store/S3942999",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "On The Border 光化门D Tower店",
+      "short_description": "位于光化门D Tower二楼的墨西哥餐厅，所列菜单包括法吉塔和墨西哥夹饼等。",
+      "source_url": "https://www.tablenjoy.com/store/S3942999",
+      "checked_at": "2026-10-12T12:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "얼티밋 화이타",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.tablenjoy.com/store/S3942999",
+      "checked_at": "2026-10-12T12:00:00Z"
+    },
+    {
+      "name_ko": "더블스텍클럽 퀘사디아",
+      "position": 1,
+      "price_krw": null,
+      "source_url": "https://www.tablenjoy.com/store/S3942999",
+      "checked_at": "2026-10-12T12:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}

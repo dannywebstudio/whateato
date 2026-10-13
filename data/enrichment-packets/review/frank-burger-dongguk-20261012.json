@@ -1,0 +1,66 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "6d2889f5-0764-4fc9-b2c5-eb2b72c07c77",
+  "name_ko": "프랭크버거 동국대점",
+  "road_address_ko": "서울특별시 중구 서애로1길 18, 1층 (필동3가)",
+  "identity_evidence": {
+    "url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+    "checked_at": "2026-10-12T13:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "프랭크버거 동국대점",
+      "short_description": "동국대학교 인근 서애로1길에 있는 햄버거 전문점. 프랭크치킨버거와 치폴레치킨버거 등 버거 메뉴를 안내하고 있다.",
+      "source_url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Frank Burger Dongguk University",
+      "short_description": "A burger restaurant on Seae-ro 1-gil near Dongguk University, listing burgers including Frank Chicken Burger and Chipotle Chicken Burger.",
+      "source_url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "フランクバーガー 東国大店",
+      "short_description": "東国大学近くのソエロ1ギルにあるハンバーガー店。フランクチキンバーガーやチポトレチキンバーガーなどが掲載されている。",
+      "source_url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "Frank Burger 东国大学店",
+      "short_description": "位于东国大学附近瑞爱路1街的汉堡店，菜单介绍了Frank鸡肉汉堡和Chipotle鸡肉汉堡等。",
+      "source_url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "프랭크치킨버거",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "name_ko": "치폴레치킨버거",
+      "position": 1,
+      "price_krw": null,
+      "source_url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "name_ko": "오꼬노미쉬림프버거",
+      "position": 2,
+      "price_krw": null,
+      "source_url": "https://www.daangn.com/kr/local-profile/%ED%94%84%EB%9E%AD%ED%81%AC%EB%B2%84%EA%B1%B0-%EB%8F%99%EA%B5%AD%EB%8C%80%EC%A0%90-fbmrg8dy2j2e/",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}

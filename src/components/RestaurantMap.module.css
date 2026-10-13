@@ -1,0 +1,19 @@
+/* Component-scoped map result directory. Does not alter DESIGN LOCK v1. */
+.directory.directory {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 14px;
+}
+.directory.directory > .result,
+.directory.directory > :global(.result) {
+  min-width: 0;
+  height: 100%;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  .directory.directory {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

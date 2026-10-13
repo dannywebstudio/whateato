@@ -1,0 +1,141 @@
+{
+  "project": "WhatEatO",
+  "batch": "phase25-first20-20261012",
+  "checked_at": "2026-10-12",
+  "policy": "RESEARCH_FLAGS_ARE_NOT_AUTOMATIC_PERMIT_STATUS_UPDATES",
+  "count": 11,
+  "flags": [
+    {
+      "restaurant_id": "1b246b70-bb17-44b9-b121-f9903ebd9331",
+      "name_ko": "살구골",
+      "road_address_ko": "서울특별시 중구 소월로 20-4, 1층 (남대문로5가)",
+      "code": "POSSIBLE_CLOSURE",
+      "severity": "critical",
+      "evidence_url": "https://polle.com/place/1HDts2/%EC%82%B4%EA%B5%AC%EA%B3%A8",
+      "finding": "Public listing marks the venue as 폐점 (closed), while the permit-based table currently records active. Requires authoritative current operating-status confirmation; never recommend as currently open.",
+      "action": "HOLD_FOR_CLOSURE_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "3c47f857-03f1-434b-a42b-21c460999086",
+      "name_ko": "신선원",
+      "road_address_ko": "서울특별시 종로구 종로 263-1 (종로6가,(지상1층))",
+      "code": "NAME_IDENTITY_MISMATCH",
+      "severity": "high",
+      "evidence_url": "https://www.tabling.co.kr/place/677cc7ac66de5f0698752840",
+      "finding": "Permit record says 신선원 at 종로 263-1; matching telephone and vicinity appear as 신신원 at 종로 263. Same business vs distinct/renamed venue not established.",
+      "action": "HOLD_FOR_NAME_AND_BRANCH_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "31adc115-9e51-421d-859c-54e22ce79e0c",
+      "name_ko": "두레유",
+      "road_address_ko": "서울특별시 종로구 평창30길 28 (평창동)",
+      "code": "BRANCH_ADDRESS_COLLISION",
+      "severity": "high",
+      "evidence_url": "https://www.tabling.co.kr/place/677cd0e466de5f069886e8c3",
+      "finding": "Observed 두레유 2호점 at 평창문화로 84 is NOT the same address as permit record 두레유 at 평창30길 28. Do not copy branch menu or operating hours until branch identity checked.",
+      "action": "HOLD_FOR_BRANCH_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "521e43ef-6eb9-469b-91b1-7bca704c1091",
+      "name_ko": "농민 사골 순대국",
+      "road_address_ko": "서울특별시 종로구 종로66길 10 (숭인동)",
+      "code": "PERMIT_CATEGORY_CONFLICT",
+      "severity": "medium",
+      "evidence_url": "https://www.localdata.go.kr/",
+      "finding": "Registry category for 농민 사골 순대국 is 일식 despite a Korean-soup-like name; name alone cannot establish true serving category or open status.",
+      "action": "HOLD_FOR_CATEGORY_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "ba36c7fb-532d-4f3d-aaa3-71100edd0a16",
+      "name_ko": "copper coffee",
+      "road_address_ko": "서울특별시 종로구 혜화로9길 7 (명륜1가,지상1층)",
+      "code": "POSSIBLE_CLOSURE",
+      "severity": "critical",
+      "evidence_url": "https://polle.com/place/4kqkEX/%EC%BB%A4%ED%8D%BC%20%EC%BB%A4%ED%94%BC",
+      "finding": "A public listing marks 커퍼 커피 at 혜화로9길 7 as 폐점 (closed), while the permit record remains active as copper coffee and classifies it as 중국식. Store identity, closure date, and true category require confirmation.",
+      "action": "HOLD_FOR_CLOSURE_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "be9ca232-0aaf-41b6-b109-02d7aee4c760",
+      "name_ko": "느티나무",
+      "road_address_ko": "서울특별시 종로구 경희궁길 9 (신문로2가,1층)",
+      "code": "NAME_IDENTITY_MISMATCH",
+      "severity": "high",
+      "evidence_url": "https://www.dongnecoffeenote.com/c/17316",
+      "finding": "At 경희궁길 9, the current publicly indexed brand 카페느티 differs from permit-registered 느티나무. It may be a rename or different operator; business identity has not been established.",
+      "action": "HOLD_FOR_NAME_AND_BRANCH_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "6b69d5f2-c708-45f2-ad0b-8ba26430e6be",
+      "name_ko": "탕화쿵푸마라탕 명동 롯데점",
+      "road_address_ko": "서울특별시 중구 남대문로7길 15, 대호 2층 (소공동)",
+      "code": "BRANCH_ADDRESS_COLLISION",
+      "severity": "high",
+      "evidence_url": "https://polle.com/place/5tVM1c/%ED%83%95%ED%99%94%EC%BF%B5%ED%91%B8%20%EB%A7%88%EB%9D%BC%ED%83%95",
+      "finding": "The public listing at 남대문로7길 15 names a 탕화쿵푸 마라탕 명동5호점 while the permit record calls it 탕화쿵푸마라탕 명동 롯데점. Confirm the legal outlet, signage and location identity before menu association.",
+      "action": "HOLD_FOR_BRANCH_CHECK",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "87f4a16b-54cf-4a4b-94ed-0e376498767f",
+      "name_ko": "부암동 테리야끼",
+      "road_address_ko": "서울특별시 종로구 자하문로 252-1, 지하1층 비01호 (부암동)",
+      "code": "INSUFFICIENT_CURRENT_MENU_EVIDENCE",
+      "severity": "medium",
+      "evidence_url": "https://dining.ayo.pe.kr/restaurant/d79c7fae67ed3ddd737fd43d4f7c8c0b",
+      "finding": "Public listings for 부암동 테리야끼 at the exact registered basement unit reproduce permit details, but no current branch-specific menu or recent storefront/operating evidence was verified. Do not infer menu items from the word '테리야끼'.",
+      "action": "HOLD_FOR_CURRENT_MENU_AND_IDENTITY_EVIDENCE",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "f01770c5-220b-4570-8a74-922ad472288f",
+      "name_ko": "소올(SOL)",
+      "road_address_ko": "서울특별시 중구 명동8길 27 (명동2가, 엠플라자 21층)",
+      "code": "INSUFFICIENT_CURRENT_MENU_EVIDENCE",
+      "severity": "medium",
+      "evidence_url": "https://place.clariosync.com/p/7526306/%EC%86%8C%EC%98%AC%28sol%29",
+      "finding": "The source reproduces the 2015 permit listing for 소올(SOL) at 명동 M Plaza 21F. Current operating hours, branch continuity, menu and actual restaurant identity lack an independent current primary-source confirmation.",
+      "action": "HOLD_FOR_CURRENT_MENU_AND_IDENTITY_EVIDENCE",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "a36631a0-64a3-4ad8-a6bf-3ed3dcca21bc",
+      "name_ko": "라 테라스",
+      "road_address_ko": "서울특별시 중구 삼일대로 302 (충무로2가, 1층)",
+      "code": "INSUFFICIENT_CURRENT_MENU_EVIDENCE",
+      "severity": "medium",
+      "evidence_url": "https://www.onkorea.co.kr/sjung/B5u7Yq8P2TxF",
+      "finding": "라 테라스 has a café permit at 삼일대로 302, but the record is a historical permit copy, last updated in 2022. The building also houses a hotel; no current matching venue/menu verification was found. Do not copy hotel restaurant menus.",
+      "action": "HOLD_FOR_CURRENT_MENU_AND_IDENTITY_EVIDENCE",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    },
+    {
+      "restaurant_id": "650c1a8d-b964-4b3e-861e-4c09f0378c17",
+      "name_ko": "라니마라탕",
+      "road_address_ko": "서울특별시 중구 을지로 228, 대성을지로오피스텔 1층 105호 (을지로5가)",
+      "code": "INSUFFICIENT_CURRENT_MENU_EVIDENCE",
+      "severity": "medium",
+      "evidence_url": "https://cylooks.co.kr/shop/2001472592?device=pc",
+      "finding": "라니마라탕 is listed at 을지로 228 in a directory without menu or review details. Menu records for similarly named outlets in other districts are not evidence for the Euljiro5-ga unit.",
+      "action": "HOLD_FOR_CURRENT_MENU_AND_IDENTITY_EVIDENCE",
+      "review_status": "unresolved",
+      "publication_allowed": false
+    }
+  ]
+}

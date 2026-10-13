@@ -19,8 +19,18 @@ export default function Privacy(){
       <span>로그인 후 계정 화면에서 회원 탈퇴를 선택하면 WhatEatO 계정 식별자와 직접 작성한 리뷰를 함께 삭제합니다. Google 계정 자체는 삭제되지 않습니다.</span>
     </div>
     <div className="result">
+      <strong>외부 지도 자료</strong>
+      <span>기본 지도는 OpenFreeMap에서 제공하며, 브라우저가 해당 지도 서버에 직접 요청합니다. 지도 렌더링이 지원되지 않거나 실패하면 OpenStreetMap의 공식 내장 지도로 전환되어 브라우저가 openstreetmap.org에 접속할 수 있습니다. 외부 지도 서비스의 개인정보 처리방침과 이용약관을 참고하세요. WhatEatO 식당 마커·목록은 자체 인허가 데이터에 기반합니다.</span>
+    </div>
+    <div className="result">
       <strong>외부 리뷰 분석</strong>
       <span>계약이나 명시적 이용허락을 확인한 외부 자료만 요약에 사용합니다. 타 사이트 리뷰 원문을 무단 수집·재게시하지 않습니다.</span>
+    </div>
+    <div className="result">
+      <strong>방문 및 검색 통계</strong>
+      <span>페이지 조회·검색·식당 상세 페이지 조회 등 활동 횟수, 선택 언어, 기기 유형과 대략적인 유입 경로를 집계합니다. IP 주소·이메일·지속적인 이용자 식별자·방문자 쿠키는 이 통계 DB에 저장하지 않습니다.</span>
+      <span>검색어에는 개인 정보가 포함될 수 있어 일부 입력은 기록하지 않습니다. 원본 이벤트는 30일 이내 삭제되도록 운영 작업을 구성하며, 실제 배포 전 삭제 작업의 작동을 확인합니다.</span>
+      <span>방문 수는 이벤트 수이며, 고유 방문자 수나 실제 음식점 방문 횟수로 해석할 수 없습니다.</span>
     </div>
     <p className="hint">본 문서는 기술 구현 설명을 위한 초안이며 운영 전 관련 법령에 따른 고지사항과 이용약관을 추가해야 합니다.</p>
     <Link className="simple-link" href="/account">← 계정으로 돌아가기</Link>

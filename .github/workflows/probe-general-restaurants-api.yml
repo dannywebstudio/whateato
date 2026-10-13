@@ -1,0 +1,26 @@
+name: Probe general restaurant OpenAPI
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe public data portal (read only)
+        env:
+          DATA_GO_KR_SERVICE_KEY: ${{ secrets.DATA_GO_KR_SERVICE_KEY }}
+          API_QUERY_JSON: ${{ vars.LOCALDATA_API_QUERY_JSON }}
+        run: node scripts/probe_general_restaurants_api.mjs
+      - name: Upload safe metadata only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: general-restaurants-api-probe
+          path: general-restaurants-api-probe.json
+          retention-days: 7

@@ -1,0 +1,59 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "a5271953-1b28-4d31-8c53-52d79d7641b9",
+  "name_ko": "소수헌",
+  "road_address_ko": "서울특별시 중구 만리재로21길 8, 지하1층, 지상1층 (만리동2가)",
+  "identity_evidence": {
+    "url": "https://www.tabling.co.kr/place/677cd68866de5f069891271a",
+    "checked_at": "2026-10-12T13:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "소수헌",
+      "short_description": "서울역 인근 만리재로21길의 스시 오마카세 식당. 점심과 저녁 오마카세 코스가 안내되어 있으며 사전 예약 조건 확인이 필요하다.",
+      "source_url": "https://www.tabling.co.kr/place/677cd68866de5f069891271a",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Sosuheon",
+      "short_description": "A sushi omakase restaurant on Mallijae-ro 21-gil near Seoul Station. Lunch and dinner courses are listed; confirm reservations and current details before visiting.",
+      "source_url": "https://www.tabling.co.kr/place/677cd68866de5f069891271a",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "ソスホン",
+      "short_description": "ソウル駅近くの万里峠路21ギルにある寿司おまかせ店。ランチ・ディナーコースが紹介されており、予約条件は来店前に確認が必要。",
+      "source_url": "https://www.tabling.co.kr/place/677cd68866de5f069891271a",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "Sosuheon",
+      "short_description": "位于首尔站附近万里峙路21街的寿司主厨套餐餐厅，提供午间和晚间套餐信息；到访前需核实预约条件。",
+      "source_url": "https://www.tabling.co.kr/place/677cd68866de5f069891271a",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "런치 오마카세",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://www.tabling.co.kr/place/677cd68866de5f069891271a",
+      "checked_at": "2026-10-12T13:00:00Z"
+    },
+    {
+      "name_ko": "디너 오마카세",
+      "position": 1,
+      "price_krw": null,
+      "source_url": "https://www.tabling.co.kr/place/677cd68866de5f069891271a",
+      "checked_at": "2026-10-12T13:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}

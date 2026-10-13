@@ -1,0 +1,20 @@
+name: WhatEatO privacy analytics retention
+on:
+  schedule:
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prune:
+    if: ${{ vars.WHATEATO_ANALYTICS_CLEANUP_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install "psycopg[binary]>=3.2,<4"
+      - run: python scripts/cleanup_analytics.py
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
