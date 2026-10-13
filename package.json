@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prebuild": "node scripts/copy_maplibre_worker.mjs",
+    "predev": "node scripts/copy_maplibre_worker.mjs",
+    "test:mapworker": "node scripts/verify_maplibre_worker.mjs"
   },
   "dependencies": {
     "next": "^15.5.27",
