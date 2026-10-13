@@ -170,3 +170,14 @@
 .map-explore-cards .we-card-map .we-card-menu-row{min-height:0;height:20px}
 .map-explore-cards .we-card-map .we-card-bottom{min-height:0;margin-top:0;padding-top:3px}
 }
+
+
+/* Restaurant pin detail popup */
+.we-map-popup{display:flex;flex-direction:column;gap:7px;min-width:155px;padding:5px 3px;font-family:inherit}
+.we-map-popup strong{font-size:15px;line-height:1.35;color:#1b2f22}
+.we-map-popup-state{font-size:12px;font-weight:700;color:#6c746d}
+.we-map-popup-state.is-open{color:#14805b}
+.we-map-popup-state.is-closed{color:#ba2634}
+.we-map-popup-state.is-preparing{color:#935e11}
+.we-map-popup a{font-size:12px;font-weight:750;text-align:center;color:#fff!important;background:#13805b;border-radius:7px;text-decoration:none;padding:8px 12px}
+.we-map-popup a:hover{background:#0e6949}
