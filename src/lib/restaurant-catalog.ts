@@ -6,7 +6,7 @@ import {escapeLike,isUuid,normalizeLocale,normalizeTags,normalizeText,type Local
 export type CatalogTag={code:string;label:string};
 export type FeaturedImageMetadata={id:string;alt_ko:string|null;url:string};
 export type RestaurantSearchItem={
-  id:string;name:string;name_ko:string;address_ko:string|null;
+  id:string;name:string;name_ko:string;address_ko:string|null;address:string|null;
   category_code:string|null;region_sido:string|null;region_sigungu:string|null;short_description:string|null;
   main_menu:string|null;featured_image_metadata:FeaturedImageMetadata|null;
   editorial_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;ratings:RatingDisplay;
@@ -21,7 +21,7 @@ export type RestaurantSearchResponse={
   ratings_note:string;
 };
 export type RestaurantDetailInfo={
-  id:string;name_ko:string;name:string;short_description:string|null;
+  id:string;name_ko:string;name:string;address:string|null;short_description:string|null;
   full_description:string|null;road_address_ko:string|null;lot_address_ko:string|null;
   region_sido:string|null;region_sigungu:string|null;category_code:string|null;
   latitude:number|null;longitude:number|null;
@@ -55,7 +55,8 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
   const sql=`
     SELECT r.id::text AS id,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
-      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,r.category_code,r.region_sido,r.region_sigungu,
+      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
+      COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,r.category_code,r.region_sido,r.region_sigungu,
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name)
          FROM restaurant_menus m
@@ -82,6 +83,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
           AND NULLIF(BTRIM(a.evidence_ref),'') IS NOT NULL
           AND a.verified_at IS NOT NULL),'[]'::json) AS tags
     FROM restaurants r
+    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$1
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$1 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
@@ -171,13 +173,14 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       COALESCE(l.short_description,k.short_description) AS short_description,
       COALESCE(l.full_description,k.full_description) AS full_description,
-      r.road_address_ko,r.lot_address_ko,r.region_sido,r.region_sigungu,
+      COALESCE(al.display_address,r.road_address_ko,r.lot_address_ko) AS address,r.road_address_ko,r.lot_address_ko,r.region_sido,r.region_sigungu,
       r.category_code,r.latitude,r.longitude,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.methodology_version ELSE NULL END AS editorial_methodology
     FROM restaurants r
+    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$2
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$2 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
