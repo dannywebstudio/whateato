@@ -39,7 +39,7 @@ export async function getTransientPhotoReferences(restaurantId:string,placeId:st
   const r=await fetch(url,{headers:{'X-Goog-Api-Key':apiKey,'X-Goog-FieldMask':'photos.name,photos.authorAttributions,photos.googleMapsUri,googleMapsUri'},
     cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(!r.ok)throw new Error('google_place_details_failed_'+r.status);
-  const response=await r.json();
+  const response=await r.json() as {photos?:unknown[];googleMapsUri?:unknown};
   return (Array.isArray(response.photos)?response.photos:[]).slice(0,3)
     .filter((p:unknown):p is {name:string;googleMapsUri?:string;authorAttributions?:GooglePhotoAttribution[]} =>
       Boolean(p && typeof p==='object' && typeof (p as {name?:unknown}).name==='string'))
