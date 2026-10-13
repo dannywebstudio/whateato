@@ -11,6 +11,9 @@ on:
       - 'src/lib/restaurant-catalog.ts'
       - 'src/lib/geo-catalog.ts'
       - 'src/components/RestaurantMap.tsx'
+      - 'src/app/restaurant/[id]/page.tsx'
+      - 'scripts/verify_wave2_live.mjs'
+      - 'data/enrichment-packets/wave2/**'
   workflow_dispatch:
 
 permissions:
@@ -58,6 +61,8 @@ jobs:
           PY
       - name: Live HTTP, DB, Search, detail and SSR verification (GET only)
         run: node scripts/verify_phase25_deployed.mjs
+      - name: Wave 2 real records, draft-publication gate and directions
+        run: node scripts/verify_wave2_live.mjs
       - name: Install Chromium for real Render visual QA
         run: |
           npm install --no-save --no-package-lock playwright@1.55.1
