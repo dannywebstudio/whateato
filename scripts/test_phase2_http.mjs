@@ -141,6 +141,8 @@ assert.ok(!searchHtml.body.includes('Draft Bistro'),'draft translation not visib
 const detailHtml=await get('/restaurant/'+rid+'?hl=en');
 assert.equal(detailHtml.status,200);
 assert.match(detailHtml.body,/Evidence-backed full intro for CI./);
+assert.match(detailHtml.body,/map\\.kakao\\.com\\/link\\/to\\//,'actual permit coordinates link to Kakao directions');
+assert.match(detailHtml.body,/target="_blank" rel="noopener noreferrer"/,'directions use safe new-window link');
 assert.match(detailHtml.body,/Coffee/);
 assert.match(detailHtml.body,/Synthetic approved CI review number one/);
 assert.match(detailHtml.body,/Synthetic approved CI review number two/);
