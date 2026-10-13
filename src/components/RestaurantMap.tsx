@@ -1,5 +1,6 @@
 'use client';
 import RestaurantExperienceCard from '@/components/RestaurantExperienceCard';
+import {cuisineColor} from '@/lib/cuisine-palette';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import mapStyles from './RestaurantMap.module.css';
@@ -12,12 +13,12 @@ import type {Map as MapLibreMap,GeoJSONSource} from 'maplibre-gl';
 // Attribution is mandatory. Outages fall back to a genuine DB-powered directory.
 type Place={
   id:string;name:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;latitude:number;longitude:number;
-  editorial_score:number|null;region_sigungu:string|null;tags:{code:string;label:string}[];
+  editorial_score:number|null;category_code:string|null;region_sigungu:string|null;tags:{code:string;label:string}[];
 };
 type Response={items:Place[];has_more:boolean;location_note:string};
 type Feature={
   type:'Feature';geometry:{type:'Point';coordinates:[number,number]};
-  properties:{id:string;name:string};
+  properties:{id:string;name:string;pinColor:string};
 };
 type FeatureCollection={type:'FeatureCollection';features:Feature[]};
 const MAPTILER_STYLE='https://api.maptiler.com/maps/streets-v4/style.json';
@@ -111,7 +112,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       source?.setData({
         type:'FeatureCollection',features:valid.map(x=>({
           type:'Feature',geometry:{type:'Point',coordinates:[x.longitude,x.latitude]},
-          properties:{id:x.id,name:x.name}
+          properties:{id:x.id,name:x.name,pinColor:cuisineColor(x.category_code)}
         }))
       });
     }catch(e){
@@ -168,12 +169,12 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
           });
           m.addLayer({id:markerLayer,type:'circle',source:markerSource,
             filter:['!',['has','point_count']],
-            paint:{'circle-radius':8,'circle-color':'#188a64','circle-stroke-color':'#ffffff','circle-stroke-width':2}
+            paint:{'circle-radius':8,'circle-color':['coalesce',['get','pinColor'],'#697887'],'circle-stroke-color':'#ffffff','circle-stroke-width':2}
           });
           // Only mark a real selected permit location; never add synthetic pins.
           m.addLayer({id:selectedLayer,type:'circle',source:markerSource,
             filter:['==',['get','id'],''],
-            paint:{'circle-radius':13,'circle-color':'#188a64',
+            paint:{'circle-radius':13,'circle-color':['coalesce',['get','pinColor'],'#697887'],
               'circle-stroke-color':'#ffffff','circle-stroke-width':4}
           });
         }
@@ -300,7 +301,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       </div>
       {resultsReady&&visibleItems.length===0&&<p className="hint">${directoryError?ui.error:ui.empty}</p>}
       <div className="map-explore-cards">
-        {visibleItems.slice(safePage*pageSize,(safePage+1)*pageSize).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={x.editorial_score} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}
+        {visibleItems.slice(safePage*pageSize,(safePage+1)*pageSize).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} category={x.category_code} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={x.editorial_score} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}
       </div>
       <p className="map-explore-notice">${ui.license}</p>
     </section>
