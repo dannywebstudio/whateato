@@ -69,6 +69,14 @@ try{
     assert.equal(paidTiles.length,0,'unapproved paid MapTiler provider must not load');
     assert.ok(freeTileRequests.length>0,
       'MapLibre should request the public no-key OpenFreeMap style');
+    // A clickable directory must focus the actual selected geographic
+    // position, not just open a separate restaurant page.
+    const showLocation=page.getByRole('button',{name:/지도에서 위치 보기/}).first();
+    await showLocation.waitFor({state:'visible',timeout:10000});
+    await showLocation.click();
+    const chosen=await page.locator('[aria-label="Interactive restaurant map"]')
+      .getAttribute('data-selected-map-restaurant');
+    assert.match(chosen||'',/^[a-f0-9-]{36}$/i,'restaurant focus must select a real permit UUID');
     await page.screenshot({path:out+'/'+device.name+'-map.png',fullPage:true});
 
     const search='/search?q='+encodeURIComponent('테스트')+'&hl=ko';
