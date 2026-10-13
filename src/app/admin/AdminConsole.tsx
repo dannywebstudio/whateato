@@ -423,10 +423,21 @@ export default function AdminConsole({role}:{role:Role}){
        {imageResult&&<p role="status">{imageResult}</p>}
        <div className={styles.cardList}>{selected.images.map(i=><div key={i.id} className={styles.row}>
          <span className={styles.code}>{i.id} · {i.rights_status} · {i.publication_state}</span>
-         <button className={styles.button+' '+styles.secondary} disabled={!owner} onClick={()=>void(async()=>{
-           if(!window.confirm('원본과 권리를 검수했어? 게시 승인 후 공개 이미지로 제공돼.'))return;
-           try{await post('/api/v1/owner/media/'+i.id,{decision:'approve'});await select(selected.restaurant.id)}catch(e){inform(e)}
-         })()}>사용권 확인 후 게시</button>
+         {owner&&i.rights_status==='pending'&&<>
+           <button className={styles.button+' '+styles.secondary} onClick={()=>void(async()=>{
+             if(!window.confirm('원본과 사용권 증빙을 검수했어? 승인 후 공개돼.'))return;
+             try{await post('/api/v1/owner/media/'+i.id,{decision:'approve'},'PATCH');await select(selected.restaurant.id)}catch(e){inform(e)}
+           })()}>사진 게시 승인</button>
+           <button className={styles.button+' '+styles.danger} onClick={()=>void(async()=>{
+             if(!window.confirm('사진 사용을 거절할까?'))return;
+             try{await post('/api/v1/owner/media/'+i.id,{decision:'reject'},'PATCH');await select(selected.restaurant.id)}catch(e){inform(e)}
+           })()}>거절</button>
+         </>}
+         {owner&&i.publication_state==='published'&&<button className={styles.button+' '+styles.danger}
+           onClick={()=>void(async()=>{
+             if(!window.confirm('게시된 이미지를 즉시 비공개 처리할까?'))return;
+             try{await post('/api/v1/owner/media/'+i.id,{decision:'hide'},'PATCH');await select(selected.restaurant.id)}catch(e){inform(e)}
+           })()}>비공개</button>}
        </div>)}</div>
      </>}
    </section>}
