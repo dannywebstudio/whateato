@@ -50,7 +50,26 @@ try{
     await noHorizontalOverflow('detail');
     await page.screenshot({path:out+'/'+name+'-detail.png',fullPage:true});
 
+    const styleRequests=[];
+    page.on('requestfailed',req=>{
+      if(req.url().includes('openfreemap.org'))styleRequests.push('FAILED '+req.url().slice(0,170)+' '+req.failure()?.errorText);
+    });
+    page.on('response',response=>{
+      if(response.url().includes('openfreemap.org')&&response.status()>=400)
+        styleRequests.push('HTTP '+response.status()+' '+response.url().slice(0,170));
+    });
     await open('/map?q='+encodeURIComponent('종로구')+'&hl=ko');
+    await page.waitForTimeout(6000);
+    const mapDiagnostics=await page.evaluate(()=>{
+      const host=document.querySelector('[aria-label="Interactive restaurant map"]');
+      const canvas=host?.querySelector('canvas');
+      const s=document.querySelector('[role="status"]');
+      return {container:!!host,containerRect:host?.getBoundingClientRect().toJSON(),
+        hasCanvas:!!canvas,canvasWidth:canvas?.width,canvasHeight:canvas?.height,
+        status:s?.textContent?.trim(),mapLibreLoaded:!!document.querySelector('.maplibregl-map'),
+        errorDisplay:!!document.querySelector('[aria-label="Basemap unavailable"]')};
+    });
+    console.log('MAP DISPLAY DIAGNOSTICS '+JSON.stringify({device:name,networkErrors:styleRequests.slice(0,12),...mapDiagnostics}));
     // Keyless setup must provide a factual directory, NOT unauthorized tiles.
     const noProvider=await page.locator('[aria-label="Map provider not configured"]').count();
     if(noProvider){
