@@ -104,3 +104,6 @@
 @media(prefers-reduced-motion:reduce){.we-card{transition:none}.we-card:hover{transform:none}}
 
 .map-results .we-card.map-restaurant-card{padding:0;gap:0;display:flex;flex-direction:column;border-radius:15px;overflow:hidden}
+
+.status-pill.is-closed{background:#fde8e8!important;color:#ba2634!important;border:1px solid #f8cbcf}
+.status-pill.is-preparing{background:#fff1d9!important;color:#935e11!important;border:1px solid #f2d9a9}
