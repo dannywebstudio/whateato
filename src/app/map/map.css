@@ -150,4 +150,4 @@
 }
 
 /* Keep the detail-link arrow legible against its green button. */
-.map-explore-cards .we-card-map .we-card-visit span[aria-hidden='true']{color:#111!important;opacity:1}
+.map-explore-cards .we-card-map .we-card-visit span[aria-hidden='true']{color:#fff!important;opacity:1}
