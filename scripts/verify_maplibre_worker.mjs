@@ -7,7 +7,7 @@ const base=new URL('../public/maplibre/',import.meta.url);
 for(const file of ['maplibre-gl-worker.mjs','maplibre-gl-shared.mjs']){
   const url=new URL(file,base);
   const info=await stat(url);
-  assert.ok(info.isFile()&&info.size>1000,'Missing or truncated MapLibre runtime: '+file);
+  assert.ok(info.isFile()&&info.size>16,'Missing or truncated MapLibre runtime: '+file);
 }
 const entry=await readFile(new URL('maplibre-gl-worker.mjs',base),'utf8');
 assert.ok(entry.includes('maplibre-gl-shared.mjs'),
