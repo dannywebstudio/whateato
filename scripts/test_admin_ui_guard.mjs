@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const db=new URL(process.env.DATABASE_URL||'');
 assert.ok(['localhost','127.0.0.1'].includes(db.hostname));
 assert.equal(process.env.WHATEATO_CI_LOCAL_FIXTURE,'ONLY_LOCAL_EPHEMERAL');
-assert.notEqual(process.env.WHATEATO_OWNER_CMS_ENABLED,'true');
+assert.equal(process.env.WHATEATO_OWNER_CMS_ENABLED,'true'); // Test no-session access in a fully enabled preview.
 const root='http://127.0.0.1:3000';
 const paths=[
  '/api/v1/owner/catalog',
