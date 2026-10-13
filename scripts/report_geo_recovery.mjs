@@ -36,16 +36,16 @@ try{
       WHERE latitude BETWEEN 33 AND 39.5 AND longitude BETWEEN 124 AND 132
     ), matched AS(
       SELECT m.id,m.name_ko,m.address,m.region_sigungu,
-        COUNT(k.id)::int AS references,
+        COUNT(k.id)::int AS reference_count,
         COUNT(DISTINCT (k.latitude,k.longitude)) FILTER(WHERE k.id IS NOT NULL)::int AS coordinate_variants,
         MIN(k.latitude) AS latitude,MIN(k.longitude) AS longitude
       FROM missing m LEFT JOIN known k ON m.address=k.address AND m.address IS NOT NULL
       GROUP BY m.id,m.name_ko,m.address,m.region_sigungu
     )
-    SELECT id::text,name_ko,address,region_sigungu,references,coordinate_variants,latitude,longitude
-    FROM matched ORDER BY references DESC,name_ko ASC,id ASC`);
+    SELECT id::text,name_ko,address,region_sigungu,reference_count,coordinate_variants,latitude,longitude
+    FROM matched ORDER BY reference_count DESC,name_ko ASC,id ASC`);
   const rows=summary.rows;
-  const candidates=rows.filter(x=>x.references>0);
+  const candidates=rows.filter(x=>x.reference_count>0);
   const unique=candidates.filter(x=>x.coordinate_variants===1);
   const report={
     source:'public permit records only',mode:local?'ephemeral-ci':'neon-staging',mutations:0,
