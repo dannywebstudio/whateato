@@ -47,6 +47,16 @@ try{
     const label=await page.locator('.map-explore-list-head h2').innerText();
     assert.ok(!label.includes(String.fromCharCode(36)),'no dollar in counter');
     assert.ok(await page.locator('.map-explore-cards .we-card-visit').first().isVisible(),'detail button visible');
+    const intro=await page.locator('.map-explore-cards .we-card-map').first().evaluate(card=>{
+      const desc=card.querySelector('.we-card-desc');
+      const head=card.querySelector('.we-card-head');
+      const info=card.querySelector('.we-card-information');
+      if(!desc||!head||!info)return null;
+      const a=head.getBoundingClientRect(),b=desc.getBoundingClientRect(),c=info.getBoundingClientRect();
+      return {headBottom:a.bottom,descriptionTop:b.top,descriptionBottom:b.bottom,infoTop:c.top};
+    });
+    assert.ok(intro&&intro.descriptionTop>=intro.headBottom-1&&intro.infoTop>=intro.descriptionBottom-1,
+      'description must not overlap status or menu: '+JSON.stringify(intro));
     const overflow=await page.locator('.map-explore-cards .we-card-map').first().evaluate(card=>{
       const bounds=card.getBoundingClientRect();
       const tags=card.querySelector('.we-card-menu-row .we-card-tags');
