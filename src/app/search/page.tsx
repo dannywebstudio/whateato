@@ -1,3 +1,4 @@
+import RestaurantExperienceCard from '@/components/RestaurantExperienceCard';
 import Link from 'next/link';
 import type {Metadata} from 'next';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
@@ -61,16 +62,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
         if(region)detailParams.set('region',region);
         if(offset)detailParams.set('offset',String(offset));
         const href='/restaurant/'+r.id+'?'+detailParams.toString();
-        return <Link className="restaurant-card" href={href} key={r.id}><div className="restaurant-card-media">
-          <VerifiedRestaurantPhoto image={r.featured_image_metadata} restaurantName={r.name}/>{!r.featured_image_metadata&&<div className="restaurant-photo-placeholder" aria-label="Image not yet available"><span>W</span><small>WhatEatO</small></div>}</div><div className="restaurant-card-content"><div className="restaurant-card-top"><strong>{r.name}</strong><span className={"status-pill "+(r.opening_hours?.state==="open"?"is-open":r.opening_hours?.state==="closed"?"is-closed":"")}>{hoursLabels[locale][r.opening_hours?.state||"unknown"]}</span></div>
-          {r.short_description&&<p className="card-description">{r.short_description}</p>}
-          {r.opening_hours?.today_hours&&<span className="restaurant-card-meta">◷ {r.opening_hours.today_hours}</span>}
-          <span className="restaurant-card-meta">🍽 {t.menu}: {r.main_menu||t.menuUnknown}</span>
-          {r.tags.length>0&&<span aria-label="Verified restaurant tags">{r.tags.map(tag=>tag.label).join(' · ')}</span>}
-          {r.ratings.external?<span>★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</span>:<span>{t.scoreUnknown}</span>}
-          {r.ratings.whateato&&<span>★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</span>}
-          <span className="restaurant-card-address">⌖ {r.address_ko||t.address}</span><span className="restaurant-card-cta">{locale==="ko"?"식당 자세히 보기":locale==="en"?"Explore restaurant":"View details"} <span aria-hidden="true">↗</span></span></div>
-        </Link>
+        return <RestaurantExperienceCard key={r.id} name={r.name} address={r.address||r.address_ko} description={r.short_description} menu={r.main_menu} href={href} locale={locale} status={r.opening_hours?.state||'unknown'} hours={r.opening_hours?.today_hours} rating={r.ratings.external?.rating??r.ratings.whateato?.rating??null} tags={r.tags.map(t=>t.label)} imageUrl={r.featured_image_metadata?.url||null}/>
       })}</div>
       {found.items.length===0&&<p className="empty">{t.empty}</p>}
       {found.has_more&&offset<10000&&
