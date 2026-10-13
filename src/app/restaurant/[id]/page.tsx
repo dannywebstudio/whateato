@@ -96,15 +96,10 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   ]);
   return <main className="content restaurant-detail-page">
     <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
-    <header className="restaurant-hero"><div className="restaurant-hero-main"><span className="eyebrow">WhatEatO · {r.category_code||t.category}</span><h1>{r.name}</h1><p className="restaurant-lede">{r.short_description}</p><div className="restaurant-facts"><span className={"status-pill "+(r.opening_hours?.state==="open"?"is-open":r.opening_hours?.state==="closed"?"is-closed":r.opening_hours?.state==="preparing"?"is-preparing":"")}>{hoursLabels[locale][r.opening_hours?.state||"unknown"]}</span>{r.opening_hours?.today_hours&&<span className="meta-chip">◷ {r.opening_hours.today_hours}</span>}{detail.tags.slice(0,3).map(tag=><span className="meta-chip" key={tag.code}>{tag.label}</span>)}{r.ratings.external&&<span className="meta-chip">★ {r.ratings.external.rating.toFixed(1)}</span>}</div></div><div className="hero-location">⌖ <span>{r.address||r.road_address_ko||r.lot_address_ko||t.noAddress}</span></div></header>
+    <header className="restaurant-hero"><div className="restaurant-hero-main"><span className="eyebrow">WhatEatO · {r.category_code||t.category}</span><h1>{r.name}</h1><p className="restaurant-lede">{r.short_description}</p><div className="restaurant-facts"><span className={"status-pill "+(r.opening_hours?.state==="open"?"is-open":r.opening_hours?.state==="closed"?"is-closed":r.opening_hours?.state==="preparing"?"is-preparing":"")}>{hoursLabels[locale][r.opening_hours?.state||"unknown"]}</span>{r.opening_hours?.today_hours&&<span className="meta-chip">◷ {r.opening_hours.today_hours}</span>}{detail.tags.slice(0,3).map(tag=><span className="meta-chip" key={tag.code}>{tag.label}</span>)}{r.ratings.external&&<span className="meta-chip">★ {r.ratings.external.rating.toFixed(1)}</span>}</div></div><div className="hero-location" style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:7}}><div>⌖ <span>{r.address||r.road_address_ko||r.lot_address_ko||t.noAddress}</span></div>{r.opening_hours?.weekly&&r.opening_hours.weekly.length>0&&<div style={{display:'flex',gap:8,alignItems:'baseline',flexWrap:'wrap'}}><strong>{hoursLabels[locale].hours}</strong><span>{groupedOpeningHours(r.opening_hours.weekly,locale).join(' · ')}</span></div>}</div></header>
     <RestaurantPhotoGallery images={detail.images} name={r.name} locale={locale}/>
     {process.env.WHATEATO_GOOGLE_PHOTO_APPROVED==='true' && detail.images.length===0 && <GooglePlacesPhotoPreview restaurantId={id} restaurantName={r.name} locale={locale}/>}
 
-    <p className="hint source-note">{t.license}</p>
-
-
-    <p className="hint">{locale==='ko'?'영업 상태는 등록된 영업시간 기준이며, 식당 사정에 따라 실제와 다를 수 있습니다.':locale==='en'?'Hours-based status may differ from actual operations.':locale==='ja'?'営業状況は登録された営業時間に基づき、実際と異なる場合があります。':'营业状态按登记营业时间计算，实际情况可能有所不同。'}</p>
-    {r.opening_hours&&r.opening_hours.weekly.length>0&&<section className="hours-panel"><div className="section-kicker">SCHEDULE</div><h2>{hoursLabels[locale].hours}</h2><div className="hour-lines">{groupedOpeningHours(r.opening_hours.weekly,locale).map((line,i)=><div className="hour-line" key={i}>{line}</div>)}</div></section>}
     {r.ratings.external&&<p className="hint">★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</p>}
     {r.ratings.whateato&&<p className="hint">★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</p>}
     {detail.menus.length>0&&<>
@@ -118,7 +113,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     </>}
     {(r.short_description||r.full_description)&&<>
       <h2 className="detail-section-title">{t.description}</h2>
-      <section className="result"><span>{r.full_description||r.short_description}</span></section>
+      <p className="restaurant-description-text" style={{margin:'9px 0 22px',lineHeight:1.75,whiteSpace:'pre-line'}}>{r.full_description||r.short_description}</p>
     </>}
     <section className="result detail-address-panel" style={{display:'grid',gridTemplateColumns:miniMapHref?'repeat(auto-fit,minmax(min(100%,240px),1fr))':'1fr',gap:12,alignItems:'center'}}>
       <div style={{minWidth:0}}>
@@ -134,10 +129,6 @@ export default async function RestaurantDetail({params,searchParams}:Params){
       </div>
       {miniMapHref&&<iframe title={locale==='ko'?'식당 위치 미니맵':'Restaurant location mini map'} src={miniMapHref} loading="lazy" referrerPolicy="no-referrer" style={{width:'100%',height:176,border:0,borderRadius:10}}/>}
     </section>
-    {detail.tags.length>0&&<>
-      <h2>{t.tags}</h2>
-      <section className="result"><span>{detail.tags.map(tag=>tag.label).join(' · ')}</span></section>
-    </>}
     <h2>{t.reviews}</h2>
     <p className="hint">{t.reviewNote}</p>
     {summary&&<p className="hint">{t.reviewCount} {summary.reviewCount}
