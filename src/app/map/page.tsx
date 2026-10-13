@@ -3,6 +3,7 @@ import SearchBoxSynced from '@/components/SearchBoxSynced';
 import RestaurantMap from '@/components/RestaurantMap';
 import {normalizeLocale,normalizeTags,normalizeText} from '@/lib/platform-v1';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import './map.css';
 
 export const dynamic='force-dynamic';
 type Params={q?:string;f?:string;hl?:string};
