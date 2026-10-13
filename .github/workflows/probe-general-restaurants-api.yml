@@ -1,6 +1,11 @@
 name: Probe general restaurant OpenAPI
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/probe_general_restaurants_api.mjs'
+      - '.github/workflows/probe-general-restaurants-api.yml'
 permissions:
   contents: read
 jobs:
