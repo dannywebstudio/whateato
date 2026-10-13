@@ -70,14 +70,29 @@ try{
         errorDisplay:!!document.querySelector('[aria-label="Basemap unavailable"]')};
     });
     console.log('MAP DISPLAY DIAGNOSTICS '+JSON.stringify({device:name,networkErrors:styleRequests.slice(0,12),...mapDiagnostics}));
-    // Keyless setup must provide a factual directory, NOT unauthorized tiles.
-    const noProvider=await page.locator('[aria-label="Map provider not configured"]').count();
-    if(noProvider){
-      await page.locator('[aria-label="Map provider not configured"] + p').waitFor({timeout:15000});
-      await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:20000});
+    // A mounted div or canvas is NOT evidence of a visible map.
+    // Enforce successful marker display OR a real iframe fallback map,
+    // with a loaded restaurant directory independently of WebGL.
+    await page.waitForFunction(()=>{
+      const host=document.querySelector('[aria-label="Interactive restaurant map"]');
+      return host?.getAttribute('data-map-status')==='ready' ||
+        !!document.querySelector('[aria-label="Basemap unavailable"] iframe[src^="https://www.openstreetmap.org/export/embed.html"]');
+    },null,{timeout:22000});
+    await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:14000});
+    const hasFallback=await page.locator('[aria-label="Basemap unavailable"] iframe').count();
+    if(hasFallback){
+      const src=await page.locator('[aria-label="Basemap unavailable"] iframe').getAttribute('src');
+      assert.ok(src?.startsWith('https://www.openstreetmap.org/export/embed.html'),
+        'WebGL failures show a real external OpenStreetMap fallback, not an empty gray map');
     }else{
-      assert.equal(await page.locator('[aria-label="Interactive restaurant map"]').count(),1);
+      const canvas=page.locator('.maplibregl-canvas');
+      await canvas.waitFor({state:'visible',timeout:8000});
+      const bounds=await canvas.boundingBox();
+      assert.ok(bounds&&bounds.width>200&&bounds.height>250,'rendered map canvas must have dimensions');
+      assert.match((await page.locator('[role="status"]').textContent())||'',/지도|식당/,
+        'real map data status should be visible');
     }
+    console.log('MAP RENDER PASS '+JSON.stringify({device:name,fallback:Boolean(hasFallback)}));
     await noHorizontalOverflow('map');
     await page.screenshot({path:out+'/'+name+'-map.png',fullPage:true});
     assert.deepEqual(errors,[],name+' browser exceptions');
