@@ -26,8 +26,9 @@ export async function isVerifiedPilotPlace(restaurantId:string,placeId:string):P
   try{
     const r=await pool.query(`SELECT 1 FROM restaurant_source_match_checkpoints_v1 c
       JOIN restaurant_enrichment_sample_1000 s ON s.restaurant_id=c.restaurant_id
+      JOIN google_place_manual_identity_approvals_v1 a ON a.restaurant_id=c.restaurant_id AND a.google_place_id=c.google_place_id
       WHERE c.restaurant_id=$1 AND c.google_place_id=$2 AND s.sample_rank BETWEEN 1 AND 3
-        AND c.state='verified_identity' LIMIT 1`,[restaurantId,placeId]);
+        AND a.verified_at IS NOT NULL LIMIT 1`,[restaurantId,placeId]);
     return (r.rowCount||0)>0;
   }catch{return false}
 }
