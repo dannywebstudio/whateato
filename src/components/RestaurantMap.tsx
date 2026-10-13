@@ -4,7 +4,7 @@ import {cuisineColor} from '@/lib/cuisine-palette';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import mapStyles from './RestaurantMap.module.css';
-import type {Map as MapLibreMap,GeoJSONSource} from 'maplibre-gl';
+import type {Map as MapLibreMap,GeoJSONSource,MapLayerMouseEvent} from 'maplibre-gl';
 
 // Restaurant marker data is ALWAYS sourced from the verified WhatEatO catalog.
 // OpenFreeMap's public MapLibre basemap is free for commercial use without a
@@ -197,12 +197,12 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         void load(m);
       };
       const onMove=()=>void load(m);
-      const onClick=(ev:{features?:Array<{properties?:{id?:string;name?:string;openingState?:string};geometry?:{type:string;coordinates?:number[]}}>})=>{
+      const onClick=(ev:MapLayerMouseEvent)=>{
         const feature=ev.features?.[0];
         const id=feature?.properties?.id;
         if(typeof id!=='string'||!/^[a-f0-9-]{36}$/i.test(id))return;
         setSelected(id);
-        const coords=feature?.geometry?.coordinates;
+        const coords=feature?.geometry?.type==='Point'?feature.geometry.coordinates:null;
         if(!Array.isArray(coords)||coords.length<2||!Number.isFinite(coords[0])||!Number.isFinite(coords[1]))return;
         currentPopup?.remove();
         const activeLocale=queryRef.current.locale;
