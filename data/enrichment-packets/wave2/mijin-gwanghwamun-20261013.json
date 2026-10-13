@@ -1,0 +1,66 @@
+{
+  "schema_version": "whateato.enrichment.v1",
+  "restaurant_id": "16918f58-4e63-4e49-a013-aad17e499ad4",
+  "name_ko": "광화문 미진",
+  "road_address_ko": "서울특별시 종로구 종로 19 (종로1가,르메이에르 종로타운 지상1층116-2호, 117호)",
+  "identity_evidence": {
+    "url": "https://www.diningcode.com/profile.php?rid=QlMrlKl3A6ry",
+    "checked_at": "2026-10-13T00:00:00Z"
+  },
+  "localizations": [
+    {
+      "locale": "ko",
+      "display_name": "광화문 미진",
+      "short_description": "종로 르메이에르 종로타운 1층에 있는 메밀국수 전문 식당으로, 냉메밀과 온메밀, 메밀전병 등을 메뉴로 선보인다.",
+      "source_url": "https://www.matzipmap.com/place/2ce8509f-565a-42b1-a479-965b81238687",
+      "checked_at": "2026-10-13T00:00:00Z"
+    },
+    {
+      "locale": "en",
+      "display_name": "Gwanghwamun Mijin",
+      "short_description": "A buckwheat noodle restaurant on the first floor of Le Meilleur Jongno Town, with cold and warm memil noodles and buckwheat rolls on the menu.",
+      "source_url": "https://www.matzipmap.com/place/2ce8509f-565a-42b1-a479-965b81238687",
+      "checked_at": "2026-10-13T00:00:00Z"
+    },
+    {
+      "locale": "ja",
+      "display_name": "光化門ミジン",
+      "short_description": "鍾路のルメイエル鍾路タウン1階にあるそば料理店。冷たいメミル麺や温かいメミル麺、そば粉の巻き物などがメニューにある。",
+      "source_url": "https://www.matzipmap.com/place/2ce8509f-565a-42b1-a479-965b81238687",
+      "checked_at": "2026-10-13T00:00:00Z"
+    },
+    {
+      "locale": "zh-CN",
+      "display_name": "光化门美珍",
+      "short_description": "位于钟路 Le Meilleur Jongno Town 一楼的荞麦面餐厅，菜单包括冷荞麦面、热荞麦面与荞麦煎卷。",
+      "source_url": "https://www.matzipmap.com/place/2ce8509f-565a-42b1-a479-965b81238687",
+      "checked_at": "2026-10-13T00:00:00Z"
+    }
+  ],
+  "tags": [],
+  "menus": [
+    {
+      "name_ko": "냉메밀",
+      "position": 0,
+      "price_krw": null,
+      "source_url": "https://polle.com/place/2ydYvH/%EA%B4%91%ED%99%94%EB%AC%B8%20%EB%AF%B8%EC%A7%84",
+      "checked_at": "2026-10-13T00:00:00Z"
+    },
+    {
+      "name_ko": "온메밀",
+      "position": 1,
+      "price_krw": null,
+      "source_url": "https://polle.com/place/2ydYvH/%EA%B4%91%ED%99%94%EB%AC%B8%20%EB%AF%B8%EC%A7%84",
+      "checked_at": "2026-10-13T00:00:00Z"
+    },
+    {
+      "name_ko": "메밀전병",
+      "position": 2,
+      "price_krw": null,
+      "source_url": "https://polle.com/place/2ydYvH/%EA%B4%91%ED%99%94%EB%AC%B8%20%EB%AF%B8%EC%A7%84",
+      "checked_at": "2026-10-13T00:00:00Z"
+    }
+  ],
+  "images": [],
+  "editorial_score": null
+}
