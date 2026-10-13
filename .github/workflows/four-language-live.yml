@@ -1,0 +1,18 @@
+name: WhatEatO four-language live data regression
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths: ['scripts/verify_four_language_live.mjs','.github/workflows/four-language-live.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/verify_four_language_live.mjs
