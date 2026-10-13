@@ -69,3 +69,36 @@
 .map-card-detail{color:var(--we-green);font-size:13px;font-weight:800;padding-top:5px}
 @media(max-width:700px){.restaurant-card-grid,.menu-grid{grid-template-columns:minmax(0,1fr)}.restaurant-hero{padding:23px 20px;border-radius:19px}.restaurant-card-media{height:190px}.restaurant-card-content{padding:17px}.restaurant-detail-page{margin-top:25px}.detail-address-panel{grid-template-columns:1fr!important}.map-card-mark{flex-basis:52px}}
 @media(prefers-reduced-motion:reduce){.restaurant-card,.map-restaurant-card{transition:none}.restaurant-card:hover,.map-restaurant-card:hover{transform:none}}
+
+
+/* WhatEatO editorial product UI v2 — unified card and tighter detail reading scale */
+.content.search-results-page{max-width:1120px}
+.search-results-page .restaurant-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.we-card{display:flex;flex-direction:column;overflow:hidden;min-width:0;border:1px solid #dae6dd;background:#fff;border-radius:15px;box-shadow:0 6px 26px rgba(22,52,33,.045);transition:transform .18s ease,box-shadow .18s ease}
+.we-card:hover{transform:translateY(-2px);box-shadow:0 13px 36px rgba(22,52,33,.105)}
+.we-card-visual{position:relative;height:158px;overflow:hidden;background:#e8f0e8}.we-card-visual img{height:100%;width:100%;object-fit:cover}
+.we-card-fallback{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:linear-gradient(115deg,#e0ece2,#f2f5ef 50%,#d7e9dd)}
+.we-card-fallback span{font-family:Georgia,serif;font-weight:700;font-size:45px;color:#267653;opacity:.44}.we-card-fallback small{font-size:9px;letter-spacing:.2em;font-weight:800;color:#54806b}
+.we-card-category{position:absolute;bottom:9px;left:12px;letter-spacing:.08em;font-size:9px;font-weight:800;color:#fff;background:#175b42bd;border:1px solid #fff5;padding:5px 9px;border-radius:5px}
+.we-card-body{padding:17px 18px 15px;display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
+.we-card-head{display:flex;justify-content:space-between;align-items:center;gap:9px}.we-card-head h3{font-size:19px;line-height:1.25;letter-spacing:-.045em;margin:0;font-weight:800;min-width:0}.we-card-head h3 a:hover{color:#147550}
+.we-card .status-pill{font-size:10px;padding:5px 8px;flex-shrink:0}
+.we-card-desc{color:#63766b;font-size:12px;line-height:1.6;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.we-card-information{display:grid;gap:5px}.we-card-information p{color:#52675a;font-size:11px;line-height:1.55;display:flex;gap:8px;margin:0}.we-card-information p span{color:#24966b;font-size:14px}.we-card-information p b{color:#2e4b3b;font-weight:750}
+.we-card-bottom{margin-top:auto;padding-top:11px;border-top:1px solid #e7eee8;display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap}.we-card-rating{font-size:10px;color:#758479}.we-card-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.we-card-visit{font-size:11px;font-weight:800;color:#fff;background:#137750;border-radius:8px;padding:9px 11px}.we-card-visit:hover{background:#075838}
+.we-map-button{font-size:11px;background:#edf6ef;color:#156947;border-radius:8px;padding:9px;border:1px solid #d3e7d9;cursor:pointer;font-weight:700}
+.we-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:1px}.we-card-tags>span{font-size:10px;padding:4px 7px;background:#f3f7f3;border-radius:5px;color:#6a7b6f}
+.map-results .we-card{height:100%}.map-results .we-card-visual{height:105px}.map-results .we-card-body{gap:7px;padding:13px}.map-results .we-card-head h3{font-size:16px}.map-results .we-card-desc{-webkit-line-clamp:2;font-size:11px}.map-results .we-card-information p{font-size:10px}.map-results .we-card-category{font-size:8px}
+.restaurant-detail-page{max-width:940px;margin-top:36px}.restaurant-detail-page .restaurant-hero{padding:23px 28px;margin-bottom:18px;border-radius:17px}
+.restaurant-detail-page .restaurant-hero h1{font-size:clamp(29px,3.2vw,38px);margin:8px 0 9px}
+.restaurant-detail-page .restaurant-lede{font-size:13px;line-height:1.7;margin-bottom:13px}
+.restaurant-detail-page .eyebrow{font-size:10px}.restaurant-detail-page .hero-location{margin-top:15px;padding-top:12px}
+.restaurant-detail-page .source-note{font-size:10px}.restaurant-detail-page .hours-panel{margin:15px 0;padding:15px 19px;border-radius:12px}
+.restaurant-detail-page .hours-panel h2{font-size:16px;margin:5px 0 9px}.restaurant-detail-page .hour-lines{gap:5px}.restaurant-detail-page .hour-line{font-size:12px;padding:5px 0}
+.restaurant-detail-page .detail-section-title{font-size:20px!important;margin:26px 0 12px!important}
+.restaurant-detail-page .menu-grid{gap:9px}.restaurant-detail-page .menu-item{min-height:72px;padding:13px 15px;border-radius:11px;gap:4px}.restaurant-detail-page .menu-item strong{font-size:14px}.restaurant-detail-page .menu-item span{font-size:12px}
+.restaurant-detail-page>.result{padding:15px;border-radius:11px}.restaurant-detail-page>.result span{font-size:12px;line-height:1.75}
+.restaurant-detail-page .detail-address-panel{padding:15px!important}
+@media(max-width:760px){.search-results-page .restaurant-card-grid{grid-template-columns:1fr}.we-card-visual{height:150px}.restaurant-detail-page .restaurant-hero{padding:19px 17px}.restaurant-detail-page .menu-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.we-card{transition:none}.we-card:hover{transform:none}}
