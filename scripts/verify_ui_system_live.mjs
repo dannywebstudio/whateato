@@ -28,6 +28,10 @@ try{
     assert.equal(await page.locator('.menu-item').count(),2,'menu grid');
    }
    if(stage==='map'){
+    await page.locator('.map-explore-layout').waitFor({timeout:30000});
+    assert.equal(await page.locator('.map-explore-pagination button').count(),2,'pagination buttons');
+    assert.ok((await page.locator('.map-explore-cards .we-card').count())<=5,'max five visible');
+    assert.equal(await page.locator('.related-local-posts').count(),0,'hide blog section with no query');
     await page.locator('.map-restaurant-card').first().waitFor({timeout:30000});
     assert.ok(await page.locator('.map-card-locate').count()>0,'map selection preserved');
    }
