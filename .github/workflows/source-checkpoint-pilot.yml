@@ -1,0 +1,27 @@
+name: WhatEatO bounded source checkpoint pilot
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: whateato-source-checkpoint-staging
+  cancel-in-progress: false
+jobs:
+  reconcile-five:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - name: Max five API pairs, reuse cached checkpoints
+        env:
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          WHATEATO_STAGING_DATABASE_URL: ${{ secrets.WHATEATO_STAGING_DATABASE_URL }}
+          WHATEATO_EXPECTED_NEON_BRANCH_ID: br-autumn-pine-b36z3utm
+          WHATEATO_MATCH_BATCH_LIMIT: '5'
+        run: node scripts/collect_source_checkpoints_50.mjs
