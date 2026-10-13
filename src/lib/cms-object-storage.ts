@@ -1,4 +1,4 @@
-import {S3Client,PutObjectCommand,GetObjectCommand,DeleteObjectCommand,HeadObjectCommand} from '@aws-sdk/client-s3';
+import {S3Client,PutObjectCommand,GetObjectCommand,DeleteObjectCommand,HeadObjectCommand,HeadBucketCommand} from '@aws-sdk/client-s3';
 
 let cached:S3Client|undefined;
 function config(){
@@ -18,6 +18,16 @@ function client(){
 }
 export function objectStorageReady(){
  try{config();return true}catch{return false}
+}
+export async function probeObjectStorage():Promise<boolean>{
+  if(!objectStorageReady())return false;
+  try{
+    const {s3,bucket}=client();
+    await s3.send(new HeadBucketCommand({Bucket:bucket}),{
+      abortSignal:AbortSignal.timeout(5000)
+    });
+    return true;
+  }catch{return false}
 }
 export async function savePhoto(key:string,bytes:Buffer){
  if(!/^media\/cms\/[0-9a-f-]{36}\.webp$/.test(key)||bytes.length>8*1024*1024)
