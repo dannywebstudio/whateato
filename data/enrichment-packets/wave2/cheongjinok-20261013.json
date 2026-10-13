@@ -12,28 +12,28 @@
       "locale": "ko",
       "display_name": "청진옥",
       "short_description": "종로3길에 자리한 해장국 전문 식당이다. 양선지 해장국을 중심으로 안주전골과 수육 등의 메뉴를 소개한다.",
-      "source_url": "https://www.ktriptips.com/kor/food/2778428",
+      "source_url": "https://www.tabling.co.kr/place/677cc7ae66de5f0698752d93",
       "checked_at": "2026-10-13T00:00:00Z"
     },
     {
       "locale": "en",
       "display_name": "Cheongjinok",
       "short_description": "A haejangguk restaurant on Jong-ro 3-gil, known for Korean soup with beef blood and tripe as well as hot pot and boiled beef dishes.",
-      "source_url": "https://www.ktriptips.com/kor/food/2778428",
+      "source_url": "https://www.tabling.co.kr/place/677cc7ae66de5f0698752d93",
       "checked_at": "2026-10-13T00:00:00Z"
     },
     {
       "locale": "ja",
       "display_name": "チョンジノク",
       "short_description": "鍾路3ギルにあるヘジャングク専門店。牛の血と内臓入りのスープを中心に、鍋料理や茹で牛肉料理などが紹介されている。",
-      "source_url": "https://www.ktriptips.com/kor/food/2778428",
+      "source_url": "https://www.tabling.co.kr/place/677cc7ae66de5f0698752d93",
       "checked_at": "2026-10-13T00:00:00Z"
     },
     {
       "locale": "zh-CN",
       "display_name": "清进屋",
       "short_description": "位于钟路3街的醒酒汤餐厅，以牛血与牛内脏汤为主，也提供韩式火锅和白切牛肉等菜品。",
-      "source_url": "https://www.ktriptips.com/kor/food/2778428",
+      "source_url": "https://www.tabling.co.kr/place/677cc7ae66de5f0698752d93",
       "checked_at": "2026-10-13T00:00:00Z"
     }
   ],
@@ -43,21 +43,21 @@
       "name_ko": "해장국",
       "position": 0,
       "price_krw": null,
-      "source_url": "https://www.cheongjinok.com/",
+      "source_url": "https://www.cheongjinok.com/menu",
       "checked_at": "2026-10-13T00:00:00Z"
     },
     {
       "name_ko": "모듬수육",
       "position": 1,
       "price_krw": null,
-      "source_url": "https://www.cheongjinok.com/",
+      "source_url": "https://www.cheongjinok.com/menu",
       "checked_at": "2026-10-13T00:00:00Z"
     },
     {
       "name_ko": "안주전골",
       "position": 2,
       "price_krw": null,
-      "source_url": "https://www.cheongjinok.com/",
+      "source_url": "https://www.cheongjinok.com/menu",
       "checked_at": "2026-10-13T00:00:00Z"
     }
   ],
