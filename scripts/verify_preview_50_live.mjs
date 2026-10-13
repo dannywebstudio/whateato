@@ -18,3 +18,17 @@ for(const [route,key] of checks){
  }finally{clearTimeout(timer)}
 }
 console.log('PASS: no unready restaurants exposed by Search or Map APIs');
+
+const privateDetails=[
+ '16918f58-4e63-4e49-a013-aad17e499ad4',
+ '6cc37914-1bb8-406e-a365-34c897b4f26f',
+ '2daa58f1-6360-4ddb-a27f-6e6d1437a122'
+];
+for(const id of privateDetails){
+ const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),25000);
+ try{
+  const response=await fetch(base+'/restaurant/'+id,{signal:controller.signal,redirect:'manual'});
+  if(response.status!==404)throw Error('Incomplete restaurant direct URL not hidden, HTTP '+response.status+' id='+id);
+  console.log(JSON.stringify({route:'/restaurant/'+id,hidden:true,httpStatus:404}));
+ }finally{clearTimeout(timer)}
+}
