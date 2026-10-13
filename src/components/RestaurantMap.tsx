@@ -159,7 +159,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
           });
           m.addLayer({id:clusterLabel,type:'symbol',source:markerSource,
             filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],
-              'text-size':12},paint:{'text-color':'#ffffff'}
+              'text-size':12,'text-font':['Noto Sans Regular']},paint:{'text-color':'#ffffff'}
           });
           m.addLayer({id:markerLayer,type:'circle',source:markerSource,
             filter:['!',['has','point_count']],
