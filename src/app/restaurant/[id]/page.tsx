@@ -61,7 +61,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   if(backQ)backParams.set('q',backQ);
   if(backRegion)backParams.set('region',backRegion);
   if(backTags.length)backParams.set('f',backTags.join(','));
-  if(Number.isInteger(backOffset)&&backOffset>0&&backOffset<=2000)backParams.set('offset',String(backOffset));
+  if(Number.isInteger(backOffset)&&backOffset>0&&backOffset<=10000)backParams.set('offset',String(backOffset));
   const backHref='/search?'+backParams.toString();
   let detail:RestaurantDetailResponse|null;
   try{detail=await getRestaurantCatalogDetail(id,locale)}
