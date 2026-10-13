@@ -160,7 +160,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       const onLoad=()=>{
         if(!m.getSource(markerSource)){
           m.addSource(markerSource,{type:'geojson',data:emptyData,cluster:true,
-            clusterMaxZoom:15,clusterRadius:48});
+            clusterMaxZoom:13,clusterRadius:48});
           m.addLayer({id:clusterLayer,type:'circle',source:markerSource,
             filter:['has','point_count'],
             paint:{'circle-color':'#188a64','circle-radius':['step',['get','point_count'],17,15,23,50,30],
