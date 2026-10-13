@@ -102,6 +102,14 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     </section>}
     {r.ratings.external&&<p className="hint">★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</p>}
     {r.ratings.whateato&&<p className="hint">★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</p>}
+    {detail.menus.length>0&&<>
+      <h2>{t.menus}</h2>
+      <div className="results">{detail.menus.map(menu=><section className="result" key={menu.id}>
+        <strong>{menu.name}</strong>
+        {menu.description&&<span>{menu.description}</span>}
+        {menu.price_krw!==null&&<span>₩{menu.price_krw.toLocaleString('ko-KR')}</span>}
+      </section>)}</div>
+    </>}
     {(r.short_description||r.full_description)&&<>
       <h2>{t.description}</h2>
       <section className="result"><span>{r.full_description||r.short_description}</span></section>
@@ -120,14 +128,6 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     {detail.tags.length>0&&<>
       <h2>{t.tags}</h2>
       <section className="result"><span>{detail.tags.map(tag=>tag.label).join(' · ')}</span></section>
-    </>}
-    {detail.menus.length>0&&<>
-      <h2>{t.menus}</h2>
-      <div className="results">{detail.menus.map(menu=><section className="result" key={menu.id}>
-        <strong>{menu.name}</strong>
-        {menu.description&&<span>{menu.description}</span>}
-        {menu.price_krw!==null&&<span>₩{menu.price_krw.toLocaleString('ko-KR')}</span>}
-      </section>)}</div>
     </>}
     <h2>{t.reviews}</h2>
     <p className="hint">{t.reviewNote}</p>
