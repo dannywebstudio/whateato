@@ -1,0 +1,19 @@
+name: WhatEatO shared UI and i18n regression
+on:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths: ['src/lib/restaurant-catalog.ts','src/lib/geo-catalog.ts','src/components/RestaurantExperienceCard.tsx','src/components/RestaurantMap.tsx','src/app/search/page.tsx','src/app/restaurant/[id]/page.tsx','src/app/globals.css','.github/workflows/ui-shared-i18n-ci.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npm run typecheck
