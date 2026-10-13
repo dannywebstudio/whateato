@@ -1,0 +1,55 @@
+name: WhatEatO Bulk CMS PostgreSQL Integration
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bulk-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_ci_only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:local_ci_only@127.0.0.1:5432/postgres
+      WHATEATO_CI_LOCAL_FIXTURE: ONLY_LOCAL_EPHEMERAL
+      WHATEATO_BULK_ADMIN_ENABLED: 'true'
+      WHATEATO_BULK_ADMIN_TOKEN: 'ci-only-bulk-admin-token-000000000000'
+      NEXT_PUBLIC_LAUNCH_READY: 'false'
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: node --check scripts/seed_bulk_ops_fixture.mjs
+      - run: node --check scripts/test_bulk_content_http.mjs
+      - run: node --check scripts/run_bulk_batch.mjs
+      - run: node --check scripts/import_bulk_ndjson.mjs
+      - run: node scripts/seed_bulk_ops_fixture.mjs
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Start local app and run isolated Postgres HTTP tests
+        run: |
+          npm run start -- --hostname 127.0.0.1 --port 3000 > /tmp/whateato-bulk-ci.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then break; fi
+            sleep 2
+          done
+          node scripts/test_bulk_content_http.mjs
+      - name: Print local errors on failure
+        if: failure()
+        run: cat /tmp/whateato-bulk-ci.log || true
