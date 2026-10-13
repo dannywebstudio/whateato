@@ -70,7 +70,8 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
             {r.opening_hours?.today_hours?` · ${hoursLabels[locale].hours} ${r.opening_hours.today_hours}`:''}
           </span>
           <span>{t.menu}: {r.main_menu||t.menuUnknown}</span>
-          <span>{r.editorial_score!==null?`★ ${r.editorial_score.toFixed(1)} / 5 · ${t.score}`:t.scoreUnknown}</span>
+          {r.ratings.external?<span>★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</span>:<span>{t.scoreUnknown}</span>}
+          {r.ratings.whateato&&<span>★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</span>}
           <span>{r.address_ko||t.address}</span>
         </Link>
       })}</div>
