@@ -1,0 +1,6 @@
+# Initial 20 — source recheck wave 1 (2026-10-13)
+Scope: staging research-only. No production, no public rating or hours publication.
+- 프랭크버거 동국대점 (6d2889f5-0764-4fc9-b2c5-eb2b72c07c77): Tabling listing reports Mon–Sat 11:00–22:00 and Sunday closed. https://www.tabling.co.kr/place/677cd09c66de5f06988663c3 . Menu prices remain unverified due to cross-source differences.
+- 영덕막회 (e368e24d-a125-463b-80ba-2b3b90184f5e): Tabling reports 10:30–22:00 every day and reservations offered, with menu examples. https://www.tabling.co.kr/place/677cccf366de5f069880117d ; menu comparison https://polle.com/place/23aK92/%EC%98%81%EB%8D%95%EB%A7%89%ED%9A%8C . Holiday exception requires verification.
+- 온더보더 광화문 D타워점 (b90a773c-e405-423b-ae44-7b340501b024): reservations reported and menu names corroborated, but directory price discrepancies remain. https://polle.com/place/40IXKT/%EC%98%A8%EB%8D%94%EB%B3%B4%EB%8D%94 ; https://www.diningcode.com/profile.php?rid=rhCqlarHAQHc ; https://gajaseoul.com/ko/store/ontheborder_gwanghwamundtower
+Result: 20 staged research rows, 2 newly evidence-linked weekly-hours candidates, 4 reported reservation-positive rows total, all 20 pending editorial review, no published new opening hours, Naver ratings or external scores. Never confuse third-party directory ratings with Naver. Confirm official venue identities/hours before promoting.
