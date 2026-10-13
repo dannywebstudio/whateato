@@ -65,7 +65,7 @@ try{
     ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3','가공간표본3','가상 공간검증로 3','서울특별시','독립표본구','기타',37.2012,127.2012,'active','published'),
     ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1','하공간표본','가상 공간검증로 4','서울특별시','독립표본구','기타',37.2810,127.2810,'active','published')
   `);
-  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql','008_restaurant_quality_review.sql','009_quality_candidates_non_destructive.sql','010_verified_opening_hours.sql','012_approved_external_ratings.sql','014_bulk_content_operations.sql']){
+  for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql','008_restaurant_quality_review.sql','009_quality_candidates_non_destructive.sql','010_verified_opening_hours.sql','012_approved_external_ratings.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
