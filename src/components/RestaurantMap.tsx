@@ -300,7 +300,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         </div>
       </div>
       {resultsReady&&visibleItems.length===0&&<p className="hint">${directoryError?ui.error:ui.empty}</p>}
-      <div className="map-explore-cards">
+      <div className={"map-explore-cards"+(visibleItems.length<=3?" map-explore-cards-spacious":"")}>
         {visibleItems.slice(safePage*pageSize,(safePage+1)*pageSize).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} category={x.category_code} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={x.editorial_score} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}
       </div>
       <p className="map-explore-notice">${ui.license}</p>
