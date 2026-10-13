@@ -1,0 +1,27 @@
+name: WhatEatO UI System v1 live visual QA
+on:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths: ['scripts/verify_ui_system_live.mjs','.github/workflows/ui-system-live-visual.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.55.1
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/verify_ui_system_live.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: whateato-ui-system-v1-qa
+          path: ui-system-qa/
+          if-no-files-found: ignore
+          retention-days: 7
