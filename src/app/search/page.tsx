@@ -47,33 +47,29 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
   if(q)toMap.set('q',q);
   if(filterString)toMap.set('f',filterString);
   toMap.set('hl',locale);
-  return <main className="content">
+  return <main className="content search-results-page">
     {searched&&found&&offset===0&&q?<AnalyticsBeacon eventType="search_submitted" pageType="search" searchTerm={q} resultCount={found.items.length===0?0:undefined}/>:null}
-    <h1>{t.heading}</h1>
+    <header className="page-intro"><span className="eyebrow">DISCOVER · WHATEATO</span><h1>{t.heading}</h1><p className="hint">{locale==="ko"?"오늘 어디서 먹을지, 한눈에 비교해 보세요.":"Find your next favorite place."}</p></header>
     <SearchBoxSynced initial={q} initialFilters={filterTags} initialRegion={region} initialLocale={locale}/>
     <p className="hint">{!searched?t.initial:found?t.ready:t.unavailable}</p>
     {found&&<>
       <p className="hint">{locale==='ko'?'영업 상태는 등록된 영업시간 기준이며, 식당 사정에 따라 실제와 다를 수 있습니다.':locale==='en'?'Hours-based status may differ from actual operations.':locale==='ja'?'営業状況は登録された営業時間に基づき、実際と異なる場合があります。':'营业状态按登记营业时间计算，实际情况可能有所不同。'}</p>
-      <div className="results">{found.items.map(r=>{
+      <div className="restaurant-card-grid">{found.items.map(r=>{
         const detailParams=new URLSearchParams({hl:locale});
         if(q)detailParams.set('q',q);
         if(filterString)detailParams.set('f',filterString);
         if(region)detailParams.set('region',region);
         if(offset)detailParams.set('offset',String(offset));
         const href='/restaurant/'+r.id+'?'+detailParams.toString();
-        return <Link className="result" href={href} key={r.id}>
-          <VerifiedRestaurantPhoto image={r.featured_image_metadata} restaurantName={r.name}/>
-          <strong>{r.name}</strong>
-          {r.short_description&&<span>{r.short_description}</span>}
-          <span aria-label="Restaurant opening status">
-            {hoursLabels[locale][r.opening_hours?.state||'unknown']}
-            {r.opening_hours?.today_hours?` · ${hoursLabels[locale].hours} ${r.opening_hours.today_hours}`:''}
-          </span>
-          <span>{t.menu}: {r.main_menu||t.menuUnknown}</span>
+        return <Link className="restaurant-card" href={href} key={r.id}><div className="restaurant-card-media">
+          <VerifiedRestaurantPhoto image={r.featured_image_metadata} restaurantName={r.name}/>{!r.featured_image_metadata&&<div className="restaurant-photo-placeholder" aria-label="Image not yet available"><span>W</span><small>WhatEatO</small></div>}</div><div className="restaurant-card-content"><div className="restaurant-card-top"><strong>{r.name}</strong><span className={"status-pill "+(r.opening_hours?.state==="open"?"is-open":r.opening_hours?.state==="closed"?"is-closed":"")}>{hoursLabels[locale][r.opening_hours?.state||"unknown"]}</span></div>
+          {r.short_description&&<p className="card-description">{r.short_description}</p>}
+          {r.opening_hours?.today_hours&&<span className="restaurant-card-meta">◷ {r.opening_hours.today_hours}</span>}
+          <span className="restaurant-card-meta">🍽 {t.menu}: {r.main_menu||t.menuUnknown}</span>
           {r.tags.length>0&&<span aria-label="Verified restaurant tags">{r.tags.map(tag=>tag.label).join(' · ')}</span>}
           {r.ratings.external?<span>★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</span>:<span>{t.scoreUnknown}</span>}
           {r.ratings.whateato&&<span>★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</span>}
-          <span>{r.address_ko||t.address}</span>
+          <span className="restaurant-card-address">⌖ {r.address_ko||t.address}</span><span className="restaurant-card-cta">{locale==="ko"?"식당 자세히 보기":locale==="en"?"Explore restaurant":"View details"} <span aria-hidden="true">↗</span></span></div>
         </Link>
       })}</div>
       {found.items.length===0&&<p className="empty">{t.empty}</p>}
