@@ -44,8 +44,9 @@ try{
     assert.ok(style.height>=125,'expanded map card height');
     if(device==='desktop')assert.ok(style.height>=140 && style.height<=195,'four slots must fit the map height');
     assert.ok(await page.locator('.map-explore-cards .we-cuisine-tag').count()>0,'cuisine tags must be visible');
-    const dollarLabel=await page.locator('.map-explore-list-head h2').innerText();
-    assert.ok(!dollarLabel.includes('
+    const label=await page.locator('.map-explore-list-head h2').innerText();
+    assert.ok(!label.includes(String.fromCharCode(36)),'no dollar in counter');
+    assert.ok(await page.locator('.map-explore-cards .we-card-visit').first().isVisible(),'detail button visible');
    }
    const d=await page.evaluate(()=>({view:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
    assert.ok(d.content<=d.view+2,device+' '+stage+' overflow '+JSON.stringify(d));
