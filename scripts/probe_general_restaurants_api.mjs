@@ -44,5 +44,12 @@ summary.api_body_keys=body&&typeof body==='object'?Object.keys(body).slice(0,30)
 summary.item_count=Array.isArray(items)?items.length:Array.isArray(items?.item)?items.item.length:first?1:0;
 summary.first_item_keys=first&&typeof first==='object'?Object.keys(first).slice(0,80):[];
 summary.pagination={totalCount:body?.totalCount??null,numOfRows:body?.numOfRows??null,pageNo:body?.pageNo??null};
+const keys=summary.first_item_keys;
+summary.field_candidates={
+ permit_id:keys.filter(k=>/mng|manage|관리번호|인허가번호|permit|license/i.test(k)),
+ business_status:keys.filter(k=>/status|상태|영업|폐업|운영/i.test(k)),
+ closure_date:keys.filter(k=>/close|폐업일|취소일|말소일|종료일/i.test(k)),
+};
+summary.ready_for_exact_key_reconciliation=summary.item_count>0&&summary.field_candidates.permit_id.length>0&&summary.field_candidates.business_status.length>0;
 writeFileSync('general-restaurants-api-probe.json',JSON.stringify(summary,null,2)+'\n');
 console.log(JSON.stringify(summary));
