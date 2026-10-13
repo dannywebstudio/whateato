@@ -257,7 +257,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     return ()=>controller.abort();
   },[q,filter,locale]);
   const visibleItems=state==='ready'&&!basemapFailed?items:directory;
-  const pageSize=5;
+  const pageSize=4;
   const totalPages=Math.max(1,Math.ceil(visibleItems.length/pageSize));
   const safePage=Math.min(page,totalPages-1);
   const resultsReady=state==='ready'||directoryReady;
@@ -292,18 +292,18 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   <div className="map-explore-layout">
     <section className="map-explore-list" aria-label={ui.count}>
       <div className="map-explore-list-head">
-        <div><span className="eyebrow">LOCAL RESTAURANTS</span><h2>${ui.count} <span>${visibleItems.length}</span></h2></div>
+        <div><span className="eyebrow">LOCAL RESTAURANTS</span><h2>{ui.count} <span>{visibleItems.length}</span></h2></div>
         <div className="map-explore-pagination" aria-label="Restaurant result pages">
           <button type="button" aria-label="Previous restaurant page" disabled={safePage===0} onClick={()=>setPage(p=>Math.max(0,p-1))}>‹</button>
-          <span>${safePage+1} / ${totalPages}</span>
+          <span>{safePage+1} / {totalPages}</span>
           <button type="button" aria-label="Next restaurant page" disabled={safePage>=totalPages-1} onClick={()=>setPage(p=>Math.min(totalPages-1,p+1))}>›</button>
         </div>
       </div>
       {resultsReady&&visibleItems.length===0&&<p className="hint">${directoryError?ui.error:ui.empty}</p>}
-      <div className={"map-explore-cards"+(visibleItems.length<=3?" map-explore-cards-spacious":"")}>
+      <div className="map-explore-cards">
         {visibleItems.slice(safePage*pageSize,(safePage+1)*pageSize).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} category={x.category_code} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={x.editorial_score} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}
       </div>
-      <p className="map-explore-notice">${ui.license}</p>
+      <p className="map-explore-notice">{ui.license}</p>
     </section>
     <section className="map-explore-map" aria-label="Restaurant locations">
           <div style={{position:'relative',marginTop:0}}>
@@ -339,8 +339,8 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     </div>
 
       <p className="map-explore-map-status" role="status" aria-live="polite">
-        ${basemapFailed?ui.error:state==='loading'?ui.loading:state==='error'?ui.error:state==='zoom'?ui.zoom:state==='ready'?ui.count+': '+items.length:''}
-        ${limited?' · '+ui.limit:''}
+        {basemapFailed?ui.error:state==='loading'?ui.loading:state==='error'?ui.error:state==='zoom'?ui.zoom:state==='ready'?ui.count+': '+items.length:''}
+        {limited?' · '+ui.limit:''}
       </p>
     </section>
   </div>
