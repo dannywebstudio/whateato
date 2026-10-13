@@ -1,0 +1,40 @@
+name: Reconcile staging permits (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      start_page:
+        description: 'Government API start page'
+        required: true
+        default: '1'
+      max_pages:
+        description: 'Bounded pages to scan (1-10)'
+        required: true
+        default: '5'
+permissions:
+  contents: read
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+      - name: Match government pages to Neon staging (read only)
+        env:
+          DATA_GO_KR_SERVICE_KEY: ${{ secrets.DATA_GO_KR_SERVICE_KEY }}
+          WHATEATO_STAGING_DATABASE_URL: ${{ secrets.WHATEATO_STAGING_DATABASE_URL }}
+          START_PAGE: ${{ inputs.start_page }}
+          MAX_PAGES: ${{ inputs.max_pages }}
+          PAGE_SIZE: '1000'
+        run: node scripts/reconcile_official_staging_pages.mjs
+      - name: Save read-only candidate report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-permit-reconciliation
+          path: staging-permit-reconciliation.json
+          retention-days: 7
