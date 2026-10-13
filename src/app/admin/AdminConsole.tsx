@@ -39,6 +39,7 @@ const post=(url:string,body:unknown,method='POST')=>json(url,{method,headers:{'C
 export default function AdminConsole({role}:{role:Role}){
  const [tab,setTab]=useState<Tab>(role==='moderator'?'reviews':'restaurants');
  const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);
+ const [readiness,setReadiness]=useState<Record<string,string|boolean>|null>(null);
  const [q,setQ]=useState('');const [matches,setMatches]=useState<Place[]>([]);
  const [cursor,setCursor]=useState<string|null>(null);
  const [selected,setSelected]=useState<Detail|null>(null);
@@ -101,6 +102,10 @@ export default function AdminConsole({role}:{role:Role}){
    }catch(e){inform(e)}finally{setBusy(false)}
  };
  useEffect(()=>{if(edit)void search()},[edit,search]);
+ useEffect(()=>{
+   if(!edit)return;
+   void json('/api/v1/owner/readiness').then(setReadiness).catch(()=>setReadiness(null));
+ },[edit]);
  useEffect(()=>{
    const id=new URLSearchParams(window.location.search).get('restaurant');
    if(id&&/^[a-f0-9-]{36}$/i.test(id)&&edit)void select(id);
@@ -245,6 +250,18 @@ export default function AdminConsole({role}:{role:Role}){
        <p>Global First · English content priority · Public DESIGN LOCK</p></div>
      <span className={styles.badge}>권한: {role.toUpperCase()}</span>
    </header>
+   {readiness&&<section className={styles.panel} aria-label="관리자 환경 연결 상태">
+     <div className={styles.row}>
+       <div><strong>관리자 시스템 연결</strong><p className={styles.note}>비밀키 값은 표시하지 않아.</p></div>
+       <button className={styles.button+' '+styles.secondary} onClick={()=>void json('/api/v1/owner/readiness').then(setReadiness).catch(inform)}>다시 확인</button>
+     </div>
+     <div className={styles.chips}>
+       {([['Neon DB',readiness.database_schema],['Google',readiness.google_session],
+         ['대량 게시 API',readiness.bulk_api],['리뷰 검수',readiness.review_moderation],
+         ['사진 저장소',readiness.photo_storage]] as const).map(([label,value])=>
+         <span className={styles.chip} key={label}>{label} · {String(value)}</span>)}
+     </div>
+   </section>}
    <nav className={styles.tabs} aria-label="관리 탭">
      {(edit?[['restaurants','식당 편집'],['batches','대량 작업·승인'],['photos','사진 관리']]:[]).concat(
        moderate?[['reviews','방문후기 검수']]:[]
