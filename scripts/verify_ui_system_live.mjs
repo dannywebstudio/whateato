@@ -18,7 +18,7 @@ try{
    assert.equal(res?.status(),200,device+' '+stage);
    if(stage==='search'){
     await page.locator('.restaurant-card').first().waitFor({timeout:15000});
-    assert.equal(await page.locator('.restaurant-card-top').count()>0,true,'rich card');
+    assert.equal(await page.locator('.we-card-head').count()>0,true,'rich card');
    }
    if(stage==='detail'){
     assert.equal(await page.locator('.restaurant-hero').count(),1,'hero');
