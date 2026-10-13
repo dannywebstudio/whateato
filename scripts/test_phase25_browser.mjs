@@ -50,6 +50,17 @@ try{
       {timeout:20000});
     await page.goto(base+'/map?hl=ko&f=cafe',{waitUntil:'domcontentloaded',timeout:30000});
     await styleRequested;
+    await page.waitForFunction(()=>{
+      const map=document.querySelector('[aria-label="Interactive restaurant map"]');
+      return map?.getAttribute('data-map-status')==='ready' ||
+        !!document.querySelector('[aria-label="Basemap unavailable"] iframe[src^="https://www.openstreetmap.org/"]');
+    },null,{timeout:22000});
+    await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:12000});
+    const fallback=await page.locator('[aria-label="Basemap unavailable"] iframe').count();
+    if(!fallback){
+      const canvas=page.locator('.maplibregl-canvas');
+      await canvas.waitFor({state:'visible'});
+    }
     await check(page,device.name+' map');
     assert.equal(await page.locator('[aria-label="Interactive restaurant map"]').count(),1,
       'commercial-use-allowed OpenFreeMap is the default basemap');
