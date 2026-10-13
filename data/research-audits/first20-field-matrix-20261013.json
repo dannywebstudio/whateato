@@ -1,0 +1,529 @@
+{
+  "batch": "whatEatO-first20-research-20261013",
+  "notice": "Research-only, never an instruction to publish. Prices are third-party observed (may be outdated), NOT verified current prices. Naver star ratings are not available from verified Naver source and must not be substituted with external platforms. Reservations are reported, not live confirmed. Translations are editorial drafts.",
+  "count": 20,
+  "rows": [
+    {
+      "seq": 1,
+      "restaurant_id": "b90a773c-e405-423b-ae44-7b340501b024",
+      "permit_name": "온더보더 광화문 D타워점",
+      "permit_address": "서울특별시 종로구 종로3길 17, 2층 204호 (청진동)",
+      "permit_category": "경양식",
+      "short_description": {
+        "ko": "광화문 D타워의 멕시코 음식점.",
+        "en": "A Mexican restaurant in Gwanghwamun D Tower.",
+        "ja": "光化門Dタワーにあるメキシコ料理店。",
+        "zh-CN": "位于光化门D Tower的墨西哥餐厅。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "풀드포크 타코",
+          "listed_price_krw": 7500,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "콰트로 화이타",
+          "listed_price_krw": 65000,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "yes_reported",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://polle.com/place/40IXKT/온더보더",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 2,
+      "restaurant_id": "31adc115-9e51-421d-859c-54e22ce79e0c",
+      "permit_name": "두레유",
+      "permit_address": "서울특별시 종로구 평창30길 28 (평창동)",
+      "permit_category": "경양식",
+      "short_description": {
+        "ko": "평창동의 한식 코스 요리 식당으로 소개되지만 현재 주소가 인허가 주소와 달라 확인이 필요합니다.",
+        "en": "A Korean course-dining restaurant listed in Pyeongchang-dong; its current listed address differs from the permit record.",
+        "ja": "平倉洞の韓国料理コース店と紹介されていますが、現在の掲載住所と許可記録が一致していません。",
+        "zh-CN": "一家位于平仓洞的韩式套餐餐厅；当前登记地址与许可记录不一致。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "address_mismatch",
+      "external_evidence_url": null,
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 3,
+      "restaurant_id": "be9ca232-0aaf-41b6-b109-02d7aee4c760",
+      "permit_name": "느티나무",
+      "permit_address": "서울특별시 종로구 경희궁길 9 (신문로2가,1층)",
+      "permit_category": "까페",
+      "short_description": {
+        "ko": "경희궁길의 카페로 확인되는 업소입니다.",
+        "en": "A café on Gyeonghuigung-gil.",
+        "ja": "慶熙宮ギルにあるカフェ。",
+        "zh-CN": "位于庆熙宫路的一家咖啡馆。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://naratbab.kr/place/3111771609/",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 4,
+      "restaurant_id": "e1a72bf5-7698-4136-8952-8cbfc0b5dc6d",
+      "permit_name": "1358",
+      "permit_address": "서울특별시 종로구 돈화문로8길 26, 1층 (묘동)",
+      "permit_category": "까페",
+      "short_description": {
+        "ko": "종로3가 돈화문로8길의 작은 카페로 소개됩니다.",
+        "en": "A café on Donhwamun-ro 8-gil in Jongno.",
+        "ja": "鍾路・敦化門路8ギルにあるカフェ。",
+        "zh-CN": "位于钟路敦化门路8街的一家咖啡馆。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "커피",
+          "listed_price_krw": 2500,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 5,
+      "restaurant_id": "87f4a16b-54cf-4a4b-94ed-0e376498767f",
+      "permit_name": "부암동 테리야끼",
+      "permit_address": "서울특별시 종로구 자하문로 252-1, 지하1층 비01호 (부암동)",
+      "permit_category": "일식",
+      "short_description": {
+        "ko": "부암동에서 일식 업종으로 인허가된 업소이며 현행 메뉴는 확인되지 않았습니다.",
+        "en": "A Japanese-category permit record in Buam-dong; the current menu is unverified.",
+        "ja": "付岩洞で日本料理として登録された店舗で、現在のメニューは未確認です。",
+        "zh-CN": "位于付岩洞的日式餐饮许可记录，目前菜单尚未核实。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "permit_only",
+      "external_evidence_url": "https://dining.ayo.pe.kr/restaurant/d79c7fae67ed3ddd737fd43d4f7c8c0b",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 6,
+      "restaurant_id": "521e43ef-6eb9-469b-91b1-7bca704c1091",
+      "permit_name": "농민 사골 순대국",
+      "permit_address": "서울특별시 종로구 종로66길 10 (숭인동)",
+      "permit_category": "일식",
+      "short_description": {
+        "ko": "숭인동에서 사골 순대국을 판매하는 한식 음식점입니다.",
+        "en": "A Korean restaurant specializing in ox-bone-broth sundae soup in Sungin-dong.",
+        "ja": "崇仁洞で牛骨スープのスンデクッを提供する韓国料理店。",
+        "zh-CN": "崇仁洞一家供应牛骨汤血肠汤的韩餐馆。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "순대국",
+          "listed_price_krw": 10000,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "순대국(특)",
+          "listed_price_krw": 12000,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "category_mismatch",
+      "external_evidence_url": "https://www.daangn.com/kr/local-profile/농민사골순대국-m731ia3nkkrt/",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 7,
+      "restaurant_id": "ba36c7fb-532d-4f3d-aaa3-71100edd0a16",
+      "permit_name": "copper coffee",
+      "permit_address": "서울특별시 종로구 혜화로9길 7 (명륜1가,지상1층)",
+      "permit_category": "중국식",
+      "short_description": {
+        "ko": "명륜동에 있던 커피 전문 카페이며 외부 자료에 폐점으로 표시됩니다.",
+        "en": "A coffee shop formerly listed in Myeongnyun-dong; an external directory marks it closed.",
+        "ja": "明倫洞にあったカフェで、外部サイトでは閉店と表示されています。",
+        "zh-CN": "一家曾位于明伦洞的咖啡馆，外部目录标注为已关闭。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "아메리카노",
+          "listed_price_krw": 4000,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "카페라떼",
+          "listed_price_krw": 4500,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "reported_closed",
+      "external_evidence_url": "https://polle.com/place/4kqkEX/커퍼%20커피",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 8,
+      "restaurant_id": "3c47f857-03f1-434b-a42b-21c460999086",
+      "permit_name": "신선원",
+      "permit_address": "서울특별시 종로구 종로 263-1 (종로6가,(지상1층))",
+      "permit_category": "중국식",
+      "short_description": {
+        "ko": "종로6가 중국 음식점으로, 동일 주소·전화번호에서 '신신원' 명칭이 확인되어 상호 검증이 필요합니다.",
+        "en": "A Chinese restaurant record in Jongno; current listings use the name Sinsinwon at a matching address and phone number.",
+        "ja": "鍾路の中華料理店。住所と電話番号が一致する掲載情報では「シンシンウォン」という店名が使われており、店名確認が必要です。",
+        "zh-CN": "钟路的一家中餐馆；相同地址及电话的商户资料使用“신신원”名称，需核对店名。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "짜장면",
+          "listed_price_krw": 7000,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "짬뽕",
+          "listed_price_krw": 8000,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "name_mismatch",
+      "external_evidence_url": "https://www.tabling.co.kr/place/677cc7ac66de5f0698752840",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 9,
+      "restaurant_id": "58a03e79-6fe5-4076-a097-367caf150dec",
+      "permit_name": "호호식당 대학로",
+      "permit_address": "서울특별시 종로구 대학로9길 35, 1층 (명륜4가)",
+      "permit_category": "한식",
+      "short_description": {
+        "ko": "대학로에서 돈가스와 덮밥 등 일본 가정식을 제공하는 식당입니다.",
+        "en": "A Daehangno restaurant serving Japanese home-style meals, including cutlets and rice bowls.",
+        "ja": "大学路にある、とんかつや丼物など日本の家庭料理を提供する店。",
+        "zh-CN": "位于大学路，供应炸猪排和盖饭等日式家常料理。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "로스가츠정식",
+          "listed_price_krw": 15000,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "사케동",
+          "listed_price_krw": 18000,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "yes_reported",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://www.diningcode.com/profile.php?rid=YmAt6lKukYOU",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 10,
+      "restaurant_id": "8c28bddb-8739-42db-a4c5-748b12cdf913",
+      "permit_name": "서촌명가",
+      "permit_address": "서울특별시 종로구 자하문로 112, 지하1층 (청운동)",
+      "permit_category": "한식",
+      "short_description": {
+        "ko": "청운동의 한식당으로 청국장과 생선구이 등을 판매합니다.",
+        "en": "A Korean restaurant in Cheongun-dong serving fermented soybean stew and grilled fish.",
+        "ja": "清雲洞にある韓国料理店で、チョングッチャンや焼き魚を提供しています。",
+        "zh-CN": "位于清云洞的韩餐馆，供应清麴酱汤和烤鱼等。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "청국장",
+          "listed_price_krw": 10000,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "생선구이",
+          "listed_price_krw": 13000,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 11,
+      "restaurant_id": "f01770c5-220b-4570-8a74-922ad472288f",
+      "permit_name": "소올(SOL)",
+      "permit_address": "서울특별시 중구 명동8길 27 (명동2가, 엠플라자 21층)",
+      "permit_category": "경양식",
+      "short_description": {
+        "ko": "명동 엠플라자 21층에 인허가 등록된 음식점입니다. 현재 메뉴는 확인되지 않았습니다.",
+        "en": "A restaurant registered on the 21st floor of M Plaza in Myeongdong; its current menu is unverified.",
+        "ja": "明洞Mプラザ21階に登録された飲食店で、現在のメニューは未確認です。",
+        "zh-CN": "登记于明洞M Plaza 21层的餐厅，目前菜单尚未核实。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "permit_only",
+      "external_evidence_url": null,
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 12,
+      "restaurant_id": "6d2889f5-0764-4fc9-b2c5-eb2b72c07c77",
+      "permit_name": "프랭크버거 동국대점",
+      "permit_address": "서울특별시 중구 서애로1길 18, 1층 (필동3가)",
+      "permit_category": "경양식",
+      "short_description": {
+        "ko": "동국대 인근 서애로1길에 위치한 햄버거 전문점입니다.",
+        "en": "A burger restaurant on Seae-ro 1-gil near Dongguk University.",
+        "ja": "東国大学近くのソエ路1ギルにあるハンバーガー店。",
+        "zh-CN": "位于东国大学附近瑞爱路1街的汉堡店。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "프랭크치킨버거",
+          "listed_price_krw": 3900,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "치폴레치킨버거",
+          "listed_price_krw": 4900,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "yes_reported",
+      "identity_flag": "price_conflict",
+      "external_evidence_url": "https://www.tabling.co.kr/place/677cd09c66de5f06988663c3",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 13,
+      "restaurant_id": "a36631a0-64a3-4ad8-a6bf-3ed3dcca21bc",
+      "permit_name": "라 테라스",
+      "permit_address": "서울특별시 중구 삼일대로 302 (충무로2가, 1층)",
+      "permit_category": "까페",
+      "short_description": {
+        "ko": "충무로 삼일대로의 카페 업종 인허가 기록이며 현행 영업 및 메뉴 확인이 필요합니다.",
+        "en": "A café-category permit record on Samil-daero in Chungmuro; current operations and menu are unverified.",
+        "ja": "忠武路・三一路のカフェ登録店舗で、現在の営業とメニューは未確認です。",
+        "zh-CN": "忠武路三一路的一条咖啡馆许可记录，营业及菜单待核实。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "permit_only",
+      "external_evidence_url": null,
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 14,
+      "restaurant_id": "855904c3-aaaf-404b-b9ca-755097e76444",
+      "permit_name": "카페르뷰",
+      "permit_address": "서울특별시 중구 퇴계로 282, 1층 (쌍림동)",
+      "permit_category": "까페",
+      "short_description": {
+        "ko": "쌍림동 퇴계로의 카페로, 아메리카노를 판매하는 것으로 안내됩니다.",
+        "en": "A café on Toegye-ro in Ssangnim-dong, listing Americano coffee.",
+        "ja": "双林洞の退渓路にあるカフェで、アメリカーノが掲載されています。",
+        "zh-CN": "位于双林洞退溪路的咖啡馆，商户页面列有美式咖啡。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "아메리카노",
+          "listed_price_krw": 2500,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://www.daangn.com/kr/local-profile/카페르뷰-w99efytsdisy/",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 15,
+      "restaurant_id": "d959900f-fe99-4a9a-8fb0-9b27278fb214",
+      "permit_name": "다도회집",
+      "permit_address": "서울특별시 중구 마른내로6길 38 (충무로4가)",
+      "permit_category": "일식",
+      "short_description": {
+        "ko": "충무로4가의 해산물·회 전문점으로 소개되는 식당입니다.",
+        "en": "A seafood and sashimi restaurant listed in Chungmuro.",
+        "ja": "忠武路にある魚介・刺身料理店。",
+        "zh-CN": "位于忠武路的海鲜与生鱼片餐厅。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 16,
+      "restaurant_id": "a5271953-1b28-4d31-8c53-52d79d7641b9",
+      "permit_name": "소수헌",
+      "permit_address": "서울특별시 중구 만리재로21길 8, 지하1층, 지상1층 (만리동2가)",
+      "permit_category": "일식",
+      "short_description": {
+        "ko": "만리동의 일식 오마카세 식당으로 소개됩니다.",
+        "en": "A Japanese omakase restaurant in Malli-dong.",
+        "ja": "万里洞にある日本料理のおまかせコース店。",
+        "zh-CN": "位于万里洞的日式主厨套餐餐厅。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "런치 오마카세",
+          "listed_price_krw": 300000,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "디너 오마카세",
+          "listed_price_krw": 500000,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://www.tel-co.net/food/spot/8582",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 17,
+      "restaurant_id": "6b69d5f2-c708-45f2-ad0b-8ba26430e6be",
+      "permit_name": "탕화쿵푸마라탕 명동 롯데점",
+      "permit_address": "서울특별시 중구 남대문로7길 15, 대호 2층 (소공동)",
+      "permit_category": "중국식",
+      "short_description": {
+        "ko": "소공동에서 마라탕·마라샹궈를 판매하는 중국 음식점으로, 외부에서는 명동5호점으로 안내됩니다.",
+        "en": "A Chinese restaurant in Sogong-dong serving malatang and mala xiang guo; listings call it Myeongdong Branch 5.",
+        "ja": "小公洞にある麻辣湯・麻辣香鍋の店で、外部サイトでは明洞5号店と表記されています。",
+        "zh-CN": "位于小公洞的麻辣烫和麻辣香锅餐厅，外部平台称其为明洞5号店。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "마라탕 100g",
+          "listed_price_krw": 1900,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "마라샹궈 100g",
+          "listed_price_krw": 3300,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "branch_alias",
+      "external_evidence_url": "https://www.tabling.co.kr/place/677cd61a66de5f06989062ab",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 18,
+      "restaurant_id": "650c1a8d-b964-4b3e-861e-4c09f0378c17",
+      "permit_name": "라니마라탕",
+      "permit_address": "서울특별시 중구 을지로 228, 대성을지로오피스텔 1층 105호 (을지로5가)",
+      "permit_category": "중국식",
+      "short_description": {
+        "ko": "을지로5가에 인허가된 마라탕 업종의 음식점으로 현재 메뉴는 확인되지 않았습니다.",
+        "en": "A mala restaurant permit record in Euljiro; its current menu is unverified.",
+        "ja": "乙支路に登録された麻辣料理店で、現在のメニューは未確認です。",
+        "zh-CN": "位于乙支路的麻辣料理许可记录，菜单待核实。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "permit_only",
+      "external_evidence_url": null,
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 19,
+      "restaurant_id": "e368e24d-a125-463b-80ba-2b3b90184f5e",
+      "permit_name": "영덕막회",
+      "permit_address": "서울특별시 중구 을지로3길 33 (다동, 3층)",
+      "permit_category": "한식",
+      "short_description": {
+        "ko": "을지로 다동에서 막회와 물회 등을 판매하는 해산물 음식점입니다.",
+        "en": "A seafood restaurant in Dadong, Euljiro serving sliced fish and chilled seafood soup.",
+        "ja": "乙支路・茶洞にある海鮮料理店で、刺身やムルフェなどを提供します。",
+        "zh-CN": "位于乙支路茶洞的海鲜餐厅，供应生鱼片和韩式冷拌生鱼汤。"
+      },
+      "observed_menus": [
+        {
+          "name_ko": "물회",
+          "listed_price_krw": 13000,
+          "verified_current_price": false
+        },
+        {
+          "name_ko": "회덮밥",
+          "listed_price_krw": 11000,
+          "verified_current_price": false
+        }
+      ],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "yes_reported",
+      "identity_flag": "requires_final_review",
+      "external_evidence_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
+      "publication_state": "RESEARCH_ONLY"
+    },
+    {
+      "seq": 20,
+      "restaurant_id": "1b246b70-bb17-44b9-b121-f9903ebd9331",
+      "permit_name": "살구골",
+      "permit_address": "서울특별시 중구 소월로 20-4, 1층 (남대문로5가)",
+      "permit_category": "한식",
+      "short_description": {
+        "ko": "남대문로5가의 고기 음식점으로 소개되지만 외부 자료에는 폐점 표시가 있습니다.",
+        "en": "A meat restaurant formerly listed in Namdaemun; an external directory marks it closed.",
+        "ja": "南大門にあった焼肉店と紹介されていますが、外部サイトでは閉店表示があります。",
+        "zh-CN": "曾位于南大门的烤肉餐厅，外部平台标注为已关闭。"
+      },
+      "observed_menus": [],
+      "naver_rating": null,
+      "naver_rating_status": "NOT_VERIFIED_FROM_NAVER",
+      "reservation_status": "unverified",
+      "identity_flag": "reported_closed",
+      "external_evidence_url": "https://polle.com/place/1HDts2/살구골",
+      "publication_state": "RESEARCH_ONLY"
+    }
+  ]
+}
