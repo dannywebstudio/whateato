@@ -1,6 +1,9 @@
 name: WhatEatO bounded source checkpoint pilot
 on:
   workflow_dispatch:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths: ['.github/workflows/source-checkpoint-pilot.yml']
 permissions:
   contents: read
 concurrency:
