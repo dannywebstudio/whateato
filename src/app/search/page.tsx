@@ -62,7 +62,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
         if(region)detailParams.set('region',region);
         if(offset)detailParams.set('offset',String(offset));
         const href='/restaurant/'+r.id+'?'+detailParams.toString();
-        return <RestaurantExperienceCard key={r.id} name={r.name} address={r.address||r.address_ko} description={r.short_description} menu={r.main_menu} href={href} locale={locale} status={r.opening_hours?.state||'unknown'} hours={r.opening_hours?.today_hours} rating={r.ratings.external?.rating??r.ratings.whateato?.rating??null} tags={r.tags.map(t=>t.label)} imageUrl={r.featured_image_metadata?.url||null}/>
+        return <RestaurantExperienceCard key={r.id} name={r.name} category={r.category_code} address={r.address||r.address_ko} description={r.short_description} menu={r.main_menu} href={href} locale={locale} status={r.opening_hours?.state||'unknown'} hours={r.opening_hours?.today_hours} rating={r.ratings.external?.rating??r.ratings.whateato?.rating??null} tags={r.tags.map(t=>t.label)} imageUrl={r.featured_image_metadata?.url||null}/>
       })}</div>
       {found.items.length===0&&<p className="empty">{t.empty}</p>}
       {found.has_more&&offset<10000&&
