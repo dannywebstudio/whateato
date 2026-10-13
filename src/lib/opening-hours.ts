@@ -1,5 +1,5 @@
 import type {Pool} from 'pg';
-export type OpeningHours={state:'open'|'closed'|'unknown';weekly:{weekday:number;start:string;end:string}[];verified_at:string|null};
+export type OpeningHours={state:'open'|'closed'|'unknown';weekly:{weekday:number;start:string;end:string}[];verified_at:string|null;today_hours:string|null};
 type R={restaurant_id:string;weekday:number|null;start_minute:number|null;end_minute:number|null;verified_at:string;exception_closed:boolean|null};
 const hhmm=(n:number)=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
 function koreaNow(now:Date){
@@ -22,13 +22,18 @@ export async function getOpeningHours(pool:Pool,ids:string[],now=new Date()):Pro
  ORDER BY h.restaurant_id,i.weekday,i.start_minute`,[ids,k.date]);
  const result:Record<string,OpeningHours>={};
  for(const r of response.rows){
-  const o=result[r.restaurant_id] ||= {state:'closed',weekly:[],verified_at:r.verified_at};
+  const o=result[r.restaurant_id] ||= {state:'closed',weekly:[],verified_at:r.verified_at,today_hours:null};
   if(r.weekday!==null&&r.start_minute!==null&&r.end_minute!==null){
    o.weekly.push({weekday:r.weekday,start:hhmm(r.start_minute),end:hhmm(r.end_minute)});
    if(r.weekday===k.day && k.minute>=r.start_minute&&k.minute<r.end_minute)o.state='open';
   }
   if(r.exception_closed)o.state='closed';
  }
- // A published empty weekly schedule represents a verified closure; unknown restaurants remain absent.
+ for(const o of Object.values(result)){
+  // Today's published intervals; multiple ranges indicate breaks. No guessed hours.
+  const today=o.weekly.filter(s=>s.weekday===k.day);
+  o.today_hours=today.length?today.map(s=>s.start+'–'+s.end).join(' / '):null;
+ }
+ // Unknown restaurants remain absent. An explicitly verified closure has no intervals.
  return result;
 }
