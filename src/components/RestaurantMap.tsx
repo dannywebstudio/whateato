@@ -205,14 +205,15 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         const coords=feature?.geometry?.coordinates;
         if(!Array.isArray(coords)||coords.length<2||!Number.isFinite(coords[0])||!Number.isFinite(coords[1]))return;
         currentPopup?.remove();
-        const details=locale==='ko'?'상세 보기':locale==='ja'?'詳しく見る':locale==='zh-CN'?'查看详情':'View details';
+        const activeLocale=queryRef.current.locale;
+        const details=activeLocale==='ko'?'상세 보기':activeLocale==='ja'?'詳しく見る':activeLocale==='zh-CN'?'查看详情':'View details';
         const states={
           ko:{open:'영업중',closed:'영업종료',preparing:'영업준비중',unknown:'영업시간 미확인'},
           en:{open:'Open now',closed:'Closed',preparing:'Preparing to open',unknown:'Hours unverified'},
           ja:{open:'営業中',closed:'営業時間外',preparing:'準備中',unknown:'営業時間未確認'},
           'zh-CN':{open:'营业中',closed:'已打烊',preparing:'准备中',unknown:'营业时间未核实'}
         } as const;
-        const lang=locale in states?locale as keyof typeof states:'ko';
+        const lang=activeLocale in states?activeLocale as keyof typeof states:'ko';
         const status=feature?.properties?.openingState;
         const stateKey=status==='open'||status==='closed'||status==='preparing'?status:'unknown';
         const root=document.createElement('div');root.className='we-map-popup';
@@ -221,7 +222,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         state.className='we-map-popup-state '+(stateKey==='open'?'is-open':stateKey==='closed'?'is-closed':stateKey==='preparing'?'is-preparing':'');
         const detail=document.createElement('a');
         detail.textContent=details+' ↗';
-        detail.href='/restaurant/'+encodeURIComponent(id)+'?hl='+encodeURIComponent(locale);
+        detail.href='/restaurant/'+encodeURIComponent(id)+'?hl='+encodeURIComponent(activeLocale);
         root.append(heading,state,detail);
         currentPopup=new Popup({offset:16,closeButton:true,maxWidth:'230px'})
           .setLngLat([coords[0],coords[1]]).setDOMContent(root).addTo(m);
