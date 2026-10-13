@@ -172,7 +172,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       const onClusterClick=(ev:{lngLat:{lng:number;lat:number}})=>{
         m.easeTo({center:[ev.lngLat.lng,ev.lngLat.lat],zoom:Math.min(17,m.getZoom()+1.8),duration:400});
       };
-      const onError=(event:{error?:Error})=>{
+      const onError=(event:{error?:{message?:string}})=>{
         // Sanitize optional public map-key query strings before diagnostics.
         const why=String(event.error?.message||'map_resource_error')
           .replace(/key=[^\s&]+/gi,'key=[REDACTED]').slice(0,180);
