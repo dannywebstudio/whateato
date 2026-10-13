@@ -55,6 +55,7 @@ export default function AdminConsole({role}:{role:Role}){
  const [currentBatch,setCurrentBatch]=useState<any>(null);
  const [bulkFile,setBulkFile]=useState<File|null>(null);const [imported,setImported]=useState(0);
  const [reviews,setReviews]=useState<Review[]>([]);
+ const [reviewStatus,setReviewStatus]=useState<'pending'|'published'|'rejected'>('pending');
  const [reason,setReason]=useState('spam');
  const [image,setImage]=useState<File|null>(null);const [rights,setRights]=useState(false);
  const [imageEvidence,setImageEvidence]=useState('');const [rightsEvidence,setRightsEvidence]=useState('');const [imagePosition,setImagePosition]=useState(0);
@@ -120,8 +121,8 @@ export default function AdminConsole({role}:{role:Role}){
  },[locale,selected]);
  const loadBatches=async()=>{try{const r=await json('/api/v1/owner/bulk/batches?limit=30');setBatches(r.items)}catch(e){inform(e)}};
  const loadBatch=async(id:string)=>{try{const r=await json('/api/v1/owner/bulk/batches/'+id);setCurrentBatch(r);setBatchId(id)}catch(e){inform(e)}};
- const loadReviews=async()=>{try{const r=await json('/api/v1/owner/reviews?limit=50');setReviews(r.items)}catch(e){inform(e)}};
- useEffect(()=>{if(tab==='batches'&&edit)void loadBatches();if(tab==='reviews'&&moderate)void loadReviews()},[tab,edit,moderate]);
+ const loadReviews=async()=>{try{const r=await json('/api/v1/owner/reviews?limit=50&status='+reviewStatus);setReviews(r.items)}catch(e){inform(e)}};
+ useEffect(()=>{if(tab==='batches'&&edit)void loadBatches();if(tab==='reviews'&&moderate)void loadReviews()},[tab,edit,moderate,reviewStatus]);
  const makeBatch=async(items:Item[],title:string)=>{
    if(!items.length)throw Error('등록할 항목이 없어.');
    const made=await post('/api/v1/owner/bulk/batches',{client_key:'cms-'+crypto.randomUUID(),title});
@@ -191,10 +192,10 @@ export default function AdminConsole({role}:{role:Role}){
      setTab('batches');
    }catch(e){inform(e)}
  };
- const reviewAction=async(id:string,approve:boolean)=>{
-   const reason_code=approve?'approved_guidelines':reason;
-   if(!window.confirm(approve?'실제 검토한 리뷰를 승인할까?':'해당 리뷰를 거절할까?'))return;
-   try{await post('/api/v1/owner/reviews/'+id,{decision:approve?'approve':'reject',reason_code},'PATCH');
+ const reviewAction=async(id:string,approve:boolean,hide=false)=>{
+   const reason_code=approve?'approved_guidelines':hide?'other':reason;
+   if(!window.confirm(approve?'실제 검토한 리뷰를 승인할까?':hide?'이미 게시된 리뷰를 비공개 처리할까?':'해당 리뷰를 거절할까?'))return;
+   try{await post('/api/v1/owner/reviews/'+id,{decision:approve?'approve':hide?'hide':'reject',reason_code},'PATCH');
      setNotice('리뷰 처리 완료');await loadReviews()}catch(e){inform(e)}
  };
  const batchAction=async(action:string)=>{
@@ -383,7 +384,10 @@ export default function AdminConsole({role}:{role:Role}){
      </section>
    </div>}
    {tab==='reviews'&&moderate&&<section className={styles.panel}>
-     <div className={styles.row}><h2>방문후기 승인 대기</h2><button className={styles.button+' '+styles.secondary} onClick={()=>void loadReviews()}>새로고침</button></div>
+     <div className={styles.row}><h2>방문후기 관리</h2><button className={styles.button+' '+styles.secondary} onClick={()=>void loadReviews()}>새로고침</button></div>
+     <label className={styles.field}>보기<select value={reviewStatus} onChange={e=>setReviewStatus(e.target.value as typeof reviewStatus)}>
+       <option value="pending">승인 대기</option><option value="published">게시 중</option><option value="rejected">거절·숨김</option>
+     </select></label>
      <label className={styles.field}>거절 사유<select value={reason} onChange={e=>setReason(e.target.value)}>
        {['spam','abusive','personal_data','off_topic','unverifiable_claim','other'].map(v=><option key={v} value={v}>{v}</option>)}
      </select></label>
@@ -393,8 +397,10 @@ export default function AdminConsole({role}:{role:Role}){
        <p style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{r.body}</p>
        <div className={styles.small}>{r.created_at} · ID: {r.id}</div>
        <div className={styles.actions}>
-         <button className={styles.button} onClick={()=>void reviewAction(r.id,true)}>검토 후 승인</button>
-         <button className={styles.button+' '+styles.danger} onClick={()=>void reviewAction(r.id,false)}>거절</button>
+         {reviewStatus==='pending'&&<><button className={styles.button} onClick={()=>void reviewAction(r.id,true)}>검토 후 승인</button>
+         <button className={styles.button+' '+styles.danger} onClick={()=>void reviewAction(r.id,false)}>거절</button></>}
+         {reviewStatus==='published'&&<button className={styles.button+' '+styles.danger}
+           onClick={()=>void reviewAction(r.id,false,true)}>게시된 후기 숨김</button>}
        </div>
      </article>)}
    </section>}
