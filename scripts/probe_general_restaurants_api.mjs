@@ -35,5 +35,14 @@ if(summary.has_error){
  console.error('Government API error code:',code,'(request rejected; no API secret exposed)');
  throw Error('Government API non-success resultCode='+code);
 }
+// Metadata only: never log user data, rows, service key or person-specific fields.
+const body=doc?.response?.body;
+const items=body?.items;
+const first=Array.isArray(items)?items[0]:Array.isArray(items?.item)?items.item[0]:items?.item||null;
+summary.api_header_keys=doc?.response?.header&&typeof doc.response.header==='object'?Object.keys(doc.response.header).slice(0,30):[];
+summary.api_body_keys=body&&typeof body==='object'?Object.keys(body).slice(0,30):[];
+summary.item_count=Array.isArray(items)?items.length:Array.isArray(items?.item)?items.item.length:first?1:0;
+summary.first_item_keys=first&&typeof first==='object'?Object.keys(first).slice(0,80):[];
+summary.pagination={totalCount:body?.totalCount??null,numOfRows:body?.numOfRows??null,pageNo:body?.pageNo??null};
 writeFileSync('general-restaurants-api-probe.json',JSON.stringify(summary,null,2)+'\n');
 console.log(JSON.stringify(summary));
