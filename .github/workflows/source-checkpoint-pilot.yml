@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm ci --ignore-scripts
+      - run: npm install --ignore-scripts --no-package-lock --no-save pg@8.16.0
       - name: Max five API pairs, reuse cached checkpoints
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
