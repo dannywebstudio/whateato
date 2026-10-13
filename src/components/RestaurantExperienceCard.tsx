@@ -12,7 +12,7 @@ const copy={
 export default function RestaurantExperienceCard({name,address,description,menu,href,locale,variant='search',status='unknown',hours,rating,tags=[],imageUrl,onMapClick,mapButtonLabel}:Props){
  const t=copy[locale as keyof typeof copy]||copy.ko;
  return <article className={'we-card we-card-'+variant+(variant==='map'?' result map-restaurant-card':' restaurant-card')}>
-   <div className="we-card-visual">{imageUrl?<img src={imageUrl} alt={name} loading="lazy"/>:<div className="we-card-fallback" aria-label="Photo unavailable"><span>W.</span><small>DISCOVER LOCAL</small></div>}<span className="we-card-category">WhatEatO EDITOR'S DIRECTORY</span></div>
+   <div className="we-card-visual">{imageUrl?<img src={imageUrl} alt={name} loading="lazy"/>:<div className="we-card-fallback" aria-label="Photo unavailable"><span>W.</span><small>DISCOVER LOCAL</small></div>}<span className="we-card-category">WHATEATO · LOCAL DISCOVERY</span></div>
    <div className="we-card-body"><div className="we-card-head"><h3><Link href={href}>{name}</Link></h3><span className={'status-pill '+(status==='open'?'is-open':status==='closed'?'is-closed':'')}>{t[status]}</span></div>
    {description&&<p className="we-card-desc">{description}</p>}
    <div className="we-card-information">{menu&&<p><span>◈</span><b>{t.menu}</b> {menu}</p>}{hours&&<p><span>◷</span>{hours}</p>}{address&&<p><span>⌖</span>{address}</p>}</div>
