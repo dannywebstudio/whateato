@@ -331,7 +331,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         {basemapFailed?(locale==='ko'?' · 지도 없이 목록으로 탐색':' · List view'):''}
         {limited?' · '+ui.limit:''}</p>
       <div className={'results map-results '+mapStyles.directory}>
-        {visibleItems.slice(0,visibleCount).map(x=><div key={x.id} className="map-restaurant-card">
+        {visibleItems.slice(0,visibleCount).map(x=><div key={x.id} className="result map-restaurant-card">
           <div className="map-card-mark" aria-hidden="true">⌖</div><div className="map-card-body"><strong>{x.name}</strong>
           {x.editorial_score!==null&&<span>★ {x.editorial_score.toFixed(1)} / 5 · WhatEatO</span>}
           <span className="map-card-address">{x.address_ko||x.region_sigungu}</span>
