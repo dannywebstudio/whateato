@@ -1,3 +1,4 @@
+import {reserveGooglePhotoQuota,isVerifiedPilotPlace} from '@/lib/google-photo-quota';
 /**
  * Google Places Photo (New) server-only adapter.
  * DENY BY DEFAULT. No invocation from public pages until owner-reviewed quota
@@ -28,10 +29,12 @@ function validPlaceId(id:string){
  * Chargeable: Place Details (New) photo metadata SKU can be billed. Caller
  * MUST reserve a persistent per-SKU allowance BEFORE calling this function.
  */
-export async function getTransientPhotoReferences(placeId:string,apiKey:string):Promise<LiveGooglePhoto[]>{
+export async function getTransientPhotoReferences(restaurantId:string,placeId:string,apiKey:string):Promise<LiveGooglePhoto[]>{
   assertPhotoPolicyReady();
   if(!validPlaceId(placeId))throw new Error('invalid_google_place_id');
   if(!apiKey)throw new Error('missing_server_side_google_places_key');
+  if(!await isVerifiedPilotPlace(restaurantId,placeId))throw new Error('google_place_identity_not_verified');
+  if(!await reserveGooglePhotoQuota('place_details_photo_metadata'))throw new Error('google_photo_quota_exhausted');
   const url='https://places.googleapis.com/v1/places/'+encodeURIComponent(placeId);
   const r=await fetch(url,{headers:{'X-Goog-Api-Key':apiKey,'X-Goog-FieldMask':'photos,googleMapsUri'},
     cache:'no-store',signal:AbortSignal.timeout(10000)});
@@ -47,11 +50,14 @@ export async function getTransientPhotoReferences(placeId:string,apiKey:string):
  * to a long-lived URI, never remove visible author + Google Maps attribution.
  * Reserve persistent quota before invocation. Caller must stream with no-store.
  */
-export async function getLivePhotoBytes(photoName:string,apiKey:string):Promise<Response>{
+export async function getLivePhotoBytes(restaurantId:string,placeId:string,photoName:string,apiKey:string):Promise<Response>{
   assertPhotoPolicyReady();
   if(!/^places\/[A-Za-z0-9_-]{12,255}\/photos\/[A-Za-z0-9_-]{3,600}$/.test(photoName))
     throw new Error('invalid_google_photo_resource');
   if(!apiKey)throw new Error('missing_server_side_google_places_key');
+  if(!photoName.startsWith('places/'+placeId+'/'))throw new Error('place_photo_identity_mismatch');
+  if(!await isVerifiedPilotPlace(restaurantId,placeId))throw new Error('google_place_identity_not_verified');
+  if(!await reserveGooglePhotoQuota('place_photo_media'))throw new Error('google_photo_quota_exhausted');
   const url='https://places.googleapis.com/v1/'+photoName+'/media?maxWidthPx=640&skipHttpRedirect=true';
   return fetch(url,{headers:{'X-Goog-Api-Key':apiKey},cache:'no-store',signal:AbortSignal.timeout(10000)});
 }
