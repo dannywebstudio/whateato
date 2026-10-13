@@ -20,7 +20,7 @@ export default function RestaurantExperienceCard({name,address,description,menu,
    {description&&<p className="we-card-desc">{description}</p>}
    <div className="we-card-information">{menu&&<p><span>◈</span><b>{t.menu}</b> {menu}</p>}{hours&&<p><span>◷</span>{hours}</p>}{address&&<p><span>⌖</span>{address}</p>}</div>
    <div className="we-card-bottom"><span className="we-card-rating">{rating!==null&&rating!==undefined?'★ '+rating.toFixed(1):t.rating}</span><div className="we-card-actions">{onMapClick&&<button type="button" onClick={onMapClick} className="we-map-button map-card-locate" aria-label={mapButtonLabel||t.map}>{t.map}</button>}<Link href={href} className="we-card-visit">{t.details} <span aria-hidden="true">↗</span></Link></div></div>
-   {tags.length>0&&<div className="we-card-tags">{tags.slice(0,3).map(tag=><span key={tag}>{tag}</span>)}</div>}
+   <div className="we-card-tags"><span className="we-cuisine-tag">{cuisine}</span>{tags.filter(tag=>tag!==cuisine).slice(0,3).map(tag=><span key={tag}>{tag}</span>)}</div>
    </div>
  </article>;
 }
