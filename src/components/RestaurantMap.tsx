@@ -181,7 +181,9 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
             layout:{'text-field':['get','name'],'text-size':12,
               'text-font':['Noto Sans Regular'],'text-anchor':'left',
               'text-offset':[1.1,0],'text-max-width':11,
-              'text-allow-overlap':false,'text-optional':true},
+              'text-variable-anchor':['left','right','top','bottom'],
+              'text-radial-offset':1.1,
+              'text-allow-overlap':false,'text-optional':false},
             paint:{'text-color':'#192920','text-halo-color':'#ffffff','text-halo-width':2}
           });
           // Only mark a real selected permit location; never add synthetic pins.
@@ -192,11 +194,20 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
           });
         }
         styleReady=true;
+        syncNameVisibility();
         window.clearTimeout(timeout);
         setBasemapFailed(false);
         void load(m);
       };
-      const onMove=()=>void load(m);
+      // At street-level zoom, prefer showing the actual venue name even in
+      // dense restaurant areas. At zoom 14–15, keep collision avoidance.
+      const syncNameVisibility=()=>{
+        if(!m.getLayer(markerNameLayer))return;
+        const streetLevel=m.getZoom()>=16;
+        m.setLayoutProperty(markerNameLayer,'text-allow-overlap',streetLevel);
+        m.setLayoutProperty(markerNameLayer,'text-ignore-placement',streetLevel);
+      };
+      const onMove=()=>{syncNameVisibility();void load(m);};
       const onClick=(ev:MapLayerMouseEvent)=>{
         const feature=ev.features?.[0];
         const id=feature?.properties?.id;
