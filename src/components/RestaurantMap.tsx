@@ -122,7 +122,11 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     setState('loading');
     let instance:MapLibreMap|null=null;
     let removeMapEvents:()=>void=()=>{};
-    void import('maplibre-gl').then(({Map,NavigationControl,AttributionControl})=>{
+    void import('maplibre-gl').then(({Map,NavigationControl,AttributionControl,setWorkerUrl,getVersion})=>{
+      // MapLibre 6 ESM worker must be served with its sibling shared module.
+      // The prebuild/predev steps copy both files into the same-origin public
+      // directory. The version query prevents incompatible stale worker caches.
+      setWorkerUrl('/maplibre/maplibre-gl-worker.mjs?v='+encodeURIComponent(getVersion()));
       if(cancelled||!host.current)return;
       instance=new Map({
         container:host.current,
