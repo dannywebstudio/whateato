@@ -231,6 +231,14 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const visibleItems=state==='ready'&&!basemapFailed?items:directory;
   const resultsReady=state==='ready'||directoryReady;
   const pick=visibleItems.find(x=>x.id===selected)||null;
+  const fallbackSource=pick?new URLSearchParams({
+    bbox:[pick.longitude-0.019,pick.latitude-0.013,pick.longitude+0.019,
+      pick.latitude+0.013].map(x=>x.toFixed(6)).join(','),
+    layer:'mapnik',
+    marker:pick.latitude.toFixed(6)+','+pick.longitude.toFixed(6)
+  }).toString():null;
+  const fallbackUrl=fallbackSource?'https://www.openstreetmap.org/export/embed.html?'+fallbackSource
+    :fallbackIframe;
   const params=new URLSearchParams({hl:locale});
   if(q)params.set('q',q);
   if(filter)params.set('f',filter);
@@ -244,7 +252,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       {basemapFailed&&<section aria-label="Basemap unavailable"
         style={{position:'absolute',inset:0,background:'#f3f7f4',
           borderRadius:18,overflow:'hidden',border:'1px solid #e5ece8'}}>
-        <iframe src={fallbackIframe} title="OpenStreetMap fallback map of central Seoul"
+        <iframe src={fallbackUrl} title="OpenStreetMap fallback map of central Seoul"
           loading="lazy" referrerPolicy="strict-origin-when-cross-origin"
           style={{width:'100%',height:'100%',display:'block',border:0}}/>
         <div style={{position:'absolute',left:12,top:12,right:12,background:'#fffffff0',
@@ -286,6 +294,12 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
           <strong>{x.name}</strong>
           {x.editorial_score!==null&&<span>★ {x.editorial_score.toFixed(1)} / 5 · WhatEatO</span>}
           <span>{x.address_ko||x.region_sigungu}</span>
+          {basemapFailed&&<button type="button" onClick={()=>setSelected(x.id)}
+            style={{alignSelf:'flex-start',border:'1px solid #c5dcd0',background:'#f3faf6',
+              color:'#137b57',padding:'8px 12px',borderRadius:8,cursor:'pointer'}}>
+            {locale==='ko'?'보조 지도에서 위치 보기':locale==='ja'?'地図で位置を確認':
+              locale==='zh-CN'?'在地图上查看位置':'Show on fallback map'}
+          </button>}
           <Link className="simple-link" href={'/restaurant/'+x.id+'?'+params.toString()}>{ui.open} →</Link>
         </div>)}
       </div>
