@@ -196,60 +196,81 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     };
   },[load,mapRetry]);
   useEffect(()=>{if(map.current?.isStyleLoaded())void load(map.current);},[q,filter,locale,load]);
-  // Provider outage? Offer a useful, genuine permit-coordinate
-  // directory for the Seoul coverage area. It does not impersonate a tiled map.
+  // Independently load a useful DB-backed directory even if WebGL, a font,
+  // a tile endpoint, or the entire map provider is unavailable on this device.
+  // The list never depends on the map's 'load' event or WebGL support.
   useEffect(()=>{
-    if(!basemapFailed)return;
     const controller=new AbortController();
     const params=new URLSearchParams({
       bbox:'37.47,126.78,37.68,127.14',limit:'40',hl:locale
     });
     if(q)params.set('q',q);
     if(filter)params.set('f',filter);
-    setState('loading');
+    setDirectoryReady(false);setDirectoryError(false);
     void fetch('/api/v1/map/markers?'+params.toString(),{
       signal:controller.signal,cache:'no-store',credentials:'same-origin'
     }).then(async response=>{
-      if(!response.ok)throw Error('Fallback marker catalog unavailable');
+      if(!response.ok)throw Error('Map directory unavailable');
       return response.json() as Promise<Response>;
     }).then(payload=>{
       if(controller.signal.aborted)return;
       const safe=(Array.isArray(payload.items)?payload.items:[]).filter(x=>
         typeof x.id==='string'&&typeof x.name==='string'&&
-        Number.isFinite(x.latitude)&&Number.isFinite(x.longitude) &&
+        Number.isFinite(x.latitude)&&Number.isFinite(x.longitude)&&
         x.latitude>=33&&x.latitude<=39.5&&x.longitude>=124&&x.longitude<=132
       ).slice(0,40);
-      setItems(safe);
-      setLimited(Boolean(payload.has_more));
-      setState('ready');
-    }).catch(()=>{if(!controller.signal.aborted){setItems([]);setState('error')}});
+      setDirectory(safe);setDirectoryReady(true);
+    }).catch(()=>{
+      if(!controller.signal.aborted){
+        setDirectory([]);setDirectoryError(true);setDirectoryReady(true);
+      }
+    });
     return ()=>controller.abort();
-  },[q,filter,locale,basemapFailed]);
-
-  const pick=items.find(x=>x.id===selected)||null;
+  },[q,filter,locale]);
+  const visibleItems=state==='ready'&&!basemapFailed?items:directory;
+  const resultsReady=state==='ready'||directoryReady;
+  const pick=visibleItems.find(x=>x.id===selected)||null;
   const params=new URLSearchParams({hl:locale});
   if(q)params.set('q',q);
   if(filter)params.set('f',filter);
   return <div>
-    <div ref={host} role="application" aria-label="Interactive restaurant map"
-        style={{width:'100%',height:'min(62vh,540px)',minHeight:350,borderRadius:18,overflow:'hidden',
-          border:'1px solid #e5ece8',marginTop:24}}/>
-    {basemapFailed&&<section className="empty-map" aria-label="Basemap unavailable">{ui.disabled}</section>}
-    {<p className="hint" role="status" aria-live="polite">
-      {state==='loading'?ui.loading:state==='error'?ui.error:state==='zoom'?ui.zoom:
-        state==='ready'?(basemapFailed&&locale==='ko'?'지도 없이 탐색 가능한 등록 식당':ui.count)+': '+items.length:''}
+    <div style={{position:'relative',marginTop:24}}>
+      <div ref={host} role="application" aria-label="Interactive restaurant map"
+        data-map-status={basemapFailed?'fallback':state}
+        style={{width:'100%',height:'min(62vh,540px)',minHeight:350,
+          background:'#f1f6f3',borderRadius:18,overflow:'hidden',
+          border:'1px solid #e5ece8'}}/>
+      {basemapFailed&&<div aria-label="Basemap unavailable" role="alert"
+        style={{position:'absolute',inset:0,background:'#f3f7f4',
+          border:'1px solid #e5ece8',borderRadius:18,display:'flex',alignItems:'center',
+          flexDirection:'column',justifyContent:'center',padding:24,textAlign:'center',gap:12}}>
+        <p className="hint" style={{margin:0}}>{ui.disabled}</p>
+        <button type="button" onClick={()=>setMapRetry(n=>n+1)}
+          style={{border:'1px solid #188a64',borderRadius:25,background:'#fff',
+            color:'#137b57',fontWeight:600,padding:'10px 18px',cursor:'pointer'}}>
+          {locale==='ko'?'지도 다시 불러오기':locale==='ja'?'地図を再読み込み':
+            locale==='zh-CN'?'重新加载地图':'Retry map'}
+        </button>
+      </div>}
+    </div>
+    <p className="hint" role="status" aria-live="polite">
+      {basemapFailed?ui.error:state==='loading'?ui.loading:
+        state==='error'?ui.error:state==='zoom'?ui.zoom:
+        state==='ready'?ui.count+': '+items.length:''}
       {limited?' · '+ui.limit:''}
-    </p>}
+    </p>
     {pick&&<section className="result" aria-live="polite">
       <strong>{pick.name}</strong>
       <span>{pick.address_ko||pick.region_sigungu}</span>
       <Link className="simple-link" href={'/restaurant/'+pick.id+'?'+params.toString()}>{ui.open} →</Link>
     </section>}
-    {state==='ready'&&items.length===0&&<p className="hint">{ui.empty}</p>}
-    {state==='ready'&&items.length>0&&<section aria-label={ui.count}>
-      <p className="hint">{ui.count}: {items.length}{limited?' · '+ui.limit:''}</p>
+    {resultsReady&&visibleItems.length===0&&<p className="hint">{directoryError?ui.error:ui.empty}</p>}
+    {resultsReady&&visibleItems.length>0&&<section aria-label={ui.count}>
+      <p className="hint">{ui.count}: {visibleItems.length}
+        {basemapFailed?(locale==='ko'?' · 지도 없이 목록으로 탐색':' · List view'):''}
+        {limited?' · '+ui.limit:''}</p>
       <div className="results">
-        {items.slice(0,20).map(x=><div key={x.id} className="result">
+        {visibleItems.slice(0,20).map(x=><div key={x.id} className="result">
           <strong>{x.name}</strong>
           {x.editorial_score!==null&&<span>★ {x.editorial_score.toFixed(1)} / 5 · WhatEatO</span>}
           <span>{x.address_ko||x.region_sigungu}</span>
