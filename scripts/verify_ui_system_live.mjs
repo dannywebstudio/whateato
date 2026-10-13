@@ -47,6 +47,18 @@ try{
     const label=await page.locator('.map-explore-list-head h2').innerText();
     assert.ok(!label.includes(String.fromCharCode(36)),'no dollar in counter');
     assert.ok(await page.locator('.map-explore-cards .we-card-visit').first().isVisible(),'detail button visible');
+    const overflow=await page.locator('.map-explore-cards .we-card-map').first().evaluate(card=>{
+      const bounds=card.getBoundingClientRect();
+      const tags=card.querySelector('.we-card-menu-row .we-card-tags');
+      const bottom=card.querySelector('.we-card-bottom');
+      const actions=card.querySelector('.we-card-actions');
+      const rating=card.querySelector('.we-card-rating');
+      if(!tags||!bottom||!actions||!rating)return {missing:true};
+      const t=tags.getBoundingClientRect(),b=bottom.getBoundingClientRect(),a=actions.getBoundingClientRect(),r=rating.getBoundingClientRect();
+      return {missing:false,tagsAboveFooter:t.bottom<=b.top+2,footerWithinCard:b.bottom<=bounds.bottom+1,
+        controlsSameRow:Math.abs(a.top-r.top)<20,tagVisible:t.height>0};
+    });
+    assert.ok(!overflow.missing&&overflow.tagsAboveFooter&&overflow.footerWithinCard&&overflow.controlsSameRow&&overflow.tagVisible,'card rows must fit: '+JSON.stringify(overflow));
    }
    const d=await page.evaluate(()=>({view:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
    assert.ok(d.content<=d.view+2,device+' '+stage+' overflow '+JSON.stringify(d));
