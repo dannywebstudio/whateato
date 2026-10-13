@@ -110,6 +110,14 @@ export async function getGeoCatalog(input:QueryParams & {
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
+      AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
+        SELECT 1 FROM restaurant_enrichment_sample_1000 preview
+        JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
+        WHERE preview.restaurant_id=r.id AND preview.sample_rank BETWEEN 1 AND 50
+          AND readiness.published_languages>=1 AND readiness.verified_menus>=1
+          AND readiness.approved_images>=1 AND readiness.verified_tags>=1
+          AND readiness.next_action <> 'identity_or_evidence_hold'
+      ))
       AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
         WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND r.latitude BETWEEN $2 AND $3 AND r.longitude BETWEEN $4 AND $5
