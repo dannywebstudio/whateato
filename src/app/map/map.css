@@ -98,3 +98,20 @@
 .map-explore-cards .we-card-map .we-card-head h3 a{color:#142a1e}
 .map-explore-cards .we-card-map .we-card-fallback{background:linear-gradient(135deg,#e3eee6,#d6e9dd)}
 .map-explore-cards .we-card-map .we-card-fallback span{color:var(--cuisine-accent,#697887)}
+
+
+@media(min-width:921px){
+.map-explore-list{height:790px;min-height:0}
+.map-explore-cards{flex:1;min-height:0;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:10px;align-content:stretch}
+.map-explore-cards .we-card.we-card-map{height:100%;min-height:0;max-height:none;grid-template-columns:116px minmax(0,1fr)}
+.map-explore-cards .we-card-map .we-card-visual{height:100%;min-height:0}
+.map-explore-cards .we-card-map .we-card-body{padding:11px 13px;gap:5px;min-height:0}
+.map-explore-cards .we-card-map .we-card-head h3{font-size:17px}
+.map-explore-cards .we-card-map .we-card-desc{font-size:12px;-webkit-line-clamp:1}
+.map-explore-cards .we-card-map .we-card-information{gap:2px}
+.map-explore-cards .we-card-map .we-card-information p{font-size:11px;white-space:nowrap}
+}
+.map-explore-cards .we-card-map .we-card-tags{display:flex;gap:4px;flex-wrap:wrap}
+.map-explore-cards .we-card-map .we-card-tags>span{font-size:11px;padding:3px 6px}
+.map-explore-cards .we-card-map .we-cuisine-tag{border:1px solid var(--cuisine-accent);color:var(--cuisine-accent);background:white;font-weight:800}
+.map-explore-cards .we-card-map .we-card-visit,.map-explore-cards .we-card-map .we-map-button{display:inline-flex;justify-content:center;align-items:center;text-align:center;min-height:29px}
