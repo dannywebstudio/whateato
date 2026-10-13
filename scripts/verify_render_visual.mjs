@@ -101,8 +101,9 @@ try{
     },null,{timeout:22000});
     await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:14000});
     const mapGrid=await page.locator('.map-results').evaluate(node=>({
-      columns:getComputedStyle(node).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+      columns:getComputedStyle(node).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length,
       display:getComputedStyle(node).display,
+      template:getComputedStyle(node).gridTemplateColumns,
       className:node.className,
       scrollWidth:node.scrollWidth,clientWidth:node.clientWidth
     }));
