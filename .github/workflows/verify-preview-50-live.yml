@@ -1,0 +1,21 @@
+name: Preview 50 staging visibility smoke test
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths:
+      - 'scripts/verify_preview_50_live.mjs'
+      - '.github/workflows/verify-preview-50-live.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Render staging search and map visibility
+        run: node scripts/verify_preview_50_live.mjs
