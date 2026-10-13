@@ -120,6 +120,14 @@ try{
     }
     console.log('MAP RENDER PASS '+JSON.stringify({device:name,fallback:Boolean(hasFallback)}));
     await noHorizontalOverflow('map');
+    // A visible basemap alone is insufficient. Verify list->map interaction
+    // focuses a real permit ID without mutating source data.
+    const focus=page.getByRole('button',{name:/지도에서 위치 보기/}).first();
+    await focus.waitFor({state:'visible',timeout:15000});
+    await focus.click();
+    const focusedId=await page.locator('[aria-label="Interactive restaurant map"]')
+      .getAttribute('data-selected-map-restaurant');
+    assert.match(focusedId||'',/^[a-f0-9-]{36}$/i,name+' missing interactive restaurant map selection');
     await page.screenshot({path:out+'/'+name+'-map.png',fullPage:true});
     assert.deepEqual(errors,[],name+' browser exceptions');
     await context.close();
