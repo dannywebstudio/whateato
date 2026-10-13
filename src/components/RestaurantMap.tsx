@@ -18,7 +18,7 @@ type Place={
 type Response={items:Place[];has_more:boolean;location_note:string};
 type Feature={
   type:'Feature';geometry:{type:'Point';coordinates:[number,number]};
-  properties:{id:string;name:string;pinColor:string};
+  properties:{id:string;name:string;pinColor:string;openingState:string};
 };
 type FeatureCollection={type:'FeatureCollection';features:Feature[]};
 const MAPTILER_STYLE='https://api.maptiler.com/maps/streets-v4/style.json';
@@ -30,6 +30,8 @@ const attribution='© OpenFreeMap · © OpenMapTiles · © OpenStreetMap contrib
 const fallbackIframe='https://www.openstreetmap.org/export/embed.html?bbox=126.96%2C37.55%2C127.03%2C37.605&layer=mapnik';
 const markerSource='whateato-approved-restaurants';
 const markerLayer='whateato-location-markers';
+const markerNameLayer='whateato-location-labels';
+const NAME_MIN_ZOOM=14; // maximum zoom 18 minus four zoom-out steps
 const selectedLayer='whateato-selected-location';
 const clusterLayer='whateato-location-clusters';
 const clusterLabel='whateato-cluster-count';
@@ -112,7 +114,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       source?.setData({
         type:'FeatureCollection',features:valid.map(x=>({
           type:'Feature',geometry:{type:'Point',coordinates:[x.longitude,x.latitude]},
-          properties:{id:x.id,name:x.name,pinColor:cuisineColor(x.category_code)}
+          properties:{id:x.id,name:x.name,pinColor:cuisineColor(x.category_code),openingState:x.opening_hours?.state||'unknown'}
         }))
       });
     }catch(e){
@@ -131,7 +133,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     setState('loading');
     let instance:MapLibreMap|null=null;
     let removeMapEvents:()=>void=()=>{};
-    void import('maplibre-gl').then(({Map,NavigationControl,AttributionControl,setWorkerUrl,getVersion})=>{
+    void import('maplibre-gl').then(({Map,Popup,NavigationControl,AttributionControl,setWorkerUrl,getVersion})=>{
       // MapLibre 6 ESM worker must be served with its sibling shared module.
       // The prebuild/predev steps copy both files into the same-origin public
       // directory. The version query prevents incompatible stale worker caches.
@@ -147,6 +149,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       });
       const m=instance;
       map.current=m;
+      let currentPopup:InstanceType<typeof Popup>|null=null;
       m.addControl(new NavigationControl({showCompass:false}),'top-right');
       // Never omit attribution even if a provider style's source metadata
       // does not include credits.
@@ -171,6 +174,16 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
             filter:['!',['has','point_count']],
             paint:{'circle-radius':8,'circle-color':['coalesce',['get','pinColor'],'#697887'],'circle-stroke-color':'#ffffff','circle-stroke-width':2}
           });
+          // Show venue names from zoom 14 (max zoom 18, four steps out).
+          // Hide cluster labels and allow name labels to be clicked like pins.
+          m.addLayer({id:markerNameLayer,type:'symbol',source:markerSource,
+            filter:['!',['has','point_count']],minzoom:NAME_MIN_ZOOM,
+            layout:{'text-field':['get','name'],'text-size':12,
+              'text-font':['Noto Sans Regular'],'text-anchor':'left',
+              'text-offset':[1.1,0],'text-max-width':11,
+              'text-allow-overlap':false,'text-optional':true},
+            paint:{'text-color':'#192920','text-halo-color':'#ffffff','text-halo-width':2}
+          });
           // Only mark a real selected permit location; never add synthetic pins.
           m.addLayer({id:selectedLayer,type:'circle',source:markerSource,
             filter:['==',['get','id'],''],
@@ -184,9 +197,34 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         void load(m);
       };
       const onMove=()=>void load(m);
-      const onClick=(ev:{features?:Array<{properties?:{id?:string}}>})=>{
-        const id=ev.features?.[0]?.properties?.id;
-        if(typeof id==='string'&&/^[a-f0-9-]{36}$/i.test(id))setSelected(id);
+      const onClick=(ev:{features?:Array<{properties?:{id?:string;name?:string;openingState?:string};geometry?:{type:string;coordinates?:number[]}}>})=>{
+        const feature=ev.features?.[0];
+        const id=feature?.properties?.id;
+        if(typeof id!=='string'||!/^[a-f0-9-]{36}$/i.test(id))return;
+        setSelected(id);
+        const coords=feature?.geometry?.coordinates;
+        if(!Array.isArray(coords)||coords.length<2||!Number.isFinite(coords[0])||!Number.isFinite(coords[1]))return;
+        currentPopup?.remove();
+        const details=locale==='ko'?'상세 보기':locale==='ja'?'詳しく見る':locale==='zh-CN'?'查看详情':'View details';
+        const states={
+          ko:{open:'영업중',closed:'영업종료',preparing:'영업준비중',unknown:'영업시간 미확인'},
+          en:{open:'Open now',closed:'Closed',preparing:'Preparing to open',unknown:'Hours unverified'},
+          ja:{open:'営業中',closed:'営業時間外',preparing:'準備中',unknown:'営業時間未確認'},
+          'zh-CN':{open:'营业中',closed:'已打烊',preparing:'准备中',unknown:'营业时间未核实'}
+        } as const;
+        const lang=locale in states?locale as keyof typeof states:'ko';
+        const status=feature?.properties?.openingState;
+        const stateKey=status==='open'||status==='closed'||status==='preparing'?status:'unknown';
+        const root=document.createElement('div');root.className='we-map-popup';
+        const heading=document.createElement('strong');heading.textContent=feature?.properties?.name||'';
+        const state=document.createElement('span');state.textContent=states[lang][stateKey];
+        state.className='we-map-popup-state '+(stateKey==='open'?'is-open':stateKey==='closed'?'is-closed':stateKey==='preparing'?'is-preparing':'');
+        const detail=document.createElement('a');
+        detail.textContent=details+' ↗';
+        detail.href='/restaurant/'+encodeURIComponent(id)+'?hl='+encodeURIComponent(locale);
+        root.append(heading,state,detail);
+        currentPopup=new Popup({offset:16,closeButton:true,maxWidth:'230px'})
+          .setLngLat([coords[0],coords[1]]).setDOMContent(root).addTo(m);
       };
       const onClusterClick=(ev:{lngLat:{lng:number;lat:number}})=>{
         m.easeTo({center:[ev.lngLat.lng,ev.lngLat.lat],zoom:Math.min(17,m.getZoom()+1.8),duration:400});
@@ -203,12 +241,15 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       m.on('load',onLoad);
       m.on('moveend',onMove);
       m.on('click',markerLayer,onClick);
+      m.on('click',markerNameLayer,onClick);
       m.on('click',clusterLayer,onClusterClick);
       m.on('webglcontextlost',onContextLost);
       m.on('error',onError);
       removeMapEvents=()=>{
         m.off('load',onLoad);m.off('moveend',onMove);
         m.off('click',markerLayer,onClick);
+        m.off('click',markerNameLayer,onClick);
+        currentPopup?.remove();
         m.off('click',clusterLayer,onClusterClick);
         m.off('webglcontextlost',onContextLost);m.off('error',onError);
       };
