@@ -18,12 +18,19 @@ export default async function MapPage({searchParams}:{
   const q=normalizeText(raw.q,100);
   const locale=normalizeLocale(raw.hl);
   const filter=normalizeTags(raw.f||'').join(',');
-  return <main className="content">
-    <h1>Explore on Map</h1>
+  const labels={
+    ko:{title:'지도로 맛집 찾기',back:'← 검색 결과로 돌아가기'},
+    en:{title:'Explore on Map',back:'← Back to Search'},
+    ja:{title:'地図でレストランを探す',back:'← 検索に戻る'},
+    'zh-CN':{title:'在地图上找餐厅',back:'← 返回搜索'}
+  } as const;
+  const t=labels[locale];
+  return <main className="content" style={{maxWidth:1200}}>
+    <h1>{t.title}</h1>
     <SearchBoxSynced target="map" initial={q} initialFilters={filter?filter.split(','):[]} initialLocale={locale}/>
     <RestaurantMap q={q} filter={filter} locale={locale}/>
     <Link className="simple-link" href={'/search?'+new URLSearchParams({
       ...(q?{q}:{}),...(filter?{f:filter}:{}),hl:locale
-    }).toString()}>← Back to Search</Link>
+    }).toString()}>{t.back}</Link>
   </main>;
 }
