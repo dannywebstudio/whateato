@@ -25,7 +25,13 @@ try {
     signal: controller.signal
   });
   if (!response.ok) {
-    console.error('Google Places ID-only probe failed, HTTP', response.status);
+    const errorBody = await response.json().catch(() => ({}));
+    const status = typeof errorBody?.error?.status === 'string' ? errorBody.error.status : 'UNKNOWN';
+    const reasons = Array.isArray(errorBody?.error?.details)
+      ? errorBody.error.details.map(x => x?.reason).filter(x => typeof x === 'string').slice(0, 3)
+      : [];
+    // Only standardized error identifiers, never raw messages or credential-bearing URLs.
+    console.error(JSON.stringify({result: 'rejected', httpStatus: response.status, googleStatus: status, googleReasons: reasons, maxApiRequests: 1, fieldMask: mask}));
     process.exitCode = 1;
   } else {
     const data = await response.json();
