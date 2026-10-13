@@ -23,4 +23,4 @@ const filtered=await query({MNG_NO:sentinel});
 const applied=filtered.count===0&&filtered.items.length===0;
 const report={checkedAt:new Date().toISOString(),baselineTotal:normal.count,filteredTotal:filtered.count,filteredRows:filtered.items.length,filter:'MNG_NO',filterEnforced:applied,requests:2,readyForPermitByPermitLookup:applied};
 console.log(JSON.stringify(report));
-if(!applied)console.log('MNG_NO filtering is not verified; block individual lookups and ALL deletion.');
+if(!applied){console.error('BLOCKED: MNG_NO filter not proven. Do not query individual permits or delete restaurants.');process.exitCode=2;}
