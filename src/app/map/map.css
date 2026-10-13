@@ -148,3 +148,6 @@
 .map-explore-cards .we-card-map .we-card-actions{margin-left:auto;gap:3px}
 .map-explore-cards .we-card-map .we-card-visit,.map-explore-cards .we-card-map .we-map-button{padding:5px 6px;min-height:26px;font-size:9px}
 }
+
+/* Keep the detail-link arrow legible against its green button. */
+.map-explore-cards .we-card-map .we-card-visit span[aria-hidden='true']{color:#111!important;opacity:1}
