@@ -1,6 +1,6 @@
 {
   "batch": "whatEatO-first20-research-20261013",
-  "notice": "Research-only, never an instruction to publish. Prices are third-party observed (may be outdated), NOT verified current prices. Naver star ratings are not available from verified Naver source and must not be substituted with external platforms. Reservations are reported, not live confirmed. Translations are editorial drafts.",
+  "notice": "Research-only, never an instruction to publish. Prices are third-party observed (may be outdated), NOT verified current prices. Naver star ratings are not available from verified Naver source and must not be substituted with external platforms. Reservations are reported, not live confirmed. Translations are editorial drafts. Business-hour data requires actual venue-specific sources; none of the 20 is assigned assumed hours or open-now.",
   "count": 20,
   "rows": [
     {
@@ -32,7 +32,16 @@
       "reservation_status": "yes_reported",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://polle.com/place/40IXKT/온더보더",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 2,
@@ -52,7 +61,16 @@
       "reservation_status": "unverified",
       "identity_flag": "address_mismatch",
       "external_evidence_url": null,
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 3,
@@ -72,7 +90,16 @@
       "reservation_status": "unverified",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://naratbab.kr/place/3111771609/",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 4,
@@ -98,7 +125,16 @@
       "reservation_status": "unverified",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://www.diningcode.com/profile.php?rid=8zV1q7lmULH6",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 5,
@@ -118,7 +154,16 @@
       "reservation_status": "unverified",
       "identity_flag": "permit_only",
       "external_evidence_url": "https://dining.ayo.pe.kr/restaurant/d79c7fae67ed3ddd737fd43d4f7c8c0b",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 6,
@@ -149,7 +194,16 @@
       "reservation_status": "unverified",
       "identity_flag": "category_mismatch",
       "external_evidence_url": "https://www.daangn.com/kr/local-profile/농민사골순대국-m731ia3nkkrt/",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 7,
@@ -180,7 +234,16 @@
       "reservation_status": "unverified",
       "identity_flag": "reported_closed",
       "external_evidence_url": "https://polle.com/place/4kqkEX/커퍼%20커피",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 8,
@@ -211,7 +274,16 @@
       "reservation_status": "unverified",
       "identity_flag": "name_mismatch",
       "external_evidence_url": "https://www.tabling.co.kr/place/677cc7ac66de5f0698752840",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 9,
@@ -242,7 +314,16 @@
       "reservation_status": "yes_reported",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://www.diningcode.com/profile.php?rid=YmAt6lKukYOU",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 10,
@@ -273,7 +354,16 @@
       "reservation_status": "unverified",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://www.diningcode.com/profile.php?rid=DbMRM7W6D6sl",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 11,
@@ -293,7 +383,16 @@
       "reservation_status": "unverified",
       "identity_flag": "permit_only",
       "external_evidence_url": null,
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 12,
@@ -324,7 +423,16 @@
       "reservation_status": "yes_reported",
       "identity_flag": "price_conflict",
       "external_evidence_url": "https://www.tabling.co.kr/place/677cd09c66de5f06988663c3",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 13,
@@ -344,7 +452,16 @@
       "reservation_status": "unverified",
       "identity_flag": "permit_only",
       "external_evidence_url": null,
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 14,
@@ -370,7 +487,16 @@
       "reservation_status": "unverified",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://www.daangn.com/kr/local-profile/카페르뷰-w99efytsdisy/",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 15,
@@ -390,7 +516,16 @@
       "reservation_status": "unverified",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://www.diningcode.com/profile.php?rid=xYzVDuGKxJxh",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 16,
@@ -421,7 +556,16 @@
       "reservation_status": "unverified",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://www.tel-co.net/food/spot/8582",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 17,
@@ -452,7 +596,16 @@
       "reservation_status": "unverified",
       "identity_flag": "branch_alias",
       "external_evidence_url": "https://www.tabling.co.kr/place/677cd61a66de5f06989062ab",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 18,
@@ -472,7 +625,16 @@
       "reservation_status": "unverified",
       "identity_flag": "permit_only",
       "external_evidence_url": null,
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 19,
@@ -503,7 +665,16 @@
       "reservation_status": "yes_reported",
       "identity_flag": "requires_final_review",
       "external_evidence_url": "https://www.tabling.co.kr/place/677cccf366de5f069880117d",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     },
     {
       "seq": 20,
@@ -523,7 +694,16 @@
       "reservation_status": "unverified",
       "identity_flag": "reported_closed",
       "external_evidence_url": "https://polle.com/place/1HDts2/살구골",
-      "publication_state": "RESEARCH_ONLY"
+      "publication_state": "RESEARCH_ONLY",
+      "opening_hours": {
+        "timezone": "Asia/Seoul",
+        "weekly_intervals": [],
+        "holiday_exceptions": [],
+        "status": "NOT_VERIFIED",
+        "source_url": null,
+        "verified_at": null,
+        "publication_state": "REVIEW_ONLY"
+      }
     }
   ]
 }
