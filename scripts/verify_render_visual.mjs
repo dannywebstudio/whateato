@@ -59,6 +59,15 @@ try{
     await page.screenshot({path:out+'/'+name+'-detail.png',fullPage:true});
 
     const styleRequests=[];
+    page.on('request',req=>{
+      if(req.url().includes('/api/v1/map/markers'))console.log('MAP_DATA_REQUEST '+name+' '+req.method());
+    });
+    page.on('response',resp=>{
+      if(resp.url().includes('/api/v1/map/markers'))console.log('MAP_DATA_RESPONSE '+name+' HTTP '+resp.status());
+    });
+    page.on('requestfailed',req=>{
+      if(req.url().includes('/api/v1/map/markers'))console.log('MAP_DATA_FAILED '+name+' '+(req.failure()?.errorText||'unknown'));
+    });
     page.on('console',msg=>{
       if(msg.text().includes('WHATEATO_MAP_RENDER_ERROR'))
         console.log('MAP_ENGINE_ERROR '+name+' '+msg.text().slice(0,220));
