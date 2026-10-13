@@ -317,7 +317,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       <p className="hint">{ui.count}: {visibleItems.length}
         {basemapFailed?(locale==='ko'?' · 지도 없이 목록으로 탐색':' · List view'):''}
         {limited?' · '+ui.limit:''}</p>
-      <div className="results">
+      <div className="results map-results">
         {visibleItems.slice(0,visibleCount).map(x=><div key={x.id} className="result">
           <strong>{x.name}</strong>
           {x.editorial_score!==null&&<span>★ {x.editorial_score.toFixed(1)} / 5 · WhatEatO</span>}
