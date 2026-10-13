@@ -2,12 +2,22 @@
 // Read-only HTTP smoke test; only staging preview, no external paid APIs.
 const base=process.env.WHATEATO_PREVIEW_BASE_URL||'https://whateato.onrender.com';
 if(new URL(base).hostname!=='whateato.onrender.com')throw Error('staging host only');
+// Free Render instances may cold-start. Wait for readiness before assertions.
+let ready=false;
+for(let i=0;i<8;i++){
+ try{
+  const r=await fetch(base+'/api/ready',{signal:AbortSignal.timeout(30000)});
+  if(r.ok){ready=true;break}
+ }catch{}
+ await new Promise(resolve=>setTimeout(resolve,5000));
+}
+if(!ready)throw Error('Render staging not ready; do not infer a data or photo-policy failure');
 const checks=[
  ['/api/v1/restaurants?limit=30', 'items'],
  ['/api/v1/map/markers?bbox=37.54%2C126.95%2C37.61%2C127.05&limit=100','items']
 ];
 for(const [route,key] of checks){
- const c=new AbortController();const timer=setTimeout(()=>c.abort(),25000);
+ const c=new AbortController();const timer=setTimeout(()=>c.abort(),60000);
  try{
   const response=await fetch(base+route,{signal:c.signal,headers:{'Cache-Control':'no-cache'}});
   if(!response.ok)throw Error(route+' HTTP '+response.status);
@@ -25,7 +35,7 @@ const privateDetails=[
  '2daa58f1-6360-4ddb-a27f-6e6d1437a122'
 ];
 for(const id of privateDetails){
- const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),25000);
+ const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),60000);
  try{
   const response=await fetch(base+'/restaurant/'+id,{signal:controller.signal,redirect:'manual'});
   if(response.status!==404)throw Error('Incomplete restaurant direct URL not hidden, HTTP '+response.status+' id='+id);
@@ -34,7 +44,7 @@ for(const id of privateDetails){
 }
 
 for(const id of privateDetails){
- const res=await fetch(base+'/api/v1/google-photo-preview/'+id,{redirect:'manual',signal:AbortSignal.timeout(25000)});
+ const res=await fetch(base+'/api/v1/google-photo-preview/'+id,{redirect:'manual',signal:AbortSignal.timeout(60000)});
  if(res.status!==404)throw Error('Google photo preview is exposed without photo approval: '+res.status+' id='+id);
  const cache=res.headers.get('cache-control')||'';
  if(!cache.includes('no-store'))throw Error('Google photo response must be no-store');
