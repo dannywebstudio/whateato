@@ -1,0 +1,27 @@
+name: WhatEatO Daily Hours Verification Queue
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 0 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: whateato-hours-review-staging
+  cancel-in-progress: false
+jobs:
+  queue-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/i18n-analytics-backend-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock --no-save pg@8.16.0
+      - name: Enqueue first-50 daily hours source reviews without external API calls
+        env:
+          WHATEATO_STAGING_DATABASE_URL: ${{ secrets.WHATEATO_STAGING_DATABASE_URL }}
+          WHATEATO_EXPECTED_NEON_BRANCH_ID: br-autumn-pine-b36z3utm
+        run: node scripts/audit_daily_restaurant_hours.mjs
