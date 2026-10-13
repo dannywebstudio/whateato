@@ -28,7 +28,7 @@ jobs:
           WHATEATO_STAGING_DATABASE_URL: ${{ secrets.WHATEATO_STAGING_DATABASE_URL }}
           START_PAGE: ${{ inputs.start_page }}
           MAX_PAGES: ${{ inputs.max_pages }}
-          PAGE_SIZE: '1000'
+          PAGE_SIZE: '100'
         run: node scripts/reconcile_official_staging_pages.mjs
       - name: Save read-only candidate report
         if: success()
