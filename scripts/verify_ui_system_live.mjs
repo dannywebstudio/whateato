@@ -42,6 +42,7 @@ try{
     assert.equal(style.borderLeftWidth,'5px','cuisine category left border must be visible');
     assert.ok(Number.parseFloat(style.titleFontSize)>=16,'readable title size');
     assert.ok(style.height>=125,'expanded map card height');
+    if(device==='desktop')assert.ok(style.height>=180,'sparse-result cards should substantially fill map panel');
    }
    const d=await page.evaluate(()=>({view:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
    assert.ok(d.content<=d.view+2,device+' '+stage+' overflow '+JSON.stringify(d));
