@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "prebuild": "node scripts/copy_maplibre_worker.mjs",
     "predev": "node scripts/copy_maplibre_worker.mjs",
-    "test:mapworker": "node scripts/verify_maplibre_worker.mjs"
+    "test:mapworker": "node scripts/verify_maplibre_worker.mjs",
+    "prestart": "node scripts/check_cms_storage.mjs"
   },
   "dependencies": {
     "next": "^15.5.27",
