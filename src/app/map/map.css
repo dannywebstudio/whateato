@@ -132,3 +132,19 @@
 .map-explore-cards .we-card-map .we-card-actions{display:flex;flex:0 0 auto;gap:5px;align-items:center;margin-left:auto;white-space:nowrap}
 .map-explore-cards .we-card-map .we-card-visit,.map-explore-cards .we-card-map .we-map-button{display:inline-flex;align-items:center;justify-content:center;text-align:center;padding:6px 8px;font-size:10px;min-height:28px}
 @media(min-width:921px){.map-explore-cards .we-card-map .we-card-body{overflow:hidden}}
+
+
+/* v5.2: fit information, cuisine labels, rating and actions within four fixed rows */
+@media(min-width:921px){
+.map-explore-cards .we-card-map .we-card-body{padding:8px 11px;gap:3px;overflow:hidden}
+.map-explore-cards .we-card-map .we-card-head{min-height:21px}
+.map-explore-cards .we-card-map .we-card-desc{font-size:11px;line-height:1.2;-webkit-line-clamp:1;margin:0}
+.map-explore-cards .we-card-map .we-card-information{gap:1px}
+.map-explore-cards .we-card-map .we-card-information p{font-size:10px;line-height:1.3}
+.map-explore-cards .we-card-map .we-card-menu-row{min-height:20px}
+.map-explore-cards .we-card-map .we-card-menu-row .we-card-tags>span{font-size:9px;padding:2px 4px}
+.map-explore-cards .we-card-map .we-card-bottom{margin-top:auto;padding-top:4px;min-height:28px;flex-wrap:nowrap;gap:3px}
+.map-explore-cards .we-card-map .we-card-rating{display:inline-flex;align-items:center;font-size:9px;line-height:1.2}
+.map-explore-cards .we-card-map .we-card-actions{margin-left:auto;gap:3px}
+.map-explore-cards .we-card-map .we-card-visit,.map-explore-cards .we-card-map .we-map-button{padding:5px 6px;min-height:26px;font-size:9px}
+}
