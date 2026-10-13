@@ -151,3 +151,10 @@
 
 /* Keep the detail-link arrow legible against its green button. */
 .map-explore-cards .we-card-map .we-card-visit span[aria-hidden='true']{color:#fff!important;opacity:1}
+
+/* Map thumbnail canonical placeholder; real photos keep the same container. */
+.map-explore-cards .we-card-map .we-card-visual{background:#fff}
+.map-explore-cards .we-card-map .we-card-fallback,
+.map-explore-cards .we-card-map .we-card-fallback:hover{background:#fff;display:flex;justify-content:center;align-items:center;text-align:center;padding:9px}
+.map-explore-cards .we-card-map .we-card-fallback span{font-family:inherit;font-size:12px;font-weight:650;line-height:1.5;letter-spacing:0;color:#758078;opacity:1;word-break:keep-all}
+.map-explore-cards .we-card-map .we-card-visual img{height:100%;width:100%;object-fit:cover}
