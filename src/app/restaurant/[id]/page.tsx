@@ -7,6 +7,7 @@ import {isUuid,normalizeLocale,normalizeText,normalizeTags} from '@/lib/platform
 import {getPublicReviews,getOwnReviewSummary,getLicensedReviewInsights} from '@/lib/reviews';
 import ReviewForm from '@/components/ReviewForm';
 import RestaurantPhotoGallery from '@/components/RestaurantPhotoGallery';
+import GooglePlacesPhotoPreview from '@/components/GooglePlacesPhotoPreview';
 import {notFound} from 'next/navigation';
 
 export const runtime='nodejs';
@@ -93,6 +94,8 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
     <h1>{r.name}</h1>
     <RestaurantPhotoGallery images={detail.images} name={r.name} locale={locale}/>
+    {process.env.WHATEATO_GOOGLE_PHOTO_APPROVED==='true' && detail.images.length===0 && <GooglePlacesPhotoPreview restaurantId={id} restaurantName={r.name} locale={locale}/>}
+
     <p className="hint">{r.category_code||t.category} · {t.license}</p>
     {r.opening_hours?.today_hours&&<p className="hint">{hoursLabels[locale].hours}: {r.opening_hours.today_hours}</p>}
     <p className="hint" aria-label="Restaurant opening status">{hoursLabels[locale][r.opening_hours?.state||'unknown']}</p>
