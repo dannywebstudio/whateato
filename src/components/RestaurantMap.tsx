@@ -67,7 +67,10 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const [selected,setSelected]=useState<string|null>(null);
   queryRef.current={q,filter,locale};
   const load=useCallback(async (currentMap:MapLibreMap)=>{
-    if(!currentMap.isStyleLoaded())return;
+    // Adding a fresh GeoJSON source briefly makes isStyleLoaded() false.
+    // Waiting for that flag here silently skips the *initial* marker fetch.
+    // Source existence is the appropriate guard once the map load event fired.
+    if(!currentMap.getSource(markerSource))return;
     const bbox=bboxQuery(currentMap);
     lastRequest.current?.abort();
     const next=++requestId.current;
@@ -204,7 +207,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       removeMapEvents();instance?.remove();map.current=null;
     };
   },[load,mapRetry]);
-  useEffect(()=>{if(map.current?.isStyleLoaded())void load(map.current);},[q,filter,locale,load]);
+  useEffect(()=>{if(map.current?.getSource(markerSource))void load(map.current);},[q,filter,locale,load]);
   // Independently load a useful DB-backed directory even if WebGL, a font,
   // a tile endpoint, or the entire map provider is unavailable on this device.
   // The list never depends on the map's 'load' event or WebGL support.
