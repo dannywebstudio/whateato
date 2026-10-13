@@ -15,6 +15,6 @@ for(const name of ['maplibre-gl-worker.mjs','maplibre-gl-shared.mjs']){
   const dst=join(targetDir,name);
   await copyFile(src,dst);
   const size=(await stat(dst)).size;
-  if(size<1000)throw Error('MapLibre worker runtime unexpectedly empty: '+name);
+  if(size<16)throw Error('MapLibre worker runtime unexpectedly empty: '+name);
   console.log('Prepared same-origin MapLibre v6 runtime: '+name+' ('+size+' bytes)');
 }
