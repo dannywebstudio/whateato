@@ -51,6 +51,10 @@ try{
     await page.screenshot({path:out+'/'+name+'-detail.png',fullPage:true});
 
     const styleRequests=[];
+    page.on('console',msg=>{
+      if(msg.text().includes('WHATEATO_MAP_RENDER_ERROR'))
+        console.log('MAP_ENGINE_ERROR '+name+' '+msg.text().slice(0,220));
+    });
     page.on('requestfailed',req=>{
       if(req.url().includes('openfreemap.org'))styleRequests.push('FAILED '+req.url().slice(0,170)+' '+req.failure()?.errorText);
     });
