@@ -91,6 +91,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     <h1>{r.name}</h1>
     <RestaurantPhotoGallery images={detail.images} name={r.name} locale={locale}/>
     <p className="hint">{r.category_code||t.category} · {t.license}</p>
+    {r.opening_hours?.today_hours&&<p className="hint">{hoursLabels[locale].hours}: {r.opening_hours.today_hours}</p>}
     <p className="hint" aria-label="Restaurant opening status">{hoursLabels[locale][r.opening_hours?.state||'unknown']}</p>
     <p className="hint">{locale==='ko'?'영업 상태는 등록된 영업시간 기준이며, 식당 사정에 따라 실제와 다를 수 있습니다.':locale==='en'?'Hours-based status may differ from actual operations.':locale==='ja'?'営業状況は登録された営業時間に基づき、実際と異なる場合があります。':'营业状态按登记营业时间计算，实际情况可能有所不同。'}</p>
     {r.opening_hours&&r.opening_hours.weekly.length>0&&<section className="result"><strong>{hoursLabels[locale].hours}</strong>
