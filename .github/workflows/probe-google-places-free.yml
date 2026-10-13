@@ -1,0 +1,24 @@
+name: Google Places free ID-only connectivity probe
+on:
+  push:
+    branches:
+      - feature/i18n-analytics-backend-v1
+    paths:
+      - 'scripts/probe_google_places_free.mjs'
+      - '.github/workflows/probe-google-places-free.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  google-places-free-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: One request only, free SKU, no paid fields
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node scripts/probe_google_places_free.mjs
