@@ -50,6 +50,7 @@ jobs:
           node --check scripts/test_review_moderation_http.mjs
           node --check scripts/audit_restaurant_quality.mjs
           node --check scripts/report_catalog_coverage.mjs
+          node --check scripts/report_geo_recovery.mjs
       - name: Create isolated synthetic fixtures and apply real migrations
         run: node scripts/seed_phase2_smoke.mjs
       - name: Audit source-preserving permit data and human visibility gates
@@ -71,6 +72,7 @@ jobs:
           done
           node scripts/test_phase2_http.mjs
           node scripts/report_catalog_coverage.mjs
+          node scripts/report_geo_recovery.mjs
           node scripts/test_phase25_browser.mjs
           node scripts/test_review_moderation_http.mjs
       - name: Upload desktop/mobile QA screenshots
