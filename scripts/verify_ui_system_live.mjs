@@ -57,15 +57,3 @@ try{
  }
  console.log('PASS: rich search cards, grouped restaurant hours, map selection and mobile responsiveness');
 }finally{await browser.close()}
-),'no stray dollar signs in restaurant count');
-    assert.ok(await page.locator('.map-explore-cards .we-card-visit').first().isVisible(),'detail button visible');
-   }
-   const d=await page.evaluate(()=>({view:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
-   assert.ok(d.content<=d.view+2,device+' '+stage+' overflow '+JSON.stringify(d));
-   await page.screenshot({path:'ui-system-qa/'+device+'-'+stage+'.png',fullPage:true});
-  }
-  assert.deepEqual(errors,[],device+' errors');
-  await page.close();
- }
- console.log('PASS: rich search cards, grouped restaurant hours, map selection and mobile responsiveness');
-}finally{await browser.close()}
