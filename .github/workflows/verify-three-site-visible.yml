@@ -1,0 +1,18 @@
+name: First three staging restaurants visible QA
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths: ['.github/workflows/verify-three-site-visible.yml','scripts/verify_three_site_visible.mjs']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/verify_three_site_visible.mjs
