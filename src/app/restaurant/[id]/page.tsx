@@ -16,10 +16,10 @@ type Params={
   searchParams:Promise<{hl?:string;q?:string;f?:string;region?:string;offset?:string}>;
 };
 const labels={
-  ko:{heading:'Restaurant details',unavailable:'음식점 DB 연결을 확인하고 있습니다.',category:'일반음식점',license:'인허가 영업 상태 (현재 영업 중이라는 의미 아님)',address:'주소',noAddress:'주소 정보 없음',description:'식당 소개',menus:'대표 메뉴',noPrice:'가격 확인 전',tags:'식당 태그',score:'WhatEatO 독립 평가',reviews:'WhatEatO 이용자 리뷰',reviewNote:'실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.',reviewCount:'승인된 리뷰',subjective:'이용자의 주관적인 평가',noReviews:'아직 승인된 리뷰가 없습니다.',write:'방문 후기 작성',external:'이용허락을 받은 외부 리뷰 참고 정보',negative:'직원 응대 관련 불만 언급',positive:'긍정 언급',back:'← 검색 결과로'},
-  en:{heading:'Restaurant details',unavailable:'The restaurant database is unavailable.',category:'Restaurant',license:'Permitted business record (not a real-time open-status guarantee)',address:'Address',noAddress:'Address unavailable',description:'About this restaurant',menus:'Main menu',noPrice:'Price not verified',tags:'Restaurant tags',score:'Independent WhatEatO score',reviews:'WhatEatO user reviews',reviewNote:'Only approved reviews written by registered users appear.',reviewCount:'Approved reviews',subjective:'Subjective customer opinions',noReviews:'No approved reviews yet.',write:'Write a review',external:'Licensed external review insights',negative:'Service concerns',positive:'Positive service mentions',back:'← Back to search'},
-  ja:{heading:'店舗情報',unavailable:'データベースに接続できません。',category:'飲食店',license:'営業許可情報（現在営業中である保証ではありません）',address:'住所',noAddress:'住所情報なし',description:'店舗の紹介',menus:'主なメニュー',noPrice:'価格未確認',tags:'タグ',score:'WhatEatO独自評価',reviews:'WhatEatOユーザーレビュー',reviewNote:'承認済みレビューのみ表示します。',reviewCount:'承認済みレビュー',subjective:'利用者の主観的な評価',noReviews:'承認済みレビューはまだありません。',write:'レビューを投稿',external:'利用許諾済みの外部レビュー情報',negative:'接客への不満',positive:'肯定的な言及',back:'← 検索結果へ'},
-  'zh-CN':{heading:'餐厅详情',unavailable:'餐厅数据库暂时不可用。',category:'餐厅',license:'经营许可记录（不代表当前营业）',address:'地址',noAddress:'暂无地址',description:'餐厅简介',menus:'主要菜品',noPrice:'价格未经核实',tags:'标签',score:'WhatEatO独立评分',reviews:'WhatEatO用户评价',reviewNote:'仅显示已审核的用户评价。',reviewCount:'已审核评价',subjective:'用户主观评价',noReviews:'暂无已审核的评价。',write:'撰写评价',external:'已授权的外部评价信息',negative:'服务投诉',positive:'正面反馈',back:'← 返回搜索'}
+  ko:{heading:'Restaurant details',unavailable:'음식점 DB 연결을 확인하고 있습니다.',category:'일반음식점',license:'인허가 영업 상태 (현재 영업 중이라는 의미 아님)',address:'주소',noAddress:'주소 정보 없음',description:'식당 소개',menus:'대표 메뉴',noPrice:'가격 확인 전',tags:'식당 태그',score:'WhatEatO 독립 평가',reviews:'WhatEatO 이용자 리뷰',reviewNote:'실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.',reviewCount:'승인된 리뷰',subjective:'이용자의 주관적인 평가',noReviews:'아직 승인된 리뷰가 없습니다.',write:'방문 후기 작성',external:'이용허락을 받은 외부 리뷰 참고 정보',negative:'직원 응대 관련 불만 언급',positive:'긍정 언급',directions:'카카오맵 길찾기 ↗',mapSearch:'카카오맵에서 위치 검색 ↗',back:'← 검색 결과로'},
+  en:{heading:'Restaurant details',unavailable:'The restaurant database is unavailable.',category:'Restaurant',license:'Permitted business record (not a real-time open-status guarantee)',address:'Address',noAddress:'Address unavailable',description:'About this restaurant',menus:'Main menu',noPrice:'Price not verified',tags:'Restaurant tags',score:'Independent WhatEatO score',reviews:'WhatEatO user reviews',reviewNote:'Only approved reviews written by registered users appear.',reviewCount:'Approved reviews',subjective:'Subjective customer opinions',noReviews:'No approved reviews yet.',write:'Write a review',external:'Licensed external review insights',negative:'Service concerns',positive:'Positive service mentions',directions:'Directions in Kakao Map ↗',mapSearch:'Find on Kakao Map ↗',back:'← Back to search'},
+  ja:{heading:'店舗情報',unavailable:'データベースに接続できません。',category:'飲食店',license:'営業許可情報（現在営業中である保証ではありません）',address:'住所',noAddress:'住所情報なし',description:'店舗の紹介',menus:'主なメニュー',noPrice:'価格未確認',tags:'タグ',score:'WhatEatO独自評価',reviews:'WhatEatOユーザーレビュー',reviewNote:'承認済みレビューのみ表示します。',reviewCount:'承認済みレビュー',subjective:'利用者の主観的な評価',noReviews:'承認済みレビューはまだありません。',write:'レビューを投稿',external:'利用許諾済みの外部レビュー情報',negative:'接客への不満',positive:'肯定的な言及',directions:'Kakaoマップで経路検索 ↗',mapSearch:'Kakaoマップで検索 ↗',back:'← 検索結果へ'},
+  'zh-CN':{heading:'餐厅详情',unavailable:'餐厅数据库暂时不可用。',category:'餐厅',license:'经营许可记录（不代表当前营业）',address:'地址',noAddress:'暂无地址',description:'餐厅简介',menus:'主要菜品',noPrice:'价格未经核实',tags:'标签',score:'WhatEatO独立评分',reviews:'WhatEatO用户评价',reviewNote:'仅显示已审核的用户评价。',reviewCount:'已审核评价',subjective:'用户主观评价',noReviews:'暂无已审核的评价。',write:'撰写评价',external:'已授权的外部评价信息',negative:'服务投诉',positive:'正面反馈',directions:'Kakao地图路线 ↗',mapSearch:'在Kakao地图搜索 ↗',back:'← 返回搜索'}
 } as const;
 
 // Index only launched, active restaurants with a verified/published editorial
@@ -71,6 +71,14 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   }
   if(!detail)notFound();
   const r=detail.restaurant;
+  const hasTrustedCoordinate=Number.isFinite(r.latitude)&&Number.isFinite(r.longitude)
+    && r.latitude!==null && r.longitude!==null
+    && r.latitude>=33 && r.latitude<=39.5 && r.longitude>=124 && r.longitude<=132;
+  // Kakao's officially documented web link format is name,latitude,longitude.
+  // Coordinates are permit-reference positions, not verified entrances.
+  const kakaoHref=hasTrustedCoordinate
+    ?'https://map.kakao.com/link/to/'+encodeURIComponent(r.name_ko)+','+r.latitude+','+r.longitude
+    :'https://map.kakao.com/link/search/'+encodeURIComponent(r.name_ko+' '+(r.road_address_ko||r.lot_address_ko||''));
   const session=authReady()?await auth():null;
   const [reviews,summary,external]=await Promise.all([
     getPublicReviews(id),getOwnReviewSummary(id),getLicensedReviewInsights(id)
@@ -87,6 +95,10 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     </>}
     <section className="result">
       <strong>{t.address}</strong><span>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
+      {(hasTrustedCoordinate||r.road_address_ko||r.lot_address_ko)&&
+        <a className="simple-link" href={kakaoHref} target="_blank" rel="noopener noreferrer">
+          {hasTrustedCoordinate?t.directions:t.mapSearch}
+        </a>}
     </section>
     {detail.tags.length>0&&<>
       <h2>{t.tags}</h2>
