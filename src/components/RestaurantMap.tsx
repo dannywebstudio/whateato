@@ -331,20 +331,19 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         {basemapFailed?(locale==='ko'?' · 지도 없이 목록으로 탐색':' · List view'):''}
         {limited?' · '+ui.limit:''}</p>
       <div className={'results map-results '+mapStyles.directory}>
-        {visibleItems.slice(0,visibleCount).map(x=><div key={x.id} className="result">
-          <strong>{x.name}</strong>
+        {visibleItems.slice(0,visibleCount).map(x=><div key={x.id} className="map-restaurant-card">
+          <div className="map-card-mark" aria-hidden="true">⌖</div><div className="map-card-body"><strong>{x.name}</strong>
           {x.editorial_score!==null&&<span>★ {x.editorial_score.toFixed(1)} / 5 · WhatEatO</span>}
-          <span>{x.address_ko||x.region_sigungu}</span>
+          <span className="map-card-address">{x.address_ko||x.region_sigungu}</span>
           <button type="button" onClick={()=>selectOnMap(x)}
             aria-label={locale==='ko'?x.name+' 지도에서 위치 보기':
               locale==='ja'?x.name+'を地図で見る':
               locale==='zh-CN'?'在地图上查看'+x.name:'Show '+x.name+' on map'}
-            style={{alignSelf:'flex-start',border:'1px solid #c5dcd0',background:'#f3faf6',
-              color:'#137b57',padding:'8px 12px',borderRadius:8,cursor:'pointer'}}>
+            className="map-card-locate">
             {locale==='ko'?'지도에서 위치 보기':locale==='ja'?'地図で位置を確認':
               locale==='zh-CN'?'在地图上查看位置':'Show on map'}
           </button>
-          <Link className="simple-link" href={'/restaurant/'+x.id+'?'+params.toString()}>{ui.open} →</Link>
+          <Link className="map-card-detail" href={'/restaurant/'+x.id+'?'+params.toString()}>{ui.open} ↗</Link></div>
         </div>)}
       </div>
       {visibleItems.length>visibleCount&&
