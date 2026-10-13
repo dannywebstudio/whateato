@@ -15,6 +15,7 @@ type Params={
   params:Promise<{id:string}>;
   searchParams:Promise<{hl?:string;q?:string;f?:string;region?:string;offset?:string}>;
 };
+const hoursLabels={ko:{open:'영업중',closed:'영업종료',unknown:'영업시간 미확인',hours:'영업시간'},en:{open:'Open now',closed:'Closed now',unknown:'Hours not verified',hours:'Opening hours'},ja:{open:'営業中',closed:'営業時間外',unknown:'営業時間未確認',hours:'営業時間'},'zh-CN':{open:'营业中',closed:'休息中',unknown:'营业时间未核实',hours:'营业时间'}} as const;
 const labels={
   ko:{heading:'Restaurant details',unavailable:'음식점 DB 연결을 확인하고 있습니다.',category:'일반음식점',license:'인허가 영업 상태 (현재 영업 중이라는 의미 아님)',address:'주소',noAddress:'주소 정보 없음',description:'식당 소개',menus:'대표 메뉴',noPrice:'가격 확인 전',tags:'식당 태그',score:'WhatEatO 독립 평가',reviews:'WhatEatO 이용자 리뷰',reviewNote:'실제로 가입자가 작성한 후기만 표시합니다. 모든 리뷰는 게시 전 검토됩니다.',reviewCount:'승인된 리뷰',subjective:'이용자의 주관적인 평가',noReviews:'아직 승인된 리뷰가 없습니다.',write:'방문 후기 작성',external:'이용허락을 받은 외부 리뷰 참고 정보',negative:'직원 응대 관련 불만 언급',positive:'긍정 언급',directions:'Google Maps 길찾기 ↗',mapSearch:'Google Maps에서 위치 검색 ↗',back:'← 검색 결과로'},
   en:{heading:'Restaurant details',unavailable:'The restaurant database is unavailable.',category:'Restaurant',license:'Permitted business record (not a real-time open-status guarantee)',address:'Address',noAddress:'Address unavailable',description:'About this restaurant',menus:'Main menu',noPrice:'Price not verified',tags:'Restaurant tags',score:'Independent WhatEatO score',reviews:'WhatEatO user reviews',reviewNote:'Only approved reviews written by registered users appear.',reviewCount:'Approved reviews',subjective:'Subjective customer opinions',noReviews:'No approved reviews yet.',write:'Write a review',external:'Licensed external review insights',negative:'Service concerns',positive:'Positive service mentions',directions:'Directions in Google Maps ↗',mapSearch:'Find on Google Maps ↗',back:'← Back to search'},
@@ -90,6 +91,10 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     <h1>{r.name}</h1>
     <RestaurantPhotoGallery images={detail.images} name={r.name} locale={locale}/>
     <p className="hint">{r.category_code||t.category} · {t.license}</p>
+    <p className="hint" aria-label="Restaurant opening status">{hoursLabels[locale][r.opening_hours?.state||'unknown']}</p>
+    {r.opening_hours&&r.opening_hours.weekly.length>0&&<section className="result"><strong>{hoursLabels[locale].hours}</strong>
+      {r.opening_hours.weekly.map((slot,i)=><span key={i}>{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][slot.weekday]} {slot.start}–{slot.end}</span>)}
+    </section>}
     {r.editorial_score!==null&&<p className="hint">★ {r.editorial_score.toFixed(1)} / 5 · {t.score}</p>}
     {(r.short_description||r.full_description)&&<>
       <h2>{t.description}</h2>
