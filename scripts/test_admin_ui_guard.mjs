@@ -8,6 +8,7 @@ assert.equal(process.env.WHATEATO_OWNER_CMS_ENABLED,'true'); // Test no-session 
 const root='http://127.0.0.1:3000';
 const paths=[
  '/api/v1/owner/catalog',
+ '/api/v1/owner/readiness',
  '/api/v1/owner/catalog/11111111-1111-4111-8111-111111111111',
  '/api/v1/owner/bulk/batches',
  '/api/v1/owner/reviews'
