@@ -1,0 +1,35 @@
+name: Verify official LOCALDATA download
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve official restaurant file
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/whateato-localdata
+          curl --location --fail --show-error --silent \
+            --retry 2 --connect-timeout 20 --max-time 900 \
+            --max-filesize 1073741824 \
+            --dump-header /tmp/whateato-localdata/headers.txt \
+            --output /tmp/whateato-localdata/source.bin \
+            'https://file.localdata.go.kr/file/general_restaurants/info'
+          file /tmp/whateato-localdata/source.bin
+          wc -c /tmp/whateato-localdata/source.bin
+          python3 scripts/inspect_official_localdata_download.py /tmp/whateato-localdata/source.bin
+      - name: Upload metadata diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: localdata-download-diagnostics
+          path: |
+            /tmp/whateato-localdata/headers.txt
+            /tmp/whateato-localdata/inspection.json
+          if-no-files-found: ignore
+          retention-days: 3
