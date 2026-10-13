@@ -101,6 +101,9 @@ try{
     },null,{timeout:22000});
     await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:14000});
     const hasFallback=await page.locator('[aria-label="Basemap unavailable"] iframe').count();
+    const errorsForFont=styleRequests.filter(msg=>msg.includes('/fonts/Open%20Sans')||msg.includes('Arial%20Unicode'));
+    assert.deepEqual(errorsForFont,[],
+      'OpenFreeMap cluster font must use the supported Noto Sans family');
     if(name==='desktop')assert.equal(hasFallback,0,
       'Desktop Chromium must render vector basemap and markers using the correctly installed v6 worker');
     if(hasFallback){
