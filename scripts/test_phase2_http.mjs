@@ -30,6 +30,7 @@ const matched=await get('/api/v1/restaurants?q='+encodeURIComponent('테스트')
 assert.equal(matched.status,200);
 assert.equal(matched.body.items.length,1);
 assert.equal(matched.body.items[0].name,'Sunny Table');
+assert.equal(matched.body.items[0].opening_hours,null,'unverified hours must never show open now');
 assert.equal(matched.body.items[0].editorial_score,4.5);
 assert.equal(matched.body.items[0].main_menu,'Coffee');
 assert.equal(matched.body.items[0].tags[0].label,'Café');
