@@ -32,6 +32,8 @@ jobs:
       # Synthetic fixture ONLY; never reuse this constant for staging/production.
       WHATEATO_REVIEW_MODERATION_ENABLED: 'true'
       WHATEATO_REVIEW_ADMIN_TOKEN: 'ci-only-review-moderation-token-00000000'
+      WHATEATO_BULK_ADMIN_ENABLED: 'true'
+      WHATEATO_BULK_ADMIN_TOKEN: 'ci-only-bulk-admin-token-000000000000'
       NEXT_PUBLIC_LAUNCH_READY: 'false'
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
     steps:
@@ -48,6 +50,7 @@ jobs:
           node --check scripts/enrichment_v1.mjs
           node --check scripts/test_enrichment_v1.mjs
           node --check scripts/test_review_moderation_http.mjs
+          node --check scripts/test_bulk_content_http.mjs
           node --check scripts/audit_restaurant_quality.mjs
           node --check scripts/report_catalog_coverage.mjs
           node --check scripts/report_geo_recovery.mjs
@@ -75,6 +78,7 @@ jobs:
           node scripts/report_geo_recovery.mjs
           node scripts/test_phase25_browser.mjs
           node scripts/test_review_moderation_http.mjs
+          node scripts/test_bulk_content_http.mjs
       - name: Upload desktop/mobile QA screenshots
         if: always()
         uses: actions/upload-artifact@v4
