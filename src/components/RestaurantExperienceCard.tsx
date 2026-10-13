@@ -11,12 +11,12 @@ const copy={
 } as const;
 export default function RestaurantExperienceCard({name,address,description,menu,href,locale,variant='search',status='unknown',hours,rating,tags=[],imageUrl,onMapClick,mapButtonLabel}:Props){
  const t=copy[locale as keyof typeof copy]||copy.ko;
- return <article className={'we-card we-card-'+variant}>
+ return <article className={'we-card we-card-'+variant+(variant==='map'?' result map-restaurant-card':' restaurant-card')}>
    <div className="we-card-visual">{imageUrl?<img src={imageUrl} alt={name} loading="lazy"/>:<div className="we-card-fallback" aria-label="Photo unavailable"><span>W.</span><small>DISCOVER LOCAL</small></div>}<span className="we-card-category">WhatEatO EDITOR'S DIRECTORY</span></div>
    <div className="we-card-body"><div className="we-card-head"><h3><Link href={href}>{name}</Link></h3><span className={'status-pill '+(status==='open'?'is-open':status==='closed'?'is-closed':'')}>{t[status]}</span></div>
    {description&&<p className="we-card-desc">{description}</p>}
    <div className="we-card-information">{menu&&<p><span>◈</span><b>{t.menu}</b> {menu}</p>}{hours&&<p><span>◷</span>{hours}</p>}{address&&<p><span>⌖</span>{address}</p>}</div>
-   <div className="we-card-bottom"><span className="we-card-rating">{rating!==null&&rating!==undefined?'★ '+rating.toFixed(1):t.rating}</span><div className="we-card-actions">{onMapClick&&<button type="button" onClick={onMapClick} className="we-map-button" aria-label={mapButtonLabel||t.map}>{t.map}</button>}<Link href={href} className="we-card-visit">{t.details} <span aria-hidden="true">↗</span></Link></div></div>
+   <div className="we-card-bottom"><span className="we-card-rating">{rating!==null&&rating!==undefined?'★ '+rating.toFixed(1):t.rating}</span><div className="we-card-actions">{onMapClick&&<button type="button" onClick={onMapClick} className="we-map-button map-card-locate" aria-label={mapButtonLabel||t.map}>{t.map}</button>}<Link href={href} className="we-card-visit">{t.details} <span aria-hidden="true">↗</span></Link></div></div>
    {tags.length>0&&<div className="we-card-tags">{tags.slice(0,3).map(tag=><span key={tag}>{tag}</span>)}</div>}
    </div>
  </article>;
