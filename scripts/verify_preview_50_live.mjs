@@ -32,3 +32,12 @@ for(const id of privateDetails){
   console.log(JSON.stringify({route:'/restaurant/'+id,hidden:true,httpStatus:404}));
  }finally{clearTimeout(timer)}
 }
+
+for(const id of privateDetails){
+ const res=await fetch(base+'/api/v1/google-photo-preview/'+id,{redirect:'manual',signal:AbortSignal.timeout(25000)});
+ if(res.status!==404)throw Error('Google photo preview is exposed without photo approval: '+res.status+' id='+id);
+ const cache=res.headers.get('cache-control')||'';
+ if(!cache.includes('no-store'))throw Error('Google photo response must be no-store');
+ console.log(JSON.stringify({route:'/api/v1/google-photo-preview/'+id,disabled:true,httpStatus:404}));
+}
+console.log('PASS: 3 unapproved Google Places photo endpoints disabled; zero photo API calls');
