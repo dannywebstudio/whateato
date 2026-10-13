@@ -44,14 +44,16 @@ export async function applyBulkItem(client:PoolClient,item:BulkInput):Promise<vo
       if(menuId){
         await client.query(`
           UPDATE restaurant_menus SET position=$2,price_krw=$3,
-             evidence_ref=$4,publication_state='published',price_verified_at=NULL
+             evidence_ref=$4,publication_state='published',
+             price_verified_at=CASE WHEN $3::integer IS NOT NULL THEN now() ELSE NULL END
           WHERE id=$1 AND restaurant_id=$5`,[
           menuId,p.position??0,p.price_krw??null,p.evidence_ref,id
         ]);
       }else{
         const created=await client.query<{id:string}>(`
-          INSERT INTO restaurant_menus(restaurant_id,price_krw,position,publication_state,evidence_ref)
-          VALUES ($1,$2,$3,'published',$4) RETURNING id::text`,[
+          INSERT INTO restaurant_menus(restaurant_id,price_krw,position,publication_state,evidence_ref,price_verified_at)
+          VALUES ($1,$2,$3,'published',$4,CASE WHEN $2::integer IS NOT NULL THEN now() ELSE NULL END)
+          RETURNING id::text`,[
           id,p.price_krw??null,p.position??0,p.evidence_ref
         ]);
         menuId=created.rows[0].id;
