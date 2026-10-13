@@ -1,5 +1,5 @@
-import RestaurantExperienceCard from '@/components/RestaurantExperienceCard';
 'use client';
+import RestaurantExperienceCard from '@/components/RestaurantExperienceCard';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import mapStyles from './RestaurantMap.module.css';
