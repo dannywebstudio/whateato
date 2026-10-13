@@ -6,7 +6,7 @@ import {writeFileSync} from 'node:fs';
 const key=process.env.DATA_GO_KR_SERVICE_KEY;
 const dbUrl=process.env.WHATEATO_STAGING_DATABASE_URL;
 if(!key||!dbUrl)throw Error('Both DATA_GO_KR_SERVICE_KEY and WHATEATO_STAGING_DATABASE_URL secrets are required');
-const size=Number(process.env.PAGE_SIZE||1000),start=Number(process.env.START_PAGE||1),limit=Number(process.env.MAX_PAGES||5);
+const size=Number(process.env.PAGE_SIZE||100),start=Number(process.env.START_PAGE||1),limit=Number(process.env.MAX_PAGES||5);
 if(!Number.isInteger(size)||size<1||size>1000||!Number.isInteger(start)||start<1||!Number.isInteger(limit)||limit<1||limit>10)throw Error('Invalid page limits');
 const client=new pg.Client({connectionString:dbUrl,connectionTimeoutMillis:15000,statement_timeout:30000,options:'-c default_transaction_read_only=on'});
 await client.connect();
@@ -36,7 +36,10 @@ for(let p=start;p<start+limit;p++){
  const header=doc?.response?.header,body=doc?.response?.body;
  if(!['0','00'].includes(String(header?.resultCode)))throw Error('API resultCode='+String(header?.resultCode).slice(0,24));
  const items=Array.isArray(body?.items)?body.items:Array.isArray(body?.items?.item)?body.items.item:body?.items?.item&&typeof body.items.item==='object'?[body.items.item]:null;
- if(!items||Number(body.pageNo)!==p||Number(body.numOfRows)!==size||items.length>size)throw Error('Unreliable pagination at page '+p);
+ if(!items||Number(body.pageNo)!==p||Number(body.numOfRows)!==size||items.length>size){
+  console.error('Pagination diagnostic:',JSON.stringify({pageRequested:p,sizeRequested:size,pageReturned:body?.pageNo??null,sizeReturned:body?.numOfRows??null,itemCount:items?.length??null,itemsType:typeof body?.items,itemsKeys:Object.keys(body?.items||{}).slice(0,8)}));
+  throw Error('Unreliable pagination at page '+p);
+ }
  if(total===null)total=Number(body.totalCount);
  if(!Number.isSafeInteger(total)||Number(body.totalCount)!==total)throw Error('Dataset count drift');
  if(p>Math.ceil(total/size))break;
