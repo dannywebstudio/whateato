@@ -53,6 +53,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
     <SearchBoxSynced initial={q} initialFilters={filterTags} initialRegion={region} initialLocale={locale}/>
     <p className="hint">{!searched?t.initial:found?t.ready:t.unavailable}</p>
     {found&&<>
+      <p className="hint">{locale==='ko'?'영업 상태는 등록된 영업시간 기준이며, 식당 사정에 따라 실제와 다를 수 있습니다.':locale==='en'?'Hours-based status may differ from actual operations.':locale==='ja'?'営業状況は登録された営業時間に基づき、実際と異なる場合があります。':'营业状态按登记营业时间计算，实际情况可能有所不同。'}</p>
       <div className="results">{found.items.map(r=>{
         const detailParams=new URLSearchParams({hl:locale});
         if(q)detailParams.set('q',q);
