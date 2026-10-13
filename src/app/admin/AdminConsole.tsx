@@ -25,7 +25,7 @@ const locales=['en','ja','zh-CN','ko'] as const;
 const timeToMin=(s:string)=>{const m=/^([01]\d|2[0-3]):([0-5]\d)$/.exec(s);
  if(!m)throw Error('시간은 HH:MM 형식이어야 해.');return Number(m[1])*60+Number(m[2])};
 const minToTime=(v:number)=>String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0');
-const blankMenu=()=>({key:'',name:'',price:'',description:'',evidence:''});
+const blankMenu=()=>({key:'',name:'',price:'',description:'',evidence:'',featured:false});
 type Menu=ReturnType<typeof blankMenu>;
 type Item={source_key:string;restaurant_id:string;kind:string;payload:Record<string,unknown>};
 async function json(url:string,init:RequestInit={}):Promise<any>{
@@ -101,11 +101,22 @@ export default function AdminConsole({role}:{role:Role}){
  };
  useEffect(()=>{if(edit)void search()},[edit,search]);
  useEffect(()=>{
+   const id=new URLSearchParams(window.location.search).get('restaurant');
+   if(id&&/^[a-f0-9-]{36}$/i.test(id)&&edit)void select(id);
+   // Intentional initial load only; no repeated account or selector requests.
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[]);
+ useEffect(()=>{
    if(!selected)return;
    const found=selected.locales.find(x=>x.locale===locale);
    setDisplayName(found?.display_name||selected.restaurant.name_ko);
    setIntro(found?.short_description||'');setFull(found?.full_description||'');
    setSource(found?.source_notes||'');
+   const m=selected.menus.filter(x=>x.locale===locale&&x.name).slice(0,20);
+   setMenus(m.length?m.map((x,i)=>({
+     key:x.menu_key,name:x.name||'',price:x.price_krw===null?'':String(x.price_krw),
+     description:x.description||'',evidence:'',featured:i===0
+   })):[blankMenu()]);
  },[locale,selected]);
  const loadBatches=async()=>{try{const r=await json('/api/v1/owner/bulk/batches?limit=30');setBatches(r.items)}catch(e){inform(e)}};
  const loadBatch=async(id:string)=>{try{const r=await json('/api/v1/owner/bulk/batches/'+id);setCurrentBatch(r);setBatchId(id)}catch(e){inform(e)}};
@@ -130,12 +141,12 @@ export default function AdminConsole({role}:{role:Role}){
      add('localization',{locale,display_name:displayName.trim(),
        short_description:intro.trim(),full_description:full.trim()||null,source_notes:source.trim()});
    }
-   for(const m of menus){
+   for(const [mi,m] of menus.entries()){
      if(!m.name.trim())continue;
      if(!/^https:\/\//.test(m.evidence))throw Error('각 메뉴의 HTTPS 검증 출처가 필요해.');
      add('menu',{key:m.key.trim(),locale,name:m.name.trim(),
        description:m.description.trim()||null,price_krw:m.price===''?null:Number(m.price),
-       position:result.length,evidence_ref:m.evidence.trim()});
+       position:m.featured?0:mi+1,evidence_ref:m.evidence.trim()});
    }
    const before=new Set(selected.tags.filter(x=>x.verification_state==='verified').map(x=>x.tag_code));
    for(const tag of chosenTags){
@@ -223,8 +234,8 @@ export default function AdminConsole({role}:{role:Role}){
    const resp=await fetch('/api/v1/owner/media',{method:'POST',credentials:'same-origin',body:form});
    const result=await resp.json();
    if(!resp.ok)throw Error(result.error||'upload_failed');
-   setImageResult('업로드 완료 · 검수 대기 '+result.image_id);
    await select(selected.restaurant.id);
+   setImageResult('업로드 완료 · 검수 대기 '+result.image_id);
  };
  return <div>
    <header className={styles.hero}>
@@ -288,6 +299,8 @@ export default function AdminConsole({role}:{role:Role}){
            </div>
            <label className={styles.field}>메뉴 검증 출처 HTTPS
              <input type="url" value={m.evidence} onChange={e=>setMenus(old=>old.map((x,n)=>n===i?{...x,evidence:e.target.value}:x))}/></label>
+           <label className={styles.chip}><input type="radio" checked={m.featured}
+              onChange={()=>setMenus(a=>a.map((x,n)=>({...x,featured:n===i})))}/> 대표메뉴 · 카드에 우선 표시</label>
            <button className={styles.button+' '+styles.danger} onClick={()=>setMenus(a=>a.filter((_,n)=>n!==i))}>메뉴 줄 제거</button>
          </div>)}
          <div className={styles.actions}><button className={styles.button+' '+styles.secondary} onClick={()=>setMenus(a=>[...a,blankMenu()])}>+ 메뉴 추가</button></div>
