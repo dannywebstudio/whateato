@@ -121,7 +121,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
       <h2>{t.description}</h2>
       <section className="result"><span>{r.full_description||r.short_description}</span></section>
     </>}
-    <section className="result" style={{display:'grid',gridTemplateColumns:miniMapHref?'minmax(0,1fr) minmax(160px,240px)':'1fr',gap:12,alignItems:'center'}}>
+    <section className="result" style={{display:'grid',gridTemplateColumns:miniMapHref?'repeat(auto-fit,minmax(min(100%,240px),1fr))':'1fr',gap:12,alignItems:'center'}}>
       <div style={{minWidth:0}}>
       <strong>{t.address}</strong><span style={{display:'block',overflowWrap:'anywhere'}}>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
       {(hasTrustedCoordinate||r.road_address_ko||r.lot_address_ko)&&
