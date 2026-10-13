@@ -215,7 +215,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         } as const;
         const lang=activeLocale in states?activeLocale as keyof typeof states:'ko';
         const status=feature?.properties?.openingState;
-        const stateKey=status==='open'||status==='closed'||status==='preparing'?status:'unknown';
+        const stateKey:'open'|'closed'|'preparing'|'unknown'=status==='open'?'open':status==='closed'?'closed':status==='preparing'?'preparing':'unknown';
         const root=document.createElement('div');root.className='we-map-popup';
         const heading=document.createElement('strong');heading.textContent=feature?.properties?.name||'';
         const state=document.createElement('span');state.textContent=states[lang][stateKey];
