@@ -1,0 +1,35 @@
+name: Reconcile official permits pages 16-25
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-staging-batch-16-25.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install PostgreSQL client
+        run: npm install --ignore-scripts --no-package-lock --no-save pg@8.16.0
+      - name: Read-only staging reconciliation pages 16-25
+        env:
+          DATA_GO_KR_SERVICE_KEY: ${{ secrets.DATA_GO_KR_SERVICE_KEY }}
+          WHATEATO_STAGING_DATABASE_URL: ${{ secrets.WHATEATO_STAGING_DATABASE_URL }}
+          START_PAGE: '16'
+          MAX_PAGES: '10'
+          PAGE_SIZE: '100'
+        run: node scripts/reconcile_official_staging_pages.mjs
+      - name: Save evidence report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-permit-reconciliation-pages-16-25
+          path: staging-permit-reconciliation.json
+          retention-days: 7
