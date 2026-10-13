@@ -9,6 +9,13 @@ assert.equal(origin,'https://whateato.onrender.com','Visual QA is staging-only')
 assert.equal(process.env.WHATEATO_STAGING_ACK,'PREVIEW_ONLY');
 const out='render-staging-visual-qa';
 await mkdir(out,{recursive:true});
+// An HTTP 200 homepage does not prove MapLibre v6's worker is deployed.
+for(const moduleName of ['maplibre-gl-worker.mjs','maplibre-gl-shared.mjs']){
+  const resp=await fetch(origin+'/maplibre/'+moduleName,{cache:'no-store'});
+  assert.equal(resp.status,200,'MapLibre same-origin worker dependency: '+moduleName);
+  const body=await resp.text();
+  assert.ok(body.length>16,'MapLibre module truncated: '+moduleName);
+}
 const browser=await chromium.launch({headless:true});
 const checks=[];
 try{
@@ -84,6 +91,8 @@ try{
     },null,{timeout:22000});
     await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:14000});
     const hasFallback=await page.locator('[aria-label="Basemap unavailable"] iframe').count();
+    if(name==='desktop')assert.equal(hasFallback,0,
+      'Desktop Chromium must render vector basemap and markers using the correctly installed v6 worker');
     if(hasFallback){
       const src=await page.locator('[aria-label="Basemap unavailable"] iframe').getAttribute('src');
       assert.ok(src?.startsWith('https://www.openstreetmap.org/export/embed.html'),
