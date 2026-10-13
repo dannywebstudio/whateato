@@ -3,7 +3,7 @@
 import csv, json, pathlib, sys, zipfile, io
 src=pathlib.Path(sys.argv[1]); b=src.read_bytes()
 result={'bytes':len(b),'official_source':'https://file.localdata.go.kr/file/general_restaurants/info','format':'unknown','files':[]}
-if b.startswith(b'PK\\x03\\x04'):
+if b[:4] == bytes((80,75,3,4)):
  result['format']='zip'
  with zipfile.ZipFile(io.BytesIO(b)) as z:
   for item in z.infolist():
