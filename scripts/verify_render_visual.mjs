@@ -102,8 +102,11 @@ try{
     await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:14000});
     const mapGrid=await page.locator('.map-results').evaluate(node=>({
       columns:getComputedStyle(node).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+      display:getComputedStyle(node).display,
+      className:node.className,
       scrollWidth:node.scrollWidth,clientWidth:node.clientWidth
     }));
+    console.log('MAP GRID COMPUTED '+JSON.stringify({device:name,...mapGrid}));
     assert.equal(mapGrid.columns,name==='desktop'?2:1,
       name+' map restaurant directory should be a clean 2-column desktop / 1-column mobile grid');
     assert.ok(mapGrid.scrollWidth<=mapGrid.clientWidth+2,
