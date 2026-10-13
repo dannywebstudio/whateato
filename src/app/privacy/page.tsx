@@ -20,7 +20,7 @@ export default function Privacy(){
     </div>
     <div className="result">
       <strong>외부 지도 자료</strong>
-      <span>지도 배경은 OpenFreeMap에서 제공하며, 브라우저가 해당 지도 서버에 요청합니다. 세부 사항은 지도 제공자의 개인정보 처리방침과 이용약관을 참고하세요. 식당 위치 정보는 WhatEatO 인허가 자료를 사용합니다.</span>
+      <span>기본 지도는 OpenFreeMap에서 제공하며, 브라우저가 해당 지도 서버에 직접 요청합니다. 지도 렌더링이 지원되지 않거나 실패하면 OpenStreetMap의 공식 내장 지도로 전환되어 브라우저가 openstreetmap.org에 접속할 수 있습니다. 외부 지도 서비스의 개인정보 처리방침과 이용약관을 참고하세요. WhatEatO 식당 마커·목록은 자체 인허가 데이터에 기반합니다.</span>
     </div>
     <div className="result">
       <strong>외부 리뷰 분석</strong>
