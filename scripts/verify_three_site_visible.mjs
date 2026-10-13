@@ -10,6 +10,15 @@ for(const [id,name] of rows){
  if(r.status!==200)throw Error(name+' detail HTTP '+r.status);
  const html=await r.text();
  if(!html.includes(name))throw Error(name+' SSR missing name');
+ if(!html.includes('openstreetmap.org/export/embed.html'))throw Error(name+' mini map missing');
+ if(!html.includes('입니다')&&!html.includes('선보입니다'))throw Error(name+' polite description missing');
+ const api=await fetch(base+'/api/v1/restaurants/'+id+'?hl=ko',{signal:AbortSignal.timeout(40000)});
+ if(!api.ok)throw Error(name+' API HTTP '+api.status);
+ const body=await api.json();
+ if(body.menus.length<2||body.menus.some(menu=>menu.price_krw===null))throw Error(name+' unpriced menus');
+ if(!body.restaurant.opening_hours||body.restaurant.opening_hours.weekly.length<6)throw Error(name+' missing weekly hours');
+ if(!['open','closed'].includes(body.restaurant.opening_hours.state))throw Error(name+' status unavailable');
+ console.log('IMPROVEMENTS '+name+' menus='+body.menus.length+' hours='+body.restaurant.opening_hours.state);
  console.log('VISIBLE DETAIL '+name+' HTTP '+r.status);
 }
 const list=await fetch(base+'/api/v1/restaurants?hl=ko&limit=30',{signal:AbortSignal.timeout(40000)});
