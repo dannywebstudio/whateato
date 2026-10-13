@@ -195,8 +195,9 @@ const spatial=await get('/api/v1/map/markers?bbox=37.19,127.19,37.29,127.29&limi
 assert.equal(spatial.status,200,'spatial viewport smoke');
 assert.equal(spatial.body.items.length,2,'strict viewport limit');
 assert.equal(spatial.body.has_more,true,'remaining markers are acknowledged');
-assert.deepEqual(spatial.body.items.map(x=>x.name_ko),['가공간표본1','하공간표본'],
-  'viewport slots must be shared across visible map cells, not monopolized by one alphabetic hotspot');
+assert.deepEqual(spatial.body.items.map(x=>x.name_ko).sort(),
+  ['가공간표본1','하공간표본'].sort(),
+  'viewport slots must cover separate map cells regardless of PostgreSQL locale collation ordering');
 
 const permitPubMarker=await get('/api/v1/map/markers?bbox=37.57,126.98,37.59,127.01&f=bar');
 assert.equal(permitPubMarker.status,200);
