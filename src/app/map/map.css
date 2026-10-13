@@ -79,3 +79,22 @@
 .map-explore-notice{font-size:12px}
 @media(max-width:920px){.map-explore-list{min-height:0}.map-explore-map{height:500px}}
 @media(max-width:620px){.map-explore-map{height:420px}.map-explore-cards .we-card.we-card-map{grid-template-columns:106px minmax(0,1fr);min-height:135px;max-height:none}.map-explore-cards .we-card-map .we-card-body{padding:10px}.map-explore-cards .we-card-map .we-card-head h3{font-size:16px}.map-explore-cards .we-card-map .we-card-information p{font-size:11px}}
+
+
+/* v4: dramatic readability correction for sparse map previews */
+@media(min-width:921px){
+ .map-explore-cards.map-explore-cards-spacious{grid-template-rows:repeat(3,minmax(0,1fr));flex:1;min-height:0;align-content:stretch}
+ .map-explore-cards-spacious .we-card.we-card-map{height:100%;max-height:none;min-height:0;grid-template-columns:minmax(130px,32%) minmax(0,1fr)}
+ .map-explore-cards-spacious .we-card-map .we-card-visual{height:100%;min-height:0}
+ .map-explore-cards-spacious .we-card-map .we-card-body{padding:20px 18px;gap:12px}
+ .map-explore-cards-spacious .we-card-map .we-card-head h3{font-size:22px}
+ .map-explore-cards-spacious .we-card-map .we-card-desc{font-size:14px;line-height:1.55;-webkit-line-clamp:2}
+ .map-explore-cards-spacious .we-card-map .we-card-information p{font-size:13px;white-space:normal;line-height:1.6}
+ .map-explore-cards-spacious .we-card-map .we-card-information{gap:6px}
+ .map-explore-cards-spacious .we-card-map .we-map-button,.map-explore-cards-spacious .we-card-map .we-card-visit{font-size:12px;padding:9px 12px}
+ .map-explore-cards-spacious .we-card-map .we-card-rating{display:inline;font-size:12px}
+}
+.map-explore-cards .we-card-map:hover{background:#f9fcfa;box-shadow:0 12px 29px rgba(18,52,34,.14);transform:translateX(2px)}
+.map-explore-cards .we-card-map .we-card-head h3 a{color:#142a1e}
+.map-explore-cards .we-card-map .we-card-fallback{background:linear-gradient(135deg,#e3eee6,#d6e9dd)}
+.map-explore-cards .we-card-map .we-card-fallback span{color:var(--cuisine-accent,#697887)}
