@@ -100,7 +100,8 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     {r.opening_hours&&r.opening_hours.weekly.length>0&&<section className="result"><strong>{hoursLabels[locale].hours}</strong>
       {r.opening_hours.weekly.map((slot,i)=><span key={i}>{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][slot.weekday]} {slot.start}–{slot.end}</span>)}
     </section>}
-    {r.editorial_score!==null&&<p className="hint">★ {r.editorial_score.toFixed(1)} / 5 · {t.score}</p>}
+    {r.ratings.external&&<p className="hint">★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</p>}
+    {r.ratings.whateato&&<p className="hint">★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</p>}
     {(r.short_description||r.full_description)&&<>
       <h2>{t.description}</h2>
       <section className="result"><span>{r.full_description||r.short_description}</span></section>
@@ -130,7 +131,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
     </>}
     <h2>{t.reviews}</h2>
     <p className="hint">{t.reviewNote}</p>
-    {summary&&<p className="hint">{t.reviewCount} {summary.reviewCount} · ★ {summary.averageRating} / 5
+    {summary&&<p className="hint">{t.reviewCount} {summary.reviewCount}
       <span> · {t.subjective}</span></p>}
     <div className="results">{reviews.length?reviews.map(rev=>
       <article className="result" key={rev.id}>
