@@ -26,8 +26,18 @@ export function hasPermission(staff:Staff,capability:'edit'|'publish'|'moderate'
 }
 export function safeSameOrigin(req:NextRequest){
   const origin=req.headers.get('origin');
-  if(!origin)return false;
-  try{return new URL(origin).origin===req.nextUrl.origin}catch{return false}
+  // A browser Origin must agree with a trusted, server-configured deployment URL.
+  // Do not use request Host/Forwarded headers as the CSRF trust anchor; proxies
+  // can rewrite them (and can differ from NextRequest.nextUrl.origin).
+  const configured=process.env.WHATEATO_OWNER_CANONICAL_ORIGIN
+    ||process.env.NEXT_PUBLIC_SITE_URL||process.env.AUTH_URL||'';
+  if(!origin||!configured)return false;
+  try{
+    const expected=new URL(configured);
+    if(expected.protocol!=='https:'&&
+      !(expected.protocol==='http:'&&['localhost','127.0.0.1'].includes(expected.hostname)))return false;
+    return new URL(origin).origin===expected.origin;
+  }catch{return false}
 }
 export const ownerHeaders={
   'Cache-Control':'private, no-store','Vary':'Cookie','X-Content-Type-Options':'nosniff',
