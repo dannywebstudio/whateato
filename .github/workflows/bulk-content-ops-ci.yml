@@ -37,6 +37,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: node --check scripts/seed_bulk_ops_fixture.mjs
       - run: node --check scripts/test_bulk_content_http.mjs
+      - run: node --check scripts/test_admin_ui_guard.mjs
       - run: node --check scripts/run_bulk_batch.mjs
       - run: node --check scripts/import_bulk_ndjson.mjs
       - run: node scripts/seed_bulk_ops_fixture.mjs
@@ -50,6 +51,7 @@ jobs:
             sleep 2
           done
           node scripts/test_bulk_content_http.mjs
+          node scripts/test_admin_ui_guard.mjs
       - name: Print local errors on failure
         if: failure()
         run: cat /tmp/whateato-bulk-ci.log || true
