@@ -17,3 +17,4 @@ jobs:
           node-version: '22'
       - run: npm install --ignore-scripts --no-package-lock
       - run: npm run typecheck
+      - run: npm run build
