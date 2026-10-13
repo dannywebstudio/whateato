@@ -18,3 +18,4 @@ jobs:
       - run: npm install --ignore-scripts --no-package-lock
       - run: npm run typecheck
       - run: npm run build
+      - run: node --test scripts/verify-google-photo-guard.test.mjs
