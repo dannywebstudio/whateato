@@ -158,3 +158,15 @@
 .map-explore-cards .we-card-map .we-card-fallback:hover{background:#fff;display:flex;justify-content:center;align-items:center;text-align:center;padding:9px}
 .map-explore-cards .we-card-map .we-card-fallback span{font-family:inherit;font-size:12px;font-weight:650;line-height:1.5;letter-spacing:0;color:#758078;opacity:1;word-break:keep-all}
 .map-explore-cards .we-card-map .we-card-visual img{height:100%;width:100%;object-fit:cover}
+
+/* v5.6: prevent description clipping under state badge, preserve 4-card grid */
+@media(min-width:921px){
+.map-explore-cards .we-card-map .we-card-body{display:grid;grid-template-rows:25px 19px minmax(0,1fr) 29px;gap:3px;overflow:hidden}
+.map-explore-cards .we-card-map .we-card-head{min-height:0;min-width:0;align-items:center}
+.map-explore-cards .we-card-map .we-card-head h3{min-width:0}
+.map-explore-cards .we-card-map .status-pill{flex-shrink:0}
+.map-explore-cards .we-card-map .we-card-desc{display:block;min-width:0;max-height:19px;line-height:19px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.map-explore-cards .we-card-map .we-card-information{min-height:0;overflow:hidden;display:grid;grid-template-rows:20px 16px 16px;gap:1px}
+.map-explore-cards .we-card-map .we-card-menu-row{min-height:0;height:20px}
+.map-explore-cards .we-card-map .we-card-bottom{min-height:0;margin-top:0;padding-top:3px}
+}
