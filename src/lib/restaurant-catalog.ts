@@ -9,7 +9,7 @@ export type RestaurantSearchItem={
   id:string;name:string;name_ko:string;address_ko:string|null;
   category_code:string|null;region_sido:string|null;region_sigungu:string|null;short_description:string|null;
   main_menu:string|null;featured_image_metadata:FeaturedImageMetadata|null;
-  editorial_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;ratings:RatingDisplay;ratings:RatingDisplay;
+  editorial_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;ratings:RatingDisplay;
 };
 export type RestaurantSearchInput={
   q?:unknown;region?:unknown;locale?:unknown;filters?:unknown;
@@ -25,7 +25,7 @@ export type RestaurantDetailInfo={
   full_description:string|null;road_address_ko:string|null;lot_address_ko:string|null;
   region_sido:string|null;region_sigungu:string|null;category_code:string|null;
   latitude:number|null;longitude:number|null;
-  editorial_score:number|null;editorial_methodology:string|null;opening_hours:OpeningHours|null;
+  editorial_score:number|null;editorial_methodology:string|null;opening_hours:OpeningHours|null;ratings:RatingDisplay;
 };
 export type RestaurantMenu={
   id:string;name:string;description:string|null;price_krw:number|null;price_verified_at:string|null;
