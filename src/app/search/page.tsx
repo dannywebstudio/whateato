@@ -64,13 +64,13 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
         return <Link className="result" href={href} key={r.id}>
           <VerifiedRestaurantPhoto image={r.featured_image_metadata} restaurantName={r.name}/>
           <strong>{r.name}</strong>
-          {r.opening_hours?.today_hours&&<span>{hoursLabels[locale].hours}: {r.opening_hours.today_hours}</span>}
-          <span aria-label="Restaurant opening status">{hoursLabels[locale][r.opening_hours?.state||'unknown']}</span>
-          {r.category_code&&<span>{locale==='ko'?'인허가 업종':locale==='ja'?'営業許可上の業種':locale==='zh-CN'?'许可经营类别':'Permit category'}: {r.category_code}</span>}
+          {r.short_description&&<span>{r.short_description}</span>}
+          <span aria-label="Restaurant opening status">
+            {hoursLabels[locale][r.opening_hours?.state||'unknown']}
+            {r.opening_hours?.today_hours?` · ${hoursLabels[locale].hours} ${r.opening_hours.today_hours}`:''}
+          </span>
           <span>{t.menu}: {r.main_menu||t.menuUnknown}</span>
           <span>{r.editorial_score!==null?`★ ${r.editorial_score.toFixed(1)} / 5 · ${t.score}`:t.scoreUnknown}</span>
-          {r.short_description&&<span>{r.short_description}</span>}
-          {r.tags.length>0&&<span>{r.tags.map(tag=>tag.label).join(' · ')}</span>}
           <span>{r.address_ko||t.address}</span>
         </Link>
       })}</div>
