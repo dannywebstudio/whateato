@@ -65,7 +65,9 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const [directoryError,setDirectoryError]=useState(false);
   const [limited,setLimited]=useState(false);
   const [selected,setSelected]=useState<string|null>(null);
+  const [visibleCount,setVisibleCount]=useState(20);
   queryRef.current={q,filter,locale};
+  useEffect(()=>{setVisibleCount(20);setSelected(null)},[q,filter,locale]);
   const load=useCallback(async (currentMap:MapLibreMap)=>{
     // Adding a fresh GeoJSON source briefly makes isStyleLoaded() false.
     // Waiting for that flag here silently skips the *initial* marker fetch.
@@ -241,6 +243,20 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   },[q,filter,locale]);
   const visibleItems=state==='ready'&&!basemapFailed?items:directory;
   const resultsReady=state==='ready'||directoryReady;
+  const selectOnMap=(place:Place)=>{
+    setSelected(place.id);
+    if(!basemapFailed&&map.current){
+      map.current.flyTo({
+        center:[place.longitude,place.latitude],
+        zoom:Math.max(map.current.getZoom(),15),
+        duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:380
+      });
+    }
+    host.current?.scrollIntoView({
+      behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',
+      block:'center'
+    });
+  };
   const pick=visibleItems.find(x=>x.id===selected)||null;
   const fallbackSource=pick?new URLSearchParams({
     bbox:[pick.longitude-0.019,pick.latitude-0.013,pick.longitude+0.019,
@@ -257,6 +273,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     <div style={{position:'relative',marginTop:24}}>
       <div ref={host} role="application" aria-label="Interactive restaurant map"
         data-map-status={basemapFailed?'fallback':state}
+        data-selected-map-restaurant={selected||''}
         style={{width:'100%',height:'min(62vh,540px)',minHeight:350,
           background:'#f1f6f3',borderRadius:18,overflow:'hidden',
           border:'1px solid #e5ece8'}}/>
@@ -301,19 +318,30 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         {basemapFailed?(locale==='ko'?' · 지도 없이 목록으로 탐색':' · List view'):''}
         {limited?' · '+ui.limit:''}</p>
       <div className="results">
-        {visibleItems.slice(0,20).map(x=><div key={x.id} className="result">
+        {visibleItems.slice(0,visibleCount).map(x=><div key={x.id} className="result">
           <strong>{x.name}</strong>
           {x.editorial_score!==null&&<span>★ {x.editorial_score.toFixed(1)} / 5 · WhatEatO</span>}
           <span>{x.address_ko||x.region_sigungu}</span>
-          {basemapFailed&&<button type="button" onClick={()=>setSelected(x.id)}
+          <button type="button" onClick={()=>selectOnMap(x)}
+            aria-label={locale==='ko'?x.name+' 지도에서 위치 보기':
+              locale==='ja'?x.name+'を地図で見る':
+              locale==='zh-CN'?'在地图上查看'+x.name:'Show '+x.name+' on map'}
             style={{alignSelf:'flex-start',border:'1px solid #c5dcd0',background:'#f3faf6',
               color:'#137b57',padding:'8px 12px',borderRadius:8,cursor:'pointer'}}>
-            {locale==='ko'?'보조 지도에서 위치 보기':locale==='ja'?'地図で位置を確認':
-              locale==='zh-CN'?'在地图上查看位置':'Show on fallback map'}
-          </button>}
+            {locale==='ko'?'지도에서 위치 보기':locale==='ja'?'地図で位置を確認':
+              locale==='zh-CN'?'在地图上查看位置':'Show on map'}
+          </button>
           <Link className="simple-link" href={'/restaurant/'+x.id+'?'+params.toString()}>{ui.open} →</Link>
         </div>)}
       </div>
+      {visibleItems.length>visibleCount&&
+        <button type="button" onClick={()=>setVisibleCount(n=>Math.min(n+20,200))}
+          style={{display:'block',margin:'16px auto 0',border:'1px solid #c5dcd0',
+            background:'white',color:'#137b57',padding:'10px 20px',
+            borderRadius:24,cursor:'pointer',fontWeight:600}}>
+          {locale==='ko'?'식당 더 보기':locale==='ja'?'店舗をもっと見る':
+            locale==='zh-CN'?'查看更多餐厅':'Show more restaurants'}
+        </button>}
     </section>}
     <p className="hint">{ui.license}</p>
   </div>;
