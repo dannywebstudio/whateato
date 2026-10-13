@@ -70,7 +70,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const [selected,setSelected]=useState<string|null>(null);
   const [page,setPage]=useState(0);
   queryRef.current={q,filter,locale};
-  useEffect(()=>{setVisibleCount(20);setSelected(null)},[q,filter,locale]);
+  useEffect(()=>{setPage(0);setSelected(null)},[q,filter,locale]);
   const load=useCallback(async (currentMap:MapLibreMap)=>{
     // Adding a fresh GeoJSON source briefly makes isStyleLoaded() false.
     // Waiting for that flag here silently skips the *initial* marker fetch.
