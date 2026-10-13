@@ -1,5 +1,5 @@
 import type {Pool} from 'pg';
-export type OpeningHours={state:'open'|'closed'|'unknown';weekly:{weekday:number;start:string;end:string}[];verified_at:string|null;today_hours:string|null};
+export type OpeningHours={state:'open'|'closed'|'preparing'|'unknown';weekly:{weekday:number;start:string;end:string}[];verified_at:string|null;today_hours:string|null};
 type R={restaurant_id:string;weekday:number|null;start_minute:number|null;end_minute:number|null;verified_at:string;exception_closed:boolean|null};
 const hhmm=(n:number)=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
 function koreaNow(now:Date){
@@ -33,6 +33,11 @@ export async function getOpeningHours(pool:Pool,ids:string[],now=new Date()):Pro
   // Today's published intervals; multiple ranges indicate breaks. No guessed hours.
   const today=o.weekly.filter(s=>s.weekday===k.day);
   o.today_hours=today.length?today.map(s=>s.start+'–'+s.end).join(' / '):null;
+  // Preparation/break is reported only between two verified sessions.
+  if(o.state==='closed'&&today.length>=2){
+   const slots=today.map(s=>({start:Number(s.start.slice(0,2))*60+Number(s.start.slice(3)),end:Number(s.end.slice(0,2))*60+Number(s.end.slice(3))})).sort((a,b)=>a.start-b.start);
+   if(k.minute>=slots[0].end&&slots.some(slot=>slot.start>k.minute))o.state='preparing';
+  }
  }
  // Unknown restaurants remain absent. An explicitly verified closure has no intervals.
  return result;
