@@ -34,6 +34,14 @@ try{
     assert.equal(await page.locator('.related-local-posts').count(),0,'hide blog section with no query');
     await page.locator('.map-restaurant-card').first().waitFor({timeout:30000});
     assert.ok(await page.locator('.map-card-locate').count()>0,'map selection preserved');
+    const style=await page.locator('.map-explore-cards .we-card').first().evaluate(el=>{
+      const card=getComputedStyle(el);const title=getComputedStyle(el.querySelector('.we-card-head h3'));
+      return {borderLeftWidth:card.borderLeftWidth,borderLeftColor:card.borderLeftColor,height:el.getBoundingClientRect().height,titleFontSize:title.fontSize};
+    });
+    console.log(JSON.stringify({device,mapCardComputed:style}));
+    assert.equal(style.borderLeftWidth,'5px','cuisine category left border must be visible');
+    assert.ok(Number.parseFloat(style.titleFontSize)>=16,'readable title size');
+    assert.ok(style.height>=125,'expanded map card height');
    }
    const d=await page.evaluate(()=>({view:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
    assert.ok(d.content<=d.view+2,device+' '+stage+' overflow '+JSON.stringify(d));
