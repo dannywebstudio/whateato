@@ -13,7 +13,7 @@ export const metadata:Metadata={robots:{index:false,follow:false},alternates:{ca
 type Params={q?:string;f?:string;hl?:string;region?:string;offset?:string};
 const hoursLabels={ko:{open:'영업중',closed:'영업종료',unknown:'영업시간 미확인',hours:'영업시간'},en:{open:'Open now',closed:'Closed now',unknown:'Hours not verified',hours:'Opening hours'},ja:{open:'営業中',closed:'営業時間外',unknown:'営業時間未確認',hours:'営業時間'},'zh-CN':{open:'营业中',closed:'休息中',unknown:'营业时间未核实',hours:'营业时间'}} as const;
 const labels={
-  ko:{heading:'Search restaurants',ready:'공공 인허가 자료 기반 검색 결과 · 현재 영업 여부는 별도 확인이 필요합니다.',unavailable:'식당 데이터베이스 연결을 확인하고 있습니다.',empty:'검색 조건과 일치하는 등록 식당이 없습니다.',initial:'음식점 이름, 지역, 메뉴를 입력하거나 필터를 선택해 주세요.',intro:'식당 소개',menu:'대표 메뉴',score:'WhatEatO 독립 평가',scoreUnknown:'평점 미확인',menuUnknown:'대표메뉴 미확인',next:'다음 결과 →',map:'지도에서 보기 →',address:'주소 정보 없음'},
+  ko:{heading:'맛집 검색 결과',ready:'공공 인허가 자료 기반 검색 결과 · 현재 영업 여부는 별도 확인이 필요합니다.',unavailable:'식당 데이터베이스 연결을 확인하고 있습니다.',empty:'검색 조건과 일치하는 등록 식당이 없습니다.',initial:'음식점 이름, 지역, 메뉴를 입력하거나 필터를 선택해 주세요.',intro:'식당 소개',menu:'대표 메뉴',score:'WhatEatO 독립 평가',scoreUnknown:'평점 미확인',menuUnknown:'대표메뉴 미확인',next:'다음 결과 →',map:'지도에서 보기 →',address:'주소 정보 없음'},
   en:{heading:'Search restaurants',ready:'Search results from permit records · current opening status is not verified.',unavailable:'The restaurant database is unavailable.',empty:'No registered restaurant matches these criteria.',initial:'Enter a restaurant, location or menu, or select a filter.',intro:'About',menu:'Main menu',score:'Independent WhatEatO score',scoreUnknown:'Rating not verified',menuUnknown:'Main menu not verified',next:'Next results →',map:'View on Map →',address:'Address not available'},
   ja:{heading:'レストランを探す',ready:'営業許可記録に基づく検索結果（現在の営業状況は未確認）',unavailable:'データベースに接続できません。',empty:'条件に一致する登録店舗はありません。',initial:'店名・地域・料理名を入力するか、フィルターを選択してください。',intro:'紹介',menu:'主なメニュー',score:'WhatEatO独自評価',scoreUnknown:'評価未確認',menuUnknown:'主なメニュー未確認',next:'次の結果 →',map:'地図で見る →',address:'住所情報なし'},
   'zh-CN':{heading:'搜索餐厅',ready:'根据经营许可资料提供的搜索结果（当前营业状态未核实）',unavailable:'餐厅数据库暂时不可用。',empty:'没有符合条件的登记餐厅。',initial:'输入餐厅、地区或菜品，或选择筛选条件。',intro:'简介',menu:'主要菜品',score:'WhatEatO独立评分',scoreUnknown:'评分未核实',menuUnknown:'招牌菜尚未核实',next:'下一页 →',map:'在地图上查看 →',address:'暂无地址'}
@@ -70,6 +70,7 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
             {r.opening_hours?.today_hours?` · ${hoursLabels[locale].hours} ${r.opening_hours.today_hours}`:''}
           </span>
           <span>{t.menu}: {r.main_menu||t.menuUnknown}</span>
+          {r.tags.length>0&&<span aria-label="Verified restaurant tags">{r.tags.map(tag=>tag.label).join(' · ')}</span>}
           {r.ratings.external?<span>★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</span>:<span>{t.scoreUnknown}</span>}
           {r.ratings.whateato&&<span>★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</span>}
           <span>{r.address_ko||t.address}</span>
