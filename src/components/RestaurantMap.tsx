@@ -24,6 +24,7 @@ const key=(process.env.NEXT_PUBLIC_MAPTILER_API_KEY||'').trim();
 const useMapTiler=/^[a-zA-Z0-9_-]{12,160}$/.test(key);
 const styleUrl=useMapTiler?MAPTILER_STYLE+'?key='+encodeURIComponent(key):OPENFREE_STYLE;
 const attribution='© OpenFreeMap · © OpenMapTiles · © OpenStreetMap contributors';
+const fallbackIframe='https://www.openstreetmap.org/export/embed.html?bbox=126.96%2C37.55%2C127.03%2C37.605&layer=mapnik';
 const markerSource='whateato-approved-restaurants';
 const markerLayer='whateato-location-markers';
 const clusterLayer='whateato-location-clusters';
@@ -240,18 +241,29 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         style={{width:'100%',height:'min(62vh,540px)',minHeight:350,
           background:'#f1f6f3',borderRadius:18,overflow:'hidden',
           border:'1px solid #e5ece8'}}/>
-      {basemapFailed&&<div aria-label="Basemap unavailable" role="alert"
+      {basemapFailed&&<section aria-label="Basemap unavailable"
         style={{position:'absolute',inset:0,background:'#f3f7f4',
-          border:'1px solid #e5ece8',borderRadius:18,display:'flex',alignItems:'center',
-          flexDirection:'column',justifyContent:'center',padding:24,textAlign:'center',gap:12}}>
-        <p className="hint" style={{margin:0}}>{ui.disabled}</p>
-        <button type="button" onClick={()=>setMapRetry(n=>n+1)}
-          style={{border:'1px solid #188a64',borderRadius:25,background:'#fff',
-            color:'#137b57',fontWeight:600,padding:'10px 18px',cursor:'pointer'}}>
-          {locale==='ko'?'지도 다시 불러오기':locale==='ja'?'地図を再読み込み':
-            locale==='zh-CN'?'重新加载地图':'Retry map'}
-        </button>
-      </div>}
+          borderRadius:18,overflow:'hidden',border:'1px solid #e5ece8'}}>
+        <iframe src={fallbackIframe} title="OpenStreetMap fallback map of central Seoul"
+          loading="lazy" referrerPolicy="strict-origin-when-cross-origin"
+          style={{width:'100%',height:'100%',display:'block',border:0}}/>
+        <div style={{position:'absolute',left:12,top:12,right:12,background:'#fffffff0',
+          borderRadius:10,padding:'10px 12px',boxShadow:'0 2px 12px #00000022',
+          display:'flex',alignItems:'center',gap:10,justifyContent:'space-between'}}>
+          <span style={{fontSize:12,color:'#34443d'}}>
+            {locale==='ko'?'보조 지도 · 식당 위치는 아래 목록에서 확인':
+              locale==='ja'?'補助地図 · 店舗は下の一覧から確認':
+              locale==='zh-CN'?'备用地图 · 请查看下方餐厅列表':
+              'Fallback map · See restaurant locations in the list below'}
+          </span>
+          <button type="button" onClick={()=>setMapRetry(n=>n+1)}
+            style={{border:'1px solid #188a64',borderRadius:25,background:'#fff',
+              color:'#137b57',fontWeight:600,padding:'8px 12px',cursor:'pointer',flexShrink:0}}>
+            {locale==='ko'?'다시 시도':locale==='ja'?'再試行':
+              locale==='zh-CN'?'重试':'Retry'}
+          </button>
+        </div>
+      </section>}
     </div>
     <p className="hint" role="status" aria-live="polite">
       {basemapFailed?ui.error:state==='loading'?ui.loading:
