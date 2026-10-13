@@ -26,6 +26,8 @@ const styleUrl=useMapTiler?MAPTILER_STYLE+'?key='+encodeURIComponent(key):OPENFR
 const attribution='© OpenFreeMap · © OpenMapTiles · © OpenStreetMap contributors';
 const markerSource='whateato-approved-restaurants';
 const markerLayer='whateato-location-markers';
+const clusterLayer='whateato-location-clusters';
+const clusterLabel='whateato-cluster-count';
 const emptyData:FeatureCollection={type:'FeatureCollection',features:[]};
 const bboxQuery=(map:MapLibreMap)=>{
   const b=map.getBounds();
@@ -56,6 +58,10 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const [items,setItems]=useState<Place[]>([]);
   const [state,setState]=useState<'loading'|'zoom'|'ready'|'error'>('loading');
   const [basemapFailed,setBasemapFailed]=useState(false);
+  const [mapRetry,setMapRetry]=useState(0);
+  const [directory,setDirectory]=useState<Place[]>([]);
+  const [directoryReady,setDirectoryReady]=useState(false);
+  const [directoryError,setDirectoryError]=useState(false);
   const [limited,setLimited]=useState(false);
   const [selected,setSelected]=useState<string|null>(null);
   queryRef.current={q,filter,locale};
@@ -107,6 +113,12 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   useEffect(()=>{
     if(!host.current)return;
     let cancelled=false;
+    let styleReady=false;
+    const timeout=window.setTimeout(()=>{
+      if(!cancelled&&!styleReady){setBasemapFailed(true);setState('error')}
+    },12000);
+    setBasemapFailed(false);
+    setState('loading');
     let instance:MapLibreMap|null=null;
     let removeMapEvents:()=>void=()=>{};
     void import('maplibre-gl').then(({Map,NavigationControl,AttributionControl})=>{
@@ -114,7 +126,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       instance=new Map({
         container:host.current,
         style:styleUrl,
-        center:[126.978,37.567],zoom:12.5,
+        center:[126.982,37.571],zoom:13.3,
         minZoom:8,maxZoom:18,
         attributionControl:false,
         cooperativeGestures:true
@@ -130,11 +142,25 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       }),'bottom-right');
       const onLoad=()=>{
         if(!m.getSource(markerSource)){
-          m.addSource(markerSource,{type:'geojson',data:emptyData});
+          m.addSource(markerSource,{type:'geojson',data:emptyData,cluster:true,
+            clusterMaxZoom:15,clusterRadius:48});
+          m.addLayer({id:clusterLayer,type:'circle',source:markerSource,
+            filter:['has','point_count'],
+            paint:{'circle-color':'#188a64','circle-radius':['step',['get','point_count'],17,15,23,50,30],
+              'circle-stroke-color':'#ffffff','circle-stroke-width':2}
+          });
+          m.addLayer({id:clusterLabel,type:'symbol',source:markerSource,
+            filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],
+              'text-size':12},paint:{'text-color':'#ffffff'}
+          });
           m.addLayer({id:markerLayer,type:'circle',source:markerSource,
-            paint:{'circle-radius':7,'circle-color':'#188a64','circle-stroke-color':'#ffffff','circle-stroke-width':2}
+            filter:['!',['has','point_count']],
+            paint:{'circle-radius':8,'circle-color':'#188a64','circle-stroke-color':'#ffffff','circle-stroke-width':2}
           });
         }
+        styleReady=true;
+        window.clearTimeout(timeout);
+        setBasemapFailed(false);
         void load(m);
       };
       const onMove=()=>void load(m);
@@ -142,24 +168,33 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         const id=ev.features?.[0]?.properties?.id;
         if(typeof id==='string'&&/^[a-f0-9-]{36}$/i.test(id))setSelected(id);
       };
-      const onError=()=>{
-        setBasemapFailed(true);
-        setState(current=>current==='loading'?'error':current);
+      const onClusterClick=(ev:{lngLat:{lng:number;lat:number}})=>{
+        m.easeTo({center:[ev.lngLat.lng,ev.lngLat.lat],zoom:Math.min(17,m.getZoom()+1.8),duration:400});
       };
+      const onError=()=>{
+        // A missing icon/glyph should not blank a successfully loaded basemap.
+        if(!styleReady){setBasemapFailed(true);setState('error')}
+      };
+      const onContextLost=()=>{setBasemapFailed(true);setState('error')};
       m.on('load',onLoad);
       m.on('moveend',onMove);
       m.on('click',markerLayer,onClick);
+      m.on('click',clusterLayer,onClusterClick);
+      m.on('webglcontextlost',onContextLost);
       m.on('error',onError);
       removeMapEvents=()=>{
         m.off('load',onLoad);m.off('moveend',onMove);
-        m.off('click',markerLayer,onClick);m.off('error',onError);
+        m.off('click',markerLayer,onClick);
+        m.off('click',clusterLayer,onClusterClick);
+        m.off('webglcontextlost',onContextLost);m.off('error',onError);
       };
-    }).catch(()=>{if(!cancelled){setBasemapFailed(true);setState('error')}});
+    }).catch(()=>{if(!cancelled){window.clearTimeout(timeout);setBasemapFailed(true);setState('error')}});
     return ()=>{
-      cancelled=true;lastRequest.current?.abort();requestId.current++;
+      cancelled=true;window.clearTimeout(timeout);
+      lastRequest.current?.abort();requestId.current++;
       removeMapEvents();instance?.remove();map.current=null;
     };
-  },[load]);
+  },[load,mapRetry]);
   useEffect(()=>{if(map.current?.isStyleLoaded())void load(map.current);},[q,filter,locale,load]);
   // Provider outage? Offer a useful, genuine permit-coordinate
   // directory for the Seoul coverage area. It does not impersonate a tiled map.
