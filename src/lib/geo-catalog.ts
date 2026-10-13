@@ -5,7 +5,7 @@ import {CatalogDatabaseUnavailable,type CatalogTag} from '@/lib/restaurant-catal
 // Geographic APIs share the existing verified-publication rules.
 // Coordinates originate in food-service permit records, not in a licensed map product.
 export type GeoMarker={
-  id:string;name:string;name_ko:string;address_ko:string|null;
+  id:string;name:string;name_ko:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;
   latitude:number;longitude:number;distance_km?:number;
   category_code:string|null;region_sigungu:string|null;
   editorial_score:number|null;tags:CatalogTag[];
@@ -92,7 +92,10 @@ export async function getGeoCatalog(input:QueryParams & {
   const distance=nearby?haversine:'NULL::float8';
   const sql=`
     SELECT r.id::text AS id,COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
-      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,r.latitude,r.longitude,
+      r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
+      COALESCE(al.display_address,r.road_address_ko,r.lot_address_ko) AS address,
+      COALESCE(l.short_description,k.short_description) AS short_description,
+      (SELECT COALESCE(ml.name,kl.name) FROM restaurant_menus m LEFT JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale=$1 LEFT JOIN restaurant_menu_localizations kl ON kl.menu_id=m.id AND kl.locale='ko' WHERE m.restaurant_id=r.id AND m.publication_state='published' ORDER BY m.position LIMIT 1) AS main_menu,r.latitude,r.longitude,
       r.category_code,r.region_sigungu,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
@@ -106,6 +109,7 @@ export async function getGeoCatalog(input:QueryParams & {
         ),'[]'::json) AS tags,
       ${distance} AS distance_km
     FROM restaurants r
+    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$1
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$1 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
