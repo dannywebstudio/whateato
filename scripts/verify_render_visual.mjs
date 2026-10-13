@@ -100,6 +100,14 @@ try{
         !!document.querySelector('[aria-label="Basemap unavailable"] iframe[src^="https://www.openstreetmap.org/export/embed.html"]');
     },null,{timeout:22000});
     await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:14000});
+    const mapGrid=await page.locator('.map-results').evaluate(node=>({
+      columns:getComputedStyle(node).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+      scrollWidth:node.scrollWidth,clientWidth:node.clientWidth
+    }));
+    assert.equal(mapGrid.columns,name==='desktop'?2:1,
+      name+' map restaurant directory should be a clean 2-column desktop / 1-column mobile grid');
+    assert.ok(mapGrid.scrollWidth<=mapGrid.clientWidth+2,
+      name+' map directory grid must not scroll horizontally');
     const hasFallback=await page.locator('[aria-label="Basemap unavailable"] iframe').count();
     const errorsForFont=styleRequests.filter(msg=>msg.includes('/fonts/Open%20Sans')||msg.includes('Arial%20Unicode'));
     assert.deepEqual(errorsForFont,[],
