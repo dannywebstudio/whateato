@@ -92,7 +92,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
         WHERE preview.restaurant_id=r.id AND preview.sample_rank BETWEEN 1 AND 50
           AND readiness.published_languages>=1 AND readiness.verified_menus>=1
           AND (
-            readiness.approved_images>=1
+            (readiness.approved_images>=1 OR (${process.env.WHATEATO_PREVIEW_THREE_TEXT_ONLY === 'true' ? 'TRUE' : 'FALSE'} AND preview.sample_rank BETWEEN 1 AND 3))
             OR (
               ${process.env.WHATEATO_GOOGLE_PHOTO_APPROVED === 'true' && process.env.WHATEATO_GOOGLE_PHOTO_QUOTA_GUARD_READY === 'true' ? 'TRUE' : 'FALSE'}
               AND EXISTS (
@@ -187,7 +187,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
         WHERE preview.restaurant_id=r.id AND preview.sample_rank BETWEEN 1 AND 50
           AND readiness.published_languages>=1 AND readiness.verified_menus>=1
-          AND readiness.approved_images>=1 AND readiness.verified_tags>=1
+          AND (readiness.approved_images>=1 OR (${process.env.WHATEATO_PREVIEW_THREE_TEXT_ONLY === 'true' ? 'TRUE' : 'FALSE'} AND preview.sample_rank BETWEEN 1 AND 3)) AND readiness.verified_tags>=1
           AND readiness.next_action <> 'identity_or_evidence_hold'
       ))
       AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
