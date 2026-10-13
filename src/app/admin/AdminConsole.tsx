@@ -400,7 +400,7 @@ export default function AdminConsole({role}:{role:Role}){
    </section>}
    {tab==='photos'&&edit&&<section className={styles.panel}>
      <h2>이미지 등록 및 검수</h2><p className={styles.note}>원본 최대 8MB · JPEG/PNG/WebP. 저장 전에 서버에서 회전/디코딩/EXIF 제거 및 WebP 최적화해. 스토리지 연결이 없으면 업로드하지 않아.</p>
-     <div className={styles.photoHelp}><strong>권장 규격</strong><p>대표사진: 기존 사이트 카드 영역 비율 유지 (자동 중앙 크롭 미리보기 필요)</p><p>상세 갤러리: 1200×900px 권장 · 4:3 · WebP 자동 변환</p></div>
+     <div className={styles.photoHelp}><strong>권장 규격</strong><p>대표사진: 1200×810px 권장 (기존 카드 160×108과 같은 약 1.48:1 비율). 화면에서는 기존 카드 규격으로 자동 출력</p><p>상세 갤러리: 1200×900px 권장 · 4:3 · WebP 자동 변환 · 대표사진과 같은 원본 사용 가능</p></div>
      {!selected?<p className={styles.note}>식당 편집 탭에서 먼저 식당을 선택해.</p>:<>
        <h3>{selected.restaurant.name_ko}</h3>
        <div className={styles.grid}>
