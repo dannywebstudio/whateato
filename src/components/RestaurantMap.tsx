@@ -1,3 +1,4 @@
+import RestaurantExperienceCard from '@/components/RestaurantExperienceCard';
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
@@ -10,7 +11,7 @@ import type {Map as MapLibreMap,GeoJSONSource} from 'maplibre-gl';
 // if an owner-supplied origin-restricted key is deliberately configured.
 // Attribution is mandatory. Outages fall back to a genuine DB-powered directory.
 type Place={
-  id:string;name:string;address_ko:string|null;latitude:number;longitude:number;
+  id:string;name:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;latitude:number;longitude:number;
   editorial_score:number|null;region_sigungu:string|null;tags:{code:string;label:string}[];
 };
 type Response={items:Place[];has_more:boolean;location_note:string};
@@ -331,21 +332,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         {basemapFailed?(locale==='ko'?' · 지도 없이 목록으로 탐색':' · List view'):''}
         {limited?' · '+ui.limit:''}</p>
       <div className={'results map-results '+mapStyles.directory}>
-        {visibleItems.slice(0,visibleCount).map(x=><div key={x.id} className="result map-restaurant-card">
-          <div className="map-card-mark" aria-hidden="true">⌖</div><div className="map-card-body"><strong>{x.name}</strong>
-          {x.editorial_score!==null&&<span>★ {x.editorial_score.toFixed(1)} / 5 · WhatEatO</span>}
-          <span className="map-card-address">{x.address_ko||x.region_sigungu}</span>
-          <button type="button" onClick={()=>selectOnMap(x)}
-            aria-label={locale==='ko'?x.name+' 지도에서 위치 보기':
-              locale==='ja'?x.name+'を地図で見る':
-              locale==='zh-CN'?'在地图上查看'+x.name:'Show '+x.name+' on map'}
-            className="map-card-locate">
-            {locale==='ko'?'지도에서 위치 보기':locale==='ja'?'地図で位置を確認':
-              locale==='zh-CN'?'在地图上查看位置':'Show on map'}
-          </button>
-          <Link className="map-card-detail" href={'/restaurant/'+x.id+'?'+params.toString()}>{ui.open} ↗</Link></div>
-        </div>)}
-      </div>
+        {visibleItems.slice(0,visibleCount).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={x.editorial_score} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}      </div>
       {visibleItems.length>visibleCount&&
         <button type="button" onClick={()=>setVisibleCount(n=>Math.min(n+20,200))}
           style={{display:'block',margin:'16px auto 0',border:'1px solid #c5dcd0',
