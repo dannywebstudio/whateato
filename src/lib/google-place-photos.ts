@@ -36,14 +36,16 @@ export async function getTransientPhotoReferences(restaurantId:string,placeId:st
   if(!await isVerifiedPilotPlace(restaurantId,placeId))throw new Error('google_place_identity_not_verified');
   if(!await reserveGooglePhotoQuota('place_details_photo_metadata'))throw new Error('google_photo_quota_exhausted');
   const url='https://places.googleapis.com/v1/places/'+encodeURIComponent(placeId);
-  const r=await fetch(url,{headers:{'X-Goog-Api-Key':apiKey,'X-Goog-FieldMask':'photos,googleMapsUri'},
+  const r=await fetch(url,{headers:{'X-Goog-Api-Key':apiKey,'X-Goog-FieldMask':'photos.name,photos.authorAttributions,photos.googleMapsUri,googleMapsUri'},
     cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(!r.ok)throw new Error('google_place_details_failed_'+r.status);
   const response=await r.json();
   return (Array.isArray(response.photos)?response.photos:[]).slice(0,3)
-    .filter((p:unknown):p is {name:string;authorAttributions?:GooglePhotoAttribution[]}=>typeof (p as {name?:unknown})?.name==='string')
+    .filter((p:unknown):p is {name:string;googleMapsUri?:string;authorAttributions?:GooglePhotoAttribution[]} =>
+      Boolean(p && typeof p==='object' && typeof (p as {name?:unknown}).name==='string'))
     .map(p=>({photoName:p.name,authorAttributions:Array.isArray(p.authorAttributions)?p.authorAttributions:[],
-      googleMapsUri:typeof response.googleMapsUri==='string'?response.googleMapsUri:null}));
+      googleMapsUri:typeof p.googleMapsUri==='string'?p.googleMapsUri:
+        typeof response.googleMapsUri==='string'?response.googleMapsUri:null}));
 }
 /**
  * Photo Media (New): may be chargeable on each request. Never store/redirect
