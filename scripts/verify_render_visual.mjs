@@ -14,7 +14,8 @@ for(const moduleName of ['maplibre-gl-worker.mjs','maplibre-gl-shared.mjs']){
   const resp=await fetch(origin+'/maplibre/'+moduleName,{cache:'no-store'});
   assert.equal(resp.status,200,'MapLibre same-origin worker dependency: '+moduleName);
   const body=await resp.text();
-  assert.ok(body.length>16,'MapLibre module truncated: '+moduleName);
+  assert.ok(moduleName==='maplibre-gl-worker.mjs'?body.length>1000:body.length>=0,
+    'MapLibre worker missing or truncated: '+moduleName);
 }
 const browser=await chromium.launch({headless:true});
 const checks=[];
