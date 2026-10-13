@@ -136,7 +136,18 @@ export async function getGeoCatalog(input:QueryParams & {
           '정종/대포집/소주방','감성주점','호프/통닭'))
       ))
       ${nearby?`AND ${haversine} <= $11::float8`:''}
-    ORDER BY ${nearby?'distance_km ASC,':''} r.name_ko ASC,r.id ASC
+    -- In viewport mode, round-robin across ~8x8 geographic cells rather
+    -- than alphabetically clipping dense Seoul to just the earliest names.
+    -- A reproducible sample represents the *whole* visible map. Nearby
+    -- ranking remains strictly distance-first and is not affected.
+    ORDER BY ${nearby?'distance_km ASC,':`ROW_NUMBER() OVER (
+      PARTITION BY
+        FLOOR((r.latitude - $2::float8) /
+          GREATEST(($3::float8-$2::float8)/8.0, 0.0001)),
+        FLOOR((r.longitude - $4::float8) /
+          GREATEST(($5::float8-$4::float8)/8.0, 0.0001))
+      ORDER BY r.name_ko ASC,r.id ASC
+    ) ASC,`} r.name_ko ASC,r.id ASC
     LIMIT ${nearby?'$12':'$9'}::integer`;
   const params=nearby
     ?[locale,bounds.south,bounds.north,bounds.west,bounds.east,
