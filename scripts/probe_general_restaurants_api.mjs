@@ -29,7 +29,7 @@ if(/SERVICE_KEY|INVALID_REQUEST_PARAMETER|PERMISSION_DENIED|LIMITED_NUMBER|APPLI
  throw Error('Government API returned a validation, permission or quota error (body deliberately not logged)');
 let doc;try{doc=JSON.parse(text)}catch{throw Error('Government API returned non-JSON; inspect documented responseType and query parameters. No data imported')}
 const summary={timestamp:new Date().toISOString(),http_status:response.status,root_keys:Object.keys(doc).slice(0,20),
- response_type:'json',response_bytes:Buffer.byteLength(text),has_error:!!(doc?.response?.header?.resultCode&&String(doc.response.header.resultCode)!=='00')};
+ response_type:'json',response_bytes:Buffer.byteLength(text),has_error:!!(doc?.response?.header?.resultCode&&!['0','00'].includes(String(doc.response.header.resultCode)))};
 if(summary.has_error){
  const code=String(doc.response.header.resultCode).replace(/[^0-9A-Za-z_-]/g,'').slice(0,40);
  console.error('Government API error code:',code,'(request rejected; no API secret exposed)');
