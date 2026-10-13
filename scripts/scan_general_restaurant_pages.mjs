@@ -34,11 +34,12 @@ async function page(n){
  const doc=await res.json();
  const hdr=doc?.response?.header,body=doc?.response?.body;
  if(!['0','00'].includes(String(hdr?.resultCode)))throw Error('Government API failed, code '+String(hdr?.resultCode).slice(0,25));
- if(!body||!Array.isArray(body.items))throw Error('Unexpected response items structure');
+ const records=Array.isArray(body?.items)?body.items:Array.isArray(body?.items?.item)?body.items.item:body?.items?.item&&typeof body.items.item==='object'?[body.items.item]:null;
+ if(!body||!records)throw Error('Unexpected response items structure; bodyKeys='+Object.keys(body||{}).join(',')+' itemsType='+typeof body?.items+' itemsKeys='+Object.keys(body?.items||{}).slice(0,10).join(','));
  if(Number(body.pageNo)!==n||Number(body.numOfRows)!==pageSize)throw Error('Pagination parameters ignored or not accepted');
- if(body.items.length>pageSize)throw Error('API returned more items than requested');
+ if(records.length>pageSize)throw Error('API returned more items than requested');
  if(!Number.isFinite(Number(body.totalCount)))throw Error('Missing totalCount');
- return body;
+ return {...body,items:records};
  }finally{clearTimeout(timer)}
 }
 const first=await page(1);
