@@ -14,6 +14,8 @@ on:
       - 'src/app/restaurant/[id]/page.tsx'
       - 'scripts/verify_wave2_live.mjs'
       - 'scripts/verify_preview_50_visual.mjs'
+      - 'scripts/verify_three_site_visible.mjs'
+      - 'scripts/verify_ui_system_live.mjs'
       - 'data/enrichment-packets/wave2/**'
   workflow_dispatch:
 
@@ -61,7 +63,7 @@ jobs:
               time.sleep(10)
           PY
       - name: Live HTTP, DB, Search, detail and SSR verification (GET only)
-        run: node scripts/verify_preview_50_live.mjs
+        run: node scripts/verify_three_site_visible.mjs
       - name: Wave 2 real records, draft-publication gate and directions
         run: node --test scripts/verify-google-photo-preview-gates.test.mjs
       - name: Install Chromium for real Render visual QA
@@ -69,7 +71,7 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.55.1
           npx playwright install --with-deps chromium
       - name: Desktop and mobile browser QA against Render (GET only)
-        run: node scripts/verify_preview_50_visual.mjs
+        run: node scripts/verify_ui_system_live.mjs
       - name: Upload staging screenshots
         if: always()
         uses: actions/upload-artifact@v4
