@@ -79,6 +79,9 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   // Open Google's documented Maps URLs without an API key or additional API bill.
   // Registered coordinates are approximate permit positions, not verified entrances.
   // If no coordinates are available, use the restaurant's registered address.
+  const miniMapHref=hasTrustedCoordinate
+    ?'https://www.openstreetmap.org/export/embed.html?bbox='+encodeURIComponent([r.longitude!-0.003,r.latitude!-0.002,r.longitude!+0.003,r.latitude!+0.002].join(','))+'&layer=mapnik&marker='+encodeURIComponent(r.latitude+','+r.longitude)
+    :null;
   const googlePlaceQuery=(r.name_ko+' '+(r.road_address_ko||r.lot_address_ko||'')).trim();
   const googleHref=hasTrustedCoordinate
     ?'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(r.latitude+','+r.longitude)
@@ -112,13 +115,15 @@ export default async function RestaurantDetail({params,searchParams}:Params){
         {menu.description&&<span>{menu.description}</span>}
         {menu.price_krw!==null&&<span>₩{menu.price_krw.toLocaleString('ko-KR')}</span>}
       </section>)}</div>
+      <p className="hint">{locale==='ko'?'메뉴 가격은 확인 시점 기준이며 실제 매장 가격과 다를 수 있습니다.':'Menu prices are reference prices and may change.'}</p>
     </>}
     {(r.short_description||r.full_description)&&<>
       <h2>{t.description}</h2>
       <section className="result"><span>{r.full_description||r.short_description}</span></section>
     </>}
-    <section className="result">
-      <strong>{t.address}</strong><span>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
+    <section className="result" style={{display:'grid',gridTemplateColumns:miniMapHref?'minmax(0,1fr) minmax(160px,240px)':'1fr',gap:12,alignItems:'center'}}>
+      <div style={{minWidth:0}}>
+      <strong>{t.address}</strong><span style={{display:'block',overflowWrap:'anywhere'}}>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
       {(hasTrustedCoordinate||r.road_address_ko||r.lot_address_ko)&&
         <a className="simple-link" href={googleHref} target="_blank" rel="noopener noreferrer">
           {hasTrustedCoordinate?t.directions:t.mapSearch}
@@ -127,6 +132,8 @@ export default async function RestaurantDetail({params,searchParams}:Params){
         <a className="simple-link" href={googleSaveHref} target="_blank" rel="noopener noreferrer">{t.saveGoogle}</a>
         <p className="hint">{t.saveHelp}</p>
       </div>}
+      </div>
+      {miniMapHref&&<iframe title={locale==='ko'?'식당 위치 미니맵':'Restaurant location mini map'} src={miniMapHref} loading="lazy" referrerPolicy="no-referrer" style={{width:'100%',height:176,border:0,borderRadius:10}}/>}
     </section>
     {detail.tags.length>0&&<>
       <h2>{t.tags}</h2>
