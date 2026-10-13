@@ -29,7 +29,7 @@ try{
  ('77777777-7777-4777-8777-777777777777','Test Location','Synthetic Three')`);
  for(const f of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql',
    '007_review_moderation_audit.sql','008_restaurant_quality_review.sql',
-   '010_verified_opening_hours.sql','014_bulk_content_operations.sql'])
+   '010_verified_opening_hours.sql','014_bulk_content_operations.sql','015_owner_cms_roles_media.sql'])
   await client.query(readFileSync('db/migrations/'+f,'utf8'));
  await client.query(`
   INSERT INTO whateato_review_accounts(id,google_subject)
