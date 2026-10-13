@@ -1,0 +1,23 @@
+name: Google photo attribution and cost guard CI
+on:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths:
+      - 'src/components/GooglePlacesPhotoCredit.tsx'
+      - 'src/lib/google-place-photos.ts'
+      - 'src/lib/google-photo-quota.ts'
+      - 'scripts/verify-google-photo-guard.test.mjs'
+      - '.github/workflows/google-photo-guard-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-no-api-calls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/verify-google-photo-guard.test.mjs
