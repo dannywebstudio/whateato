@@ -30,7 +30,7 @@ try{
    if(stage==='map'){
     await page.locator('.map-explore-layout').waitFor({timeout:30000});
     assert.equal(await page.locator('.map-explore-pagination button').count(),2,'pagination buttons');
-    assert.ok((await page.locator('.map-explore-cards .we-card').count())<=5,'max five visible');
+    assert.ok((await page.locator('.map-explore-cards .we-card').count())<=4,'max four visible');
     assert.equal(await page.locator('.related-local-posts').count(),0,'hide blog section with no query');
     await page.locator('.map-restaurant-card').first().waitFor({timeout:30000});
     assert.ok(await page.locator('.map-card-locate').count()>0,'map selection preserved');
@@ -42,7 +42,22 @@ try{
     assert.equal(style.borderLeftWidth,'5px','cuisine category left border must be visible');
     assert.ok(Number.parseFloat(style.titleFontSize)>=16,'readable title size');
     assert.ok(style.height>=125,'expanded map card height');
-    if(device==='desktop')assert.ok(style.height>=180,'sparse-result cards should substantially fill map panel');
+    if(device==='desktop')assert.ok(style.height>=140 && style.height<=195,'four slots must fit the map height');
+    assert.ok(await page.locator('.map-explore-cards .we-cuisine-tag').count()>0,'cuisine tags must be visible');
+    const dollarLabel=await page.locator('.map-explore-list-head h2').innerText();
+    assert.ok(!dollarLabel.includes('
+   }
+   const d=await page.evaluate(()=>({view:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
+   assert.ok(d.content<=d.view+2,device+' '+stage+' overflow '+JSON.stringify(d));
+   await page.screenshot({path:'ui-system-qa/'+device+'-'+stage+'.png',fullPage:true});
+  }
+  assert.deepEqual(errors,[],device+' errors');
+  await page.close();
+ }
+ console.log('PASS: rich search cards, grouped restaurant hours, map selection and mobile responsiveness');
+}finally{await browser.close()}
+),'no stray dollar signs in restaurant count');
+    assert.ok(await page.locator('.map-explore-cards .we-card-visit').first().isVisible(),'detail button visible');
    }
    const d=await page.evaluate(()=>({view:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
    assert.ok(d.content<=d.view+2,device+' '+stage+' overflow '+JSON.stringify(d));
