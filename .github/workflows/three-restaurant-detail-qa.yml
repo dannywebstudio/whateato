@@ -1,0 +1,20 @@
+name: Three restaurant detail improvements QA
+on:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths: ['src/app/restaurant/[id]/page.tsx','.github/workflows/three-restaurant-detail-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npm run typecheck
+      - run: node --test scripts/verify-google-photo-guard.test.mjs
