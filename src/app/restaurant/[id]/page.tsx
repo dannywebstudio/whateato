@@ -9,6 +9,7 @@ import ReviewForm from '@/components/ReviewForm';
 import RestaurantPhotoGallery from '@/components/RestaurantPhotoGallery';
 import GooglePlacesPhotoPreview from '@/components/GooglePlacesPhotoPreview';
 import {notFound} from 'next/navigation';
+import {groupedOpeningHours} from '@/lib/group-opening-hours';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -93,24 +94,22 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   const [reviews,summary,external]=await Promise.all([
     getPublicReviews(id),getOwnReviewSummary(id),getLicensedReviewInsights(id)
   ]);
-  return <main className="content">
+  return <main className="content restaurant-detail-page">
     <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
-    <h1>{r.name}</h1>
+    <header className="restaurant-hero"><div className="restaurant-hero-main"><span className="eyebrow">WhatEatO · {r.category_code||t.category}</span><h1>{r.name}</h1><p className="restaurant-lede">{r.short_description}</p><div className="restaurant-facts"><span className={"status-pill "+(r.opening_hours?.state==="open"?"is-open":r.opening_hours?.state==="closed"?"is-closed":"")}>{hoursLabels[locale][r.opening_hours?.state||"unknown"]}</span>{r.opening_hours?.today_hours&&<span className="meta-chip">◷ {r.opening_hours.today_hours}</span>}{detail.tags.slice(0,3).map(tag=><span className="meta-chip" key={tag.code}>{tag.label}</span>)}{r.ratings.external&&<span className="meta-chip">★ {r.ratings.external.rating.toFixed(1)}</span>}</div></div><div className="hero-location">⌖ <span>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span></div></header>
     <RestaurantPhotoGallery images={detail.images} name={r.name} locale={locale}/>
     {process.env.WHATEATO_GOOGLE_PHOTO_APPROVED==='true' && detail.images.length===0 && <GooglePlacesPhotoPreview restaurantId={id} restaurantName={r.name} locale={locale}/>}
 
-    <p className="hint">{r.category_code||t.category} · {t.license}</p>
-    {r.opening_hours?.today_hours&&<p className="hint">{hoursLabels[locale].hours}: {r.opening_hours.today_hours}</p>}
-    <p className="hint" aria-label="Restaurant opening status">{hoursLabels[locale][r.opening_hours?.state||'unknown']}</p>
+    <p className="hint source-note">{t.license}</p>
+
+
     <p className="hint">{locale==='ko'?'영업 상태는 등록된 영업시간 기준이며, 식당 사정에 따라 실제와 다를 수 있습니다.':locale==='en'?'Hours-based status may differ from actual operations.':locale==='ja'?'営業状況は登録された営業時間に基づき、実際と異なる場合があります。':'营业状态按登记营业时间计算，实际情况可能有所不同。'}</p>
-    {r.opening_hours&&r.opening_hours.weekly.length>0&&<section className="result"><strong>{hoursLabels[locale].hours}</strong>
-      {r.opening_hours.weekly.map((slot,i)=><span key={i}>{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][slot.weekday]} {slot.start}–{slot.end}</span>)}
-    </section>}
+    {r.opening_hours&&r.opening_hours.weekly.length>0&&<section className="hours-panel"><div className="section-kicker">SCHEDULE</div><h2>{hoursLabels[locale].hours}</h2><div className="hour-lines">{groupedOpeningHours(r.opening_hours.weekly,locale).map((line,i)=><div className="hour-line" key={i}>{line}</div>)}</div></section>}
     {r.ratings.external&&<p className="hint">★ {r.ratings.external.rating.toFixed(1)} / 5 ({r.ratings.external.source==='naver'?'네이버 참조':'Google 참조'})</p>}
     {r.ratings.whateato&&<p className="hint">★ WhatEatO {r.ratings.whateato.rating.toFixed(1)} / 5 ({r.ratings.whateato.review_count})</p>}
     {detail.menus.length>0&&<>
-      <h2>{t.menus}</h2>
-      <div className="results">{detail.menus.map(menu=><section className="result" key={menu.id}>
+      <h2 className="detail-section-title">{t.menus}</h2>
+      <div className="menu-grid">{detail.menus.map(menu=><section className="menu-item" key={menu.id}>
         <strong>{menu.name}</strong>
         {menu.description&&<span>{menu.description}</span>}
         {menu.price_krw!==null&&<span>₩{menu.price_krw.toLocaleString('ko-KR')}</span>}
@@ -118,10 +117,10 @@ export default async function RestaurantDetail({params,searchParams}:Params){
       <p className="hint">{locale==='ko'?'메뉴 가격은 확인 시점 기준이며 실제 매장 가격과 다를 수 있습니다.':'Menu prices are reference prices and may change.'}</p>
     </>}
     {(r.short_description||r.full_description)&&<>
-      <h2>{t.description}</h2>
+      <h2 className="detail-section-title">{t.description}</h2>
       <section className="result"><span>{r.full_description||r.short_description}</span></section>
     </>}
-    <section className="result" style={{display:'grid',gridTemplateColumns:miniMapHref?'repeat(auto-fit,minmax(min(100%,240px),1fr))':'1fr',gap:12,alignItems:'center'}}>
+    <section className="result detail-address-panel" style={{display:'grid',gridTemplateColumns:miniMapHref?'repeat(auto-fit,minmax(min(100%,240px),1fr))':'1fr',gap:12,alignItems:'center'}}>
       <div style={{minWidth:0}}>
       <strong>{t.address}</strong><span style={{display:'block',overflowWrap:'anywhere'}}>{r.road_address_ko||r.lot_address_ko||t.noAddress}</span>
       {(hasTrustedCoordinate||r.road_address_ko||r.lot_address_ko)&&
