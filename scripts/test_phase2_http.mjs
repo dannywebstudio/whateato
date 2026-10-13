@@ -188,6 +188,16 @@ const mapAll=await get('/api/v1/map/markers?bbox=37.56,126.97,37.59,127.01&hl=ja
 assert.equal(mapAll.status,200);
 assert.equal(mapAll.body.items.length,1);
 assert.equal(mapAll.body.has_more,true,'viewport marker cap surfaces truncated state');
+// Spatially diverse viewport sampling must not spend both slots on
+// alphabetically early businesses from the same block when another cell has
+// registered public restaurants. Nearby sorting remains distance-first.
+const spatial=await get('/api/v1/map/markers?bbox=37.19,127.19,37.29,127.29&limit=2&hl=ko');
+assert.equal(spatial.status,200,'spatial viewport smoke');
+assert.equal(spatial.body.items.length,2,'strict viewport limit');
+assert.equal(spatial.body.has_more,true,'remaining markers are acknowledged');
+assert.deepEqual(spatial.body.items.map(x=>x.name_ko),['가공간표본1','하공간표본'],
+  'viewport slots must be shared across visible map cells, not monopolized by one alphabetic hotspot');
+
 const permitPubMarker=await get('/api/v1/map/markers?bbox=37.57,126.98,37.59,127.01&f=bar');
 assert.equal(permitPubMarker.status,200);
 assert.equal(permitPubMarker.body.items.length,1,'map and search share permit fallback');
