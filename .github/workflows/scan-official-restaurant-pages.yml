@@ -1,0 +1,41 @@
+name: Scan official restaurant pages (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      max_pages:
+        description: 'Maximum pages to scan (1-10)'
+        required: true
+        default: '3'
+      page_size:
+        description: 'Records per page (1-1000)'
+        required: true
+        default: '100'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/scan_general_restaurant_pages.mjs'
+      - '.github/workflows/scan-official-restaurant-pages.yml'
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate official pagination (no DB access)
+        env:
+          DATA_GO_KR_SERVICE_KEY: ${{ secrets.DATA_GO_KR_SERVICE_KEY }}
+          MAX_PAGES: ${{ inputs.max_pages || '3' }}
+          PAGE_SIZE: ${{ inputs.page_size || '100' }}
+        run: node scripts/scan_general_restaurant_pages.mjs
+      - name: Upload inspection metadata
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-page-scan
+          path: official-restaurant-page-scan.json
+          retention-days: 7
