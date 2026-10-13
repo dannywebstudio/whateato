@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import SearchBoxSynced from '@/components/SearchBoxSynced';
 import RestaurantMap from '@/components/RestaurantMap';
+import RelatedMapPosts from '@/components/RelatedMapPosts';
 import {normalizeLocale,normalizeTags,normalizeText} from '@/lib/platform-v1';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './map.css';
@@ -26,10 +27,11 @@ export default async function MapPage({searchParams}:{
     'zh-CN':{title:'在地图上找餐厅',back:'← 返回搜索'}
   } as const;
   const t=labels[locale];
-  return <main className="content" style={{maxWidth:1200}}>
+  return <main className="content" style={{maxWidth:1320}}>
     <h1>{t.title}</h1>
     <SearchBoxSynced target="map" initial={q} initialFilters={filter?filter.split(','):[]} initialLocale={locale}/>
     <RestaurantMap q={q} filter={filter} locale={locale}/>
+    <RelatedMapPosts term={q} locale={locale}/>
     <Link className="simple-link" href={'/search?'+new URLSearchParams({
       ...(q?{q}:{}),...(filter?{f:filter}:{}),hl:locale
     }).toString()}>{t.back}</Link>
