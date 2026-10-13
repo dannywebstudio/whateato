@@ -28,6 +28,7 @@ const attribution='© OpenFreeMap · © OpenMapTiles · © OpenStreetMap contrib
 const fallbackIframe='https://www.openstreetmap.org/export/embed.html?bbox=126.96%2C37.55%2C127.03%2C37.605&layer=mapnik';
 const markerSource='whateato-approved-restaurants';
 const markerLayer='whateato-location-markers';
+const selectedLayer='whateato-selected-location';
 const clusterLayer='whateato-location-clusters';
 const clusterLabel='whateato-cluster-count';
 const emptyData:FeatureCollection={type:'FeatureCollection',features:[]};
@@ -168,6 +169,12 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
             filter:['!',['has','point_count']],
             paint:{'circle-radius':8,'circle-color':'#188a64','circle-stroke-color':'#ffffff','circle-stroke-width':2}
           });
+          // Only mark a real selected permit location; never add synthetic pins.
+          m.addLayer({id:selectedLayer,type:'circle',source:markerSource,
+            filter:['==',['get','id'],''],
+            paint:{'circle-radius':13,'circle-color':'#188a64',
+              'circle-stroke-color':'#ffffff','circle-stroke-width':4}
+          });
         }
         styleReady=true;
         window.clearTimeout(timeout);
@@ -211,6 +218,11 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     };
   },[load,mapRetry]);
   useEffect(()=>{if(map.current?.getSource(markerSource))void load(map.current);},[q,filter,locale,load]);
+  // Keep the map pin visually in sync with both list selections and pin clicks.
+  useEffect(()=>{
+    const m=map.current;
+    if(m?.getLayer(selectedLayer))m.setFilter(selectedLayer,['==',['get','id'],selected||'']);
+  },[selected,items,mapRetry]);
   // Independently load a useful DB-backed directory even if WebGL, a font,
   // a tile endpoint, or the entire map provider is unavailable on this device.
   // The list never depends on the map's 'load' event or WebGL support.
