@@ -30,13 +30,14 @@ export async function PATCH(request:NextRequest,{params}:Context){
   const fields=body as Record<string,unknown>;
   if(Object.keys(fields).some(x=>!['decision','reason_code'].includes(x)))
     return NextResponse.json({error:'unexpected_fields'},{status:400,headers:noStoreAdmin});
-  if(fields.decision!=='approve'&&fields.decision!=='reject')
+  if(fields.decision!=='approve'&&fields.decision!=='reject'&&fields.decision!=='hide')
     return NextResponse.json({error:'invalid_decision'},{status:400,headers:noStoreAdmin});
   const approval=fields.decision==='approve';
   if((approval&&fields.reason_code!==undefined&&fields.reason_code!=='approved_guidelines')||
      (!approval&&!REVIEW_REJECTION_CODES.has(fields.reason_code as string)))
     return NextResponse.json({error:'invalid_reason_code'},{status:400,headers:noStoreAdmin});
   const status=approval?'published':'rejected';
+  const from=fields.decision==='hide'?'published':'pending';
   const reason=approval?'approved_guidelines':fields.reason_code as string;
   const pool=reviewAdminPool();
   if(!pool)return NextResponse.json({error:'database_not_configured'},{status:503,headers:noStoreAdmin});
@@ -45,7 +46,7 @@ export async function PATCH(request:NextRequest,{params}:Context){
       WITH changed AS (
         UPDATE whateato_user_reviews v
         SET moderation_status=$2::text,reviewed_at=now(),updated_at=now()
-        WHERE v.id=$1::uuid AND v.moderation_status='pending'
+        WHERE v.id=$1::uuid AND v.moderation_status=$4::text
           AND ($2::text='rejected' OR EXISTS (
             SELECT 1 FROM restaurants r WHERE r.id=v.restaurant_id
               AND r.business_status='active' AND r.publication_status='published'
@@ -59,7 +60,7 @@ export async function PATCH(request:NextRequest,{params}:Context){
       )
       SELECT changed.id::text AS id,changed.restaurant_id::text AS restaurant_id,
              changed.moderation_status
-      FROM changed JOIN audit ON audit.review_id=changed.id`,[id,status,reason]);
+      FROM changed JOIN audit ON audit.review_id=changed.id`,[id,status,reason,from]);
     if(!res.rows[0])return NextResponse.json({error:'not_pending_or_not_publishable'},
       {status:409,headers:noStoreAdmin});
     return NextResponse.json({
