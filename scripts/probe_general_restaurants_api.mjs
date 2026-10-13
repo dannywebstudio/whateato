@@ -46,10 +46,10 @@ summary.first_item_keys=first&&typeof first==='object'?Object.keys(first).slice(
 summary.pagination={totalCount:body?.totalCount??null,numOfRows:body?.numOfRows??null,pageNo:body?.pageNo??null};
 const keys=summary.first_item_keys;
 summary.field_candidates={
- permit_id:keys.filter(k=>/mng|manage|관리번호|인허가번호|permit|license/i.test(k)),
- business_status:keys.filter(k=>/status|상태|영업|폐업|운영/i.test(k)),
- closure_date:keys.filter(k=>/close|폐업일|취소일|말소일|종료일/i.test(k)),
+ permit_id:keys.filter(k=>/^(MNG_NO)$/i.test(k)||/mng|manage|관리번호|인허가번호|permit|license/i.test(k)),
+ business_status:keys.filter(k=>/^(SALS_STTS_NM|DTL_SALS_STTS_NM|SALS_STTS_CD|DTL_SALS_STTS_CD|BZSTAT_SE_NM)$/i.test(k)||/status|상태|영업|폐업|운영/i.test(k)),
+ closure_date:keys.filter(k=>/^(CLSBIZ_YMD)$/i.test(k)||/close|폐업일|취소일|말소일|종료일/i.test(k)),
 };
-summary.ready_for_exact_key_reconciliation=summary.item_count>0&&summary.field_candidates.permit_id.length>0&&summary.field_candidates.business_status.length>0;
+summary.ready_for_exact_key_reconciliation=summary.item_count>0&&['MNG_NO','SALS_STTS_NM','DTL_SALS_STTS_NM','CLSBIZ_YMD'].every(k=>keys.includes(k));
 writeFileSync('general-restaurants-api-probe.json',JSON.stringify(summary,null,2)+'\n');
 console.log(JSON.stringify(summary));
