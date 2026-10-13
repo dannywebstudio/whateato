@@ -25,7 +25,8 @@ for(const [id,name,expectedMenus] of records){
   const html=await fetch(origin+'/restaurant/'+id+'?hl=ko',{cache:'no-store'});
   assert.equal(html.status,200,'real SSR detail '+name);
   const page=await html.text();
-  assert.ok(page.includes('map.kakao.com/link/to/'),'live Kakao directions');
+  assert.ok(page.includes('www.google.com/maps/dir/?api=1'),'live Google Maps directions');
+  assert.ok(!page.includes('map.kakao.com'),'no deprecated Kakao Maps link');
   assert.ok(page.includes(doc.restaurant.short_description),'published profile appears in SSR');
   assert.ok(!page.includes('/api/v1/images/'),'no phantom photos');
 }
