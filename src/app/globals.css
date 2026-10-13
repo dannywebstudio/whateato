@@ -102,3 +102,5 @@
 .restaurant-detail-page .detail-address-panel{padding:15px!important}
 @media(max-width:760px){.search-results-page .restaurant-card-grid{grid-template-columns:1fr}.we-card-visual{height:150px}.restaurant-detail-page .restaurant-hero{padding:19px 17px}.restaurant-detail-page .menu-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.we-card{transition:none}.we-card:hover{transform:none}}
+
+.map-results .we-card.map-restaurant-card{padding:0;gap:0;display:flex;flex-direction:column;border-radius:15px;overflow:hidden}
