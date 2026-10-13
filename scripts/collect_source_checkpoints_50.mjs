@@ -20,10 +20,10 @@ const host=new URL(url).hostname;
 if(!host.endsWith('.neon.tech') || process.env.WHATEATO_EXPECTED_NEON_BRANCH_ID!==branch)
   throw Error('Staging-only access rejected');
 const db=new pg.Client({connectionString:url,connectionTimeoutMillis:15000});
-const compact=x=>String(x||'').normalize('NFKC').replace(/<[^>]*>/g,'').replace(/\\s+/g,'').replace(/[()\[\]{}.,·'’"\\-_/]/g,'').toLowerCase();
+const compact=x=>String(x||'').normalize('NFKC').replace(/<[^>]*>/g,'').replace(/\s+/g,'').replace(/[()\[\]{}.,·'’"\-_/]/g,'').toLowerCase();
 const roadCore=x=>{
- const a=String(x||'').replace(/\\([^)]*\\)/g,'').replace(/서울특별시/g,'서울');
- const hit=a.match(/([가-힣0-9]+(?:로|길))\\s*(\\d+(?:-\\d+)?)/);
+ const a=String(x||'').replace(/\([^)]*\)/g,'').replace(/서울특별시/g,'서울');
+ const hit=a.match(/([가-힣0-9]+(?:로|길))\s*(\d+(?:-\d+)?)/);
  return hit ? compact(hit[1]+hit[2]) : '';
 };
 const fingerprint=x=>createHash('sha256').update(x.name_ko+'|'+x.address_ko).digest('hex');
