@@ -120,3 +120,15 @@
 .content .search-form .chips{width:100%;max-width:none;display:flex;justify-content:center;flex-wrap:wrap;gap:9px 10px;margin:18px 0 22px}
 .content .search-form .chip{font-size:12px;padding:9px 13px}
 @media(max-width:920px){.map-explore-cards .we-card.we-card-map{min-height:150px;max-height:none}}
+
+
+/* v5.1: fixed-height card footer, signature dish and cuisine inline */
+.map-explore-cards .we-card-map .we-card-menu-row{display:flex;align-items:center;gap:6px;min-width:0;width:100%;overflow:hidden}
+.map-explore-cards .we-card-map .we-card-menu-row>p{flex:0 1 auto;min-width:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-explore-cards .we-card-map .we-card-menu-row .we-card-tags{display:flex;flex:1 0 auto;min-width:0;gap:3px;flex-wrap:nowrap;overflow:hidden}
+.map-explore-cards .we-card-map .we-card-menu-row .we-card-tags>span{font-size:10px;padding:2px 5px;white-space:nowrap}
+.map-explore-cards .we-card-map .we-card-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:5px;margin-top:auto;min-height:31px;padding-top:4px}
+.map-explore-cards .we-card-map .we-card-rating{display:inline;white-space:nowrap;flex:0 1 auto;min-width:0;font-size:10px}
+.map-explore-cards .we-card-map .we-card-actions{display:flex;flex:0 0 auto;gap:5px;align-items:center;margin-left:auto;white-space:nowrap}
+.map-explore-cards .we-card-map .we-card-visit,.map-explore-cards .we-card-map .we-map-button{display:inline-flex;align-items:center;justify-content:center;text-align:center;padding:6px 8px;font-size:10px;min-height:28px}
+@media(min-width:921px){.map-explore-cards .we-card-map .we-card-body{overflow:hidden}}
