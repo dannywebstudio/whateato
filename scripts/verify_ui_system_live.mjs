@@ -24,7 +24,7 @@ try{
     assert.equal(await page.locator('.restaurant-hero').count(),1,'hero');
     assert.equal(await page.locator('.hours-panel .hour-line').count()>0,true,'grouped hours');
     const lines=await page.locator('.hours-panel .hour-line').allTextContents();
-    assert.ok(lines.some(x=>x.includes('화~토')),'Tue-Sat hours grouped: '+JSON.stringify(lines));
+    assert.ok(lines.some(x=>x.includes('화~일')),'Tue-Sun hours grouped: '+JSON.stringify(lines));
     assert.equal(await page.locator('.menu-item').count(),2,'menu grid');
    }
    if(stage==='map'){
