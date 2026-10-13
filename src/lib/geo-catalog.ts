@@ -1,4 +1,5 @@
 import {getPool} from '@/lib/db';
+import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {escapeLike,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
 import {CatalogDatabaseUnavailable,type CatalogTag} from '@/lib/restaurant-catalog';
 
@@ -8,7 +9,7 @@ export type GeoMarker={
   id:string;name:string;name_ko:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;
   latitude:number;longitude:number;distance_km?:number;
   category_code:string|null;region_sigungu:string|null;
-  editorial_score:number|null;tags:CatalogTag[];
+  editorial_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;
 };
 export type GeoEnvelope={south:number;west:number;north:number;east:number};
 export type GeoCatalogResponse={
@@ -182,8 +183,10 @@ export async function getGeoCatalog(input:QueryParams & {
     :[locale,bounds.south,bounds.north,bounds.west,bounds.east,
       q,'%'+escapeLike(q)+'%',filters,limit+1];
   const res=await db.query<GeoMarker>(sql,params);
-  const items=res.rows.slice(0,limit).map(r=>({
-    ...r,...(nearby?{distance_km:Number(r.distance_km)}:{}),
+  const selected=res.rows.slice(0,limit);
+  const opening=await getOpeningHours(db,selected.map(r=>r.id));
+  const items=selected.map(r=>({
+    ...r,opening_hours:opening[r.id]||null,...(nearby?{distance_km:Number(r.distance_km)}:{}),
   }));
   return {
     mode:input.mode,locale,bounds,filters,q,items,limit,
