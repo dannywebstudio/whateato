@@ -40,6 +40,16 @@ try{
   assert.equal(await page.locator('#country').inputValue(),'KR');
   assert.equal(await page.locator('#language').inputValue(),'ko');
   assert.equal(await page.locator('html').getAttribute('lang'),'ko');
+  assert.equal(await page.locator('main .hero > p').textContent(),
+   '한국에서 마음에 드는 맛집을 찾아보세요.');
+  const taglineStyle=await page.locator('main .hero > p').evaluate(el=>({
+   weight:Number(getComputedStyle(el).fontWeight),
+   size:parseFloat(getComputedStyle(el).fontSize),
+   color:getComputedStyle(el).color
+  }));
+  assert.ok(taglineStyle.weight>=700&&taglineStyle.size>=16,
+   'Homepage tagline too faint or small: '+JSON.stringify(taglineStyle));
+  assert.equal(taglineStyle.color,'rgb(41, 74, 58)');
   assert.equal(await page.locator('.country-flag img').getAttribute('src'),
    'https://flagcdn.com/w40/kr.png');
   assert.deepEqual(await page.locator('#language option').evaluateAll(v=>v.map(x=>x.value)),
@@ -71,6 +81,8 @@ try{
    await page.getByRole('button',{name:'デート'}).waitFor();
    assert.equal(await page.locator('#language').inputValue(),'ja');
    assert.equal(await page.locator('html').getAttribute('lang'),'ja');
+   assert.equal(await page.locator('main .hero > p').textContent(),
+    '韓国でお気に入りのグルメスポットを見つけよう。');
    assert.equal(await page.locator('.country-flag img').getAttribute('src'),
     'https://flagcdn.com/w40/jp.png');
    await page.locator('#country').selectOption('CN');
