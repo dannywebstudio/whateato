@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import {listPublishedBlog} from '@/lib/blog-public';
 import {getBlogCategories,blogCategoryGroups,blogCategoryName} from '@/lib/blog-categories';
 import styles from './blog.module.css';
+import BlogStoryCard from '@/components/BlogStoryCard';
 export const runtime='nodejs';export const dynamic='force-dynamic';
 export const metadata:Metadata={title:'Food, Travel & K-Beauty Stories',
  description:'Discover Korean restaurants, travel tips, shopping picks and K-Beauty guides.'};
@@ -75,22 +76,8 @@ export default async function BlogPage({searchParams}:Props){
      <h2>{q?t.results:category?(blogCategoryName(selectedCategory,locale)):t.latest}</h2>
    </div>
    {result.items.length?<div className={styles.cards}>
-      {result.items.map(item=><Link className={styles.card} key={item.id}
-        href={'/blog/'+item.slug+'?hl='+encodeURIComponent(locale)}>
-        <div className={styles.cardImage}>
-         {item.cover_image_id?
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={'/api/blog/images/'+item.cover_image_id} alt={item.title} loading="lazy"/>:
-          <span aria-hidden="true">🍽️</span>}
-        </div>
-        <div className={styles.cardText}>
-          <small>{blogCategoryName(categories.find(c=>c.slug===item.category),locale)}</small>
-          <h3>{item.title}</h3>
-          <p>{item.excerpt}</p>
-          <span className={styles.date}>{new Date(item.published_at).toLocaleDateString('en-US',{
-            year:'numeric',month:'short',day:'numeric'})}</span>
-        </div>
-      </Link>)}
+      {result.items.map(item=><BlogStoryCard key={item.id} story={item} locale={locale}
+        categoryLabel={blogCategoryName(categories.find(c=>c.slug===item.category),locale)}/>)}
     </div>:<div className={styles.empty}>
        <p>{q?t.notFound:t.empty}</p>
     </div>}
