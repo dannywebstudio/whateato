@@ -228,3 +228,8 @@
 .hero-signature{margin-right:.025em}
 .brand-logo:hover .brand-signature::after{background:linear-gradient(90deg,#0f7351,#4aba8d 76%,transparent)}
 @media(prefers-reduced-motion:reduce){.brand-signature .brand-w{transition:none}}
+
+/* Keep Contact, Blog and Map links centered on one line at every width. */
+.topbar .navlinks{display:flex;align-items:center}
+.topbar .navlinks a{display:inline-flex;align-items:center;justify-content:center;
+ height:40px;line-height:1;white-space:nowrap;vertical-align:middle}
