@@ -8,7 +8,7 @@ type Place={id:string;name_ko:string;region_sigungu:string|null;road_address_ko:
 type Detail={
  restaurant:Place&{lot_address_ko:string|null;category_code:string|null;
   region_sido:string|null;region_dong:string|null;latitude:number|null;longitude:number|null;
-  cms_origin:boolean;business_status:string};
+  cms_origin:boolean;cms_source_url:string|null;business_status:string};
  locales:{locale:string;display_name:string;short_description:string|null;full_description:string|null;source_notes:string|null}[];
  menus:{id:string;menu_key:string;position:number;price_krw:number|null;locale:string|null;name:string|null;description:string|null;publication_state:string}[];
  tags:{tag_code:string;verification_state:string;evidence_ref:string|null}[];
@@ -91,7 +91,7 @@ export default function AdminConsole({role}:{role:Role}){
       region_dong:data.restaurant.region_dong||'',
       latitude:data.restaurant.latitude===null?'':String(data.restaurant.latitude),
       longitude:data.restaurant.longitude===null?'':String(data.restaurant.longitude)});
-    setAddressProof('');
+    setAddressProof(data.restaurant.cms_origin?data.restaurant.cms_source_url||'':'');
     const chosen=data.locales.find(x=>x.locale===locale)||data.locales.find(x=>x.locale==='en');
     setDisplayName(chosen?.display_name||data.restaurant.name_ko);
     setIntro(chosen?.short_description||'');setFull(chosen?.full_description||'');
