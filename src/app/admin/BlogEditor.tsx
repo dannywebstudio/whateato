@@ -323,6 +323,21 @@ export default function BlogEditor({owner}:{owner:boolean}){
      </div>
      <section className={styles.mediaPanel}>
       <h4>블로그 사진 관리</h4>
+      <div className={styles.photoDrop}
+        onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}}
+        onDrop={e=>{
+          if(!e.dataTransfer.files.length)return;
+          e.preventDefault();
+          const incoming=e.dataTransfer.files[0];
+          if(!['image/jpeg','image/png','image/webp'].includes(incoming.type)){
+           setMessage('JPG, PNG 또는 WebP만 사용할 수 있어.');return;
+          }
+          setFile(incoming);setMessage('사진이 선택됐어. 사용권 출처와 설명을 입력한 뒤 업로드해.');
+        }}>
+        <span aria-hidden="true">📷</span>
+        <strong>사진을 여기로 끌어다 놓아도 돼</strong>
+        <span>{file?'선택된 사진: '+file.name:'또는 아래에서 파일 선택'}</span>
+      </div>
       <p>대표사진 권장 1200×810px · 본문 사진 권장 1400×1100px · JPEG/PNG/WebP 최대 8MB.
        파일은 비공개로 올라가고 사용권 검수 후 발행할 수 있어.</p>
       <div className={styles.twoCols}>
