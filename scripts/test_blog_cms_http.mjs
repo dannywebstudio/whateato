@@ -25,6 +25,54 @@ async function request(path,{method='GET',headers=owner,body}={}){
 }
 assert.equal((await request('/api/v1/owner/blog',{headers:{}})).status,403);
 assert.equal((await request('/api/v1/owner/blog',{headers:moderator})).status,403);
+const publicCategories=await request('/api/blog/categories',{headers:{}});
+assert.equal(publicCategories.status,200);
+assert.deepEqual(publicCategories.body.items.filter(x=>!x.parent_slug).map(x=>x.slug),
+ ['restaurants','travel','k-beauty']);
+const children=publicCategories.body.items.filter(x=>x.parent_slug==='travel');
+assert.deepEqual(children.map(x=>x.slug),
+ ['transportation','festivals','shopping-picks','local-attractions']);
+assert.deepEqual(publicCategories.body.items.filter(x=>x.parent_slug==='k-beauty').map(x=>x.slug),
+ ['olive-young','daiso','plastic-surgery-reviews','perfume']);
+assert.equal((await request('/api/v1/owner/blog/categories',{headers:{}})).status,403);
+assert.equal((await request('/api/v1/owner/blog/categories',{headers:moderator})).status,403);
+const newCat={slug:'korean-snacks',parent_slug:'restaurants',
+ names:{en:'Korean Snacks',ko:'한국 과자',ja:'韓国お菓子'},position:50};
+assert.equal((await request('/api/v1/owner/blog/categories',{
+ method:'POST',headers:editor,body:newCat})).status,403);
+assert.equal((await request('/api/v1/owner/blog/categories',{
+ method:'POST',headers:{...owner,Origin:'https://evil.invalid'},body:newCat})).status,403);
+const createdCategory=await request('/api/v1/owner/blog/categories',{method:'POST',body:newCat});
+assert.equal(createdCategory.status,201,JSON.stringify(createdCategory.body));
+assert.equal((await request('/api/v1/owner/blog/categories',{method:'POST',body:newCat})).status,409);
+const changedCategory=await request('/api/v1/owner/blog/categories/korean-snacks',{
+ method:'PATCH',body:{names:{en:'Korean Snack Guide',ko:'한국 간식'},position:15}});
+assert.equal(changedCategory.status,200,JSON.stringify(changedCategory.body));
+const inactive=await request('/api/v1/owner/blog/categories/korean-snacks',{
+ method:'PATCH',body:{is_active:false}});
+assert.equal(inactive.status,200);
+const absentPublic=await request('/api/blog/categories',{headers:{}});
+assert.equal(absentPublic.body.items.some(x=>x.slug==='korean-snacks'),false);
+const restored=await request('/api/v1/owner/blog/categories/korean-snacks',{
+ method:'PATCH',body:{is_active:true}});
+assert.equal(restored.status,200);
+const extension=await request('/api/v1/owner/blog/categories',{method:'POST',body:{
+ slug:'wellness',parent_slug:null,
+ names:{en:'Wellness',ko:'웰니스'},position:80
+}});
+assert.equal(extension.status,201);
+const extensionChild=await request('/api/v1/owner/blog/categories',{method:'POST',body:{
+ slug:'wellness-travel',parent_slug:'wellness',
+ names:{en:'Wellness Travel',ko:'웰니스 여행'},position:10
+}});
+assert.equal(extensionChild.status,201);
+assert.equal((await request('/api/v1/owner/blog/categories/wellness',{
+ method:'PATCH',body:{is_active:false}})).status,409,
+ 'Parent with active children must not be disabled');
+assert.equal((await request('/api/v1/owner/blog/categories/wellness',{
+ method:'PATCH',body:{parent_slug:'travel'}})).status,409,
+ 'Root with children must not become a child');
+
 assert.equal((await request('/api/v1/owner/blog',{method:'POST',
  headers:{...owner,Origin:'https://evil.invalid'},body:{slug:'new-restaurant-guide'}})).status,403);
 const created=await request('/api/v1/owner/blog',{method:'POST',headers:editor,
@@ -45,7 +93,7 @@ const blocks=[
  {id:'places',type:'list',items:['Research each restaurant','Check the real opening hours','Enjoy responsibly']},
  {id:'comparison',type:'table',rows:[['Situation','Recommendation'],['Solo meal','Look for local cafes']]}
 ];
-const draft={category:'food-guides',tags:['korean-food','seoul'],
+const draft={category:'transportation',tags:['korean-food','seoul'],
  related_restaurant_ids:['11111111-1111-4111-8111-111111111111'],
  translations:{en:{title:'Where should you eat when visiting Seoul?',
    excerpt:'A thoughtful guide to discovering Korean food and local restaurants in the neighborhoods of Seoul.',
@@ -80,6 +128,17 @@ assert.ok(html.includes('WhatEatO'));
 const results=await fetch(base+'/blog?q=neighborhoods');
 assert.equal(results.status,200);
 assert.ok((await results.text()).includes('Where should you eat when visiting Seoul?'));
+const travelRoot=await fetch(base+'/blog?category=travel');
+assert.equal(travelRoot.status,200);
+assert.ok((await travelRoot.text()).includes('Where should you eat when visiting Seoul?'));
+const transportChild=await fetch(base+'/blog?category=transportation');
+assert.ok((await transportChild.text()).includes('Where should you eat when visiting Seoul?'));
+const beautyRoot=await fetch(base+'/blog?category=k-beauty');
+assert.ok(!(await beautyRoot.text()).includes('Where should you eat when visiting Seoul?'));
+const koreanView=await fetch(base+'/blog?hl=ko');
+const koreanPage=await koreanView.text();
+assert.ok(koreanPage.includes('교통 정보')&&koreanPage.includes('성형외과 후기'));
+
 await mkdir('blog-browser-qa',{recursive:true});
 const browser=await chromium.launch({headless:true});
 try{
