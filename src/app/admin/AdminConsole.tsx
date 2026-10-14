@@ -517,7 +517,9 @@ export default function AdminConsole({role}:{role:Role}){
          <p className={styles.small}>전체 {currentBatch.batch.total} · 대기 {currentBatch.batch.pending} · 적용 {currentBatch.batch.applied} · 실패 {currentBatch.batch.failed}</p>
          <div className={styles.table}><table><thead><tr><th>ID</th><th>식당</th><th>변경</th><th>상태</th></tr></thead><tbody>
            {currentBatch.items.map((x:any)=><tr key={x.id}><td className={styles.code}>{x.id}</td>
-             <td className={styles.code}>{x.restaurant_id}</td><td>{x.kind}</td><td>{x.state} {x.error_code||''}</td></tr>)}
+             <td className={styles.code}>{x.restaurant_id}</td><td><details><summary>{x.kind} · 변경 내용 보기</summary>
+               <pre className={styles.payloadPreview}>{JSON.stringify(x.payload,null,2)}</pre>
+             </details></td><td>{x.state} {x.error_code||''}</td></tr>)}
          </tbody></table></div>
          <div className={styles.actions}>
            <button disabled={busy||currentBatch.batch.state!=='draft'} className={styles.button} onClick={()=>void batchAction('submit')}>검수 요청</button>
