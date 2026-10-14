@@ -85,6 +85,7 @@ assert.equal(reject.status,200);
 assert.equal((await req(path,{headers:{}})).body.reviews.length,0);
 const removed=await req(path,{method:'DELETE'});
 assert.equal(removed.status,200,JSON.stringify(removed.body));
+assert.equal((await req(path+'?mine=1')).body.review,null,'Deleted review must disappear from author editor');
 const db3=new pg.Client({connectionString:process.env.DATABASE_URL});await db3.connect();
 try{
  const left=await db3.query('SELECT count(*)::int AS n FROM whateato_review_photo_assets WHERE review_id=$1',[id]);
