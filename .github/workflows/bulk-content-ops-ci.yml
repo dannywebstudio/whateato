@@ -53,6 +53,7 @@ jobs:
       - run: node --check scripts/test_visitor_review_categories_http.mjs
       - run: node --check scripts/test_owner_review_delete_http.mjs
       - run: node --check scripts/test_review_form_browser.mjs
+      - run: node --check scripts/test_blog_cms_http.mjs
       - run: node --check scripts/run_bulk_batch.mjs
       - run: node --check scripts/import_bulk_ndjson.mjs
       - run: node scripts/seed_bulk_ops_fixture.mjs
@@ -76,6 +77,7 @@ jobs:
           node scripts/test_cms_venue_address_http.mjs
           node scripts/test_visitor_review_categories_http.mjs
           node scripts/test_owner_review_delete_http.mjs
+          node scripts/test_blog_cms_http.mjs
           node scripts/test_review_form_browser.mjs
       - name: Upload review form desktop and phone QA snapshots
         if: always()
