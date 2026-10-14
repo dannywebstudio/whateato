@@ -6,6 +6,7 @@ import {getRestaurantCatalogDetail,type RestaurantDetailResponse} from '@/lib/re
 import {isUuid,normalizeLocale,normalizeText,normalizeTags} from '@/lib/platform-v1';
 import {getPublicReviews,getOwnReviewSummary,getLicensedReviewInsights} from '@/lib/reviews';
 import ReviewForm from '@/components/ReviewForm';
+import reviewStyles from '@/components/ReviewForm.module.css';
 import RestaurantPhotoGallery from '@/components/RestaurantPhotoGallery';
 import GooglePlacesPhotoPreview from '@/components/GooglePlacesPhotoPreview';
 import {notFound} from 'next/navigation';
@@ -146,9 +147,31 @@ export default async function RestaurantDetail({params,searchParams}:Params){
       <span> · {t.subjective}</span></p>}
     <div className="results">{reviews.length?reviews.map(rev=>
       <article className="result" key={rev.id}>
-        <strong>★ {rev.rating} / 5</strong>
-        <p>{rev.body}</p>
-        <span>익명 이용자 · {new Date(rev.created_at).toLocaleDateString('ko-KR')}</span>
+        <strong>★ {Number(rev.rating).toFixed(1)} / 5</strong>
+        {rev.categories&&<div className={reviewStyles.categoryBadges}>
+          {([
+            ['taste',{'en':'Food & taste','ko':'맛','ja':'味','zh-CN':'口味'}],
+            ['service',{'en':'Service','ko':'서비스','ja':'サービス','zh-CN':'服务'}],
+            ['tourist_friendliness',{'en':'Tourist friendliness','ko':'외국인 편의성','ja':'旅行者への対応','zh-CN':'游客友好程度'}],
+            ['value_for_money',{'en':'Value for money','ko':'가격 만족도','ja':'価格','zh-CN':'性价比'}],
+            ['cleanliness',{'en':'Cleanliness','ko':'청결도','ja':'清潔さ','zh-CN':'卫生'}]
+          ] as const).filter(([key])=>rev.categories?.[key]!=null).map(([key,label])=>
+            <span key={key}>{label[locale]} ★ {rev.categories?.[key]}</span>)}
+        </div>}
+        <p style={{whiteSpace:'pre-line'}}>{rev.body}</p>
+        {rev.photos.length>0&&<div className={reviewStyles.publicReviewPhotos}>
+          {rev.photos.map((photo,index)=>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={photo.id} src={photo.url} loading="lazy"
+              alt={locale==='ko'?'방문자가 올린 음식 사진 '+(index+1):
+                locale==='ja'?'投稿された料理の写真 '+(index+1):
+                locale==='zh-CN'?'访客上传的菜品照片 '+(index+1):
+                'Visitor food photo '+(index+1)}/>
+          )}
+        </div>}
+        <span>{locale==='ko'?'익명 방문자':locale==='ja'?'匿名の訪問者':
+          locale==='zh-CN'?'匿名访客':'Anonymous visitor'} ·
+          {' '+new Date(rev.created_at).toLocaleDateString(locale==='ko'?'ko-KR':'en-US')}</span>
       </article>):<div className="empty">{t.noReviews}</div>}</div>
     <ReviewForm restaurantId={id} canWrite={Boolean(session?.user?.id)} locale={locale}/>
     {external.length>0&&<>
