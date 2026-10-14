@@ -22,8 +22,11 @@ export async function listPublishedBlog(input:{q?:string;locale?:string;category
  const locale=blogLocale(input.locale);
  const pool=getPool();if(!pool)return {items:[],more:false,locale,page};
  const rows=await pool.query<{id:string;slug:string;snapshot:BlogDraft&{cover_image_id?:string};
-  published_at:string}>(`
-  SELECT p.id::text,p.slug,u.snapshot,u.published_at::text
+  published_at:string;verified_cover_id:string|null}>(`
+  SELECT p.id::text,p.slug,u.snapshot,u.published_at::text,
+  (SELECT im.id::text FROM whateato_blog_media im
+    WHERE im.post_id=p.id AND im.id::text=u.snapshot->>'cover_image_id'
+      AND im.rights_status='approved' LIMIT 1) AS verified_cover_id
   FROM whateato_blog_publications u
   JOIN whateato_blog_posts p ON p.id=u.post_id
   WHERE u.is_visible=true
@@ -35,7 +38,7 @@ export async function listPublishedBlog(input:{q?:string;locale?:string;category
   const selected=translationOf(r.snapshot,locale);
   return {id:r.id,slug:r.slug,category:r.snapshot.category,
    title:selected.content?.title||'',excerpt:selected.content?.excerpt||'',
-   locale:selected.locale,cover_image_id:r.snapshot.cover_image_id||null,
+   locale:selected.locale,cover_image_id:r.verified_cover_id||null,
    published_at:r.published_at,tags:r.snapshot.tags||[]};
  });
  return {items,more:rows.rows.length>12,locale,page};
@@ -51,7 +54,7 @@ export async function findPublishedBlog(slug:string,language:unknown):Promise<Bl
  const r=result.rows[0],chosen=translationOf(r.snapshot,blogLocale(language));
  if(!chosen.content||!chosen.content.title)return null;
  return {id:r.id,slug:r.slug,draft:r.snapshot,
-  cover_image_id:r.snapshot.cover_image_id||null,
+  cover_image_id:r.verified_cover_id||null,
   published_at:r.published_at,locale:chosen.locale,
   title:chosen.content.title,excerpt:chosen.content.excerpt};
 }
