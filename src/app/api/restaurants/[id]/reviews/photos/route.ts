@@ -70,6 +70,16 @@ export async function POST(req:NextRequest,{params}:Ctx){
  let uploaded=false;
  try{
   await client.query('BEGIN');
+  // Serialize uploads across venues for the same account; cap storage abuse.
+  await client.query('SELECT id FROM whateato_review_accounts WHERE id=$1 FOR UPDATE',[owner]);
+  const daily=await client.query<{n:number}>(`
+    SELECT count(*)::int AS n FROM whateato_review_photo_assets p
+    JOIN whateato_user_reviews r ON r.id=p.review_id
+    WHERE r.account_id=$1 AND p.created_at>now()-interval '24 hours'`,[owner]);
+  if(daily.rows[0].n>=20){
+   await client.query('ROLLBACK');
+   return reply({error:'daily_upload_limit_20'},429);
+  }
   const review=await client.query<{id:string;moderation_status:string}>(`
     SELECT r.id::text,r.moderation_status FROM whateato_user_reviews r
     WHERE r.restaurant_id=$1 AND r.account_id=$2 FOR UPDATE`,[id,owner]);
