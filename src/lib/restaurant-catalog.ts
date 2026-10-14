@@ -72,7 +72,8 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
            AND im.rights_status='approved'
            AND NULLIF(BTRIM(im.usage_rights_reference),'') IS NOT NULL
            AND im.rights_verified_at IS NOT NULL
-         ORDER BY im.position,im.id LIMIT 1) AS featured_image_metadata,
+         ORDER BY CASE WHEN im.cms_photo_role='cover' THEN 0 ELSE 1 END,im.position,im.id
+          LIMIT 1) AS featured_image_metadata,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       COALESCE((SELECT json_agg(json_build_object('code',a.tag_code,'label',COALESCE(tl.label,ko_tl.label,a.tag_code)) ORDER BY a.tag_code)
@@ -221,6 +222,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       SELECT id::text,alt_ko,('/api/v1/images/'||id::text) AS url FROM restaurant_images
       WHERE restaurant_id=$1 AND publication_state='published' AND rights_status='approved'
         AND NULLIF(BTRIM(usage_rights_reference),'') IS NOT NULL AND rights_verified_at IS NOT NULL
+        AND cms_photo_role='gallery'
       ORDER BY position,id LIMIT 25`,[id])
   ]);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,[id]),loadRatingDisplays(pool,[id])]);
