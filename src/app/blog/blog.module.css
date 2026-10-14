@@ -1,17 +1,58 @@
-.blogPage{max-width:1220px;margin:0 auto;padding:46px 24px 90px;color:#1b2b23}
-.hero{position:relative;overflow:hidden;border-radius:23px;padding:53px clamp(24px,5vw,65px);
- background:radial-gradient(circle at 88% 20%,#b7dbc36e,transparent 43%),linear-gradient(125deg,#eaf6ee 0%,#f9fbf8 83%);
- border:1px solid #dbece0}
+.blogPage{max-width:1220px;margin:0 auto;padding:30px 24px 90px;color:#1b2b23}
 .eyebrow{display:inline-flex;gap:8px;align-items:center;color:#16764f;letter-spacing:.18em;font-weight:850;font-size:11px;text-transform:uppercase}
-.hero h1{max-width:780px;font-size:clamp(33px,5vw,62px);letter-spacing:-.07em;line-height:1.11;margin:16px 0 16px}
-.hero p{max-width:630px;font-size:15px;color:#5d7568;line-height:1.8;margin:0}
-.search{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:30px 0 20px}
-.search input{min-width:220px;flex:1 1 240px;height:46px;border:1px solid #cfdfd4;border-radius:12px;padding:0 16px;font-size:14px}
-.search button{border:0;border-radius:12px;color:#fff;background:#168052;font-weight:800;height:46px;padding:0 20px;cursor:pointer}
-.categories{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0}
-.categoryLink{border-radius:100px;border:1px solid #d9e4da;background:#fff;
- padding:9px 15px;font-size:12px;color:#3f5949;font-weight:650}
-.categoryLink[data-active=true]{color:#fff;border-color:#167a4c;background:#167a4c}
+
+/* Blog-only layout; search bar reuses the same global .searchfield as Map. */
+.blogSearch{margin:0 0 21px}
+.blogSearch :global(.searchfield){margin:0;max-width:750px}
+.blogSearch :global(.searchfield) :global(input){min-width:0}
+.mainCategories{display:flex;align-items:stretch;gap:8px;min-width:0;
+ border-bottom:1px solid #e2eae5;overflow-x:auto;white-space:nowrap;
+ margin:0 0 26px;scrollbar-width:thin}
+.mainCategory{display:inline-flex;justify-content:center;align-items:center;
+ flex:0 0 auto;padding:14px 23px;font-size:14px;font-weight:750;
+ color:#647569;border-bottom:3px solid transparent;
+ transition:border-color .15s,color .15s}
+.mainCategory:hover{color:#168354}
+.mainCategory[data-active="true"]{color:#137d55;border-bottom-color:#188a64}
+.mainCategory:focus-visible,.sidebarItem:focus-visible{
+ outline:2px solid #168354;outline-offset:-2px;border-radius:4px}
+.blogLayout{display:block;min-width:0}
+.blogLayoutWithSidebar{display:grid;grid-template-columns:210px minmax(0,1fr);
+ align-items:start;gap:29px;min-width:0}
+.storyContent{min-width:0}
+.categorySidebar{position:sticky;top:22px;min-width:0;border-right:1px solid #e3ebe6;
+ padding:3px 16px 18px 0}
+.sidebarTitle{color:#1e5039;font-size:14px;font-weight:850;line-height:1.45;
+ padding:9px 10px 14px;border-bottom:1px solid #e5ede8;margin-bottom:8px;overflow-wrap:anywhere}
+.sidebarItems{display:flex;flex-direction:column;align-items:stretch;gap:5px}
+.sidebarItem{display:block;border-radius:9px;padding:11px 12px;font-size:13px;
+ line-height:1.45;font-weight:600;color:#586e5f;overflow-wrap:anywhere;
+ border-left:3px solid transparent}
+.sidebarItem:hover{background:#f4f8f5;color:#0d7a4c}
+.sidebarItem[data-active="true"]{color:#086e44;font-weight:800;
+ background:#ecf7ef;border-left-color:#168454}
+@media(max-width:920px){
+ .blogLayoutWithSidebar{grid-template-columns:175px minmax(0,1fr);gap:18px}
+ .blogLayoutWithSidebar .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+ .mainCategory{padding:12px 17px}
+}
+@media(max-width:700px){
+ .blogLayoutWithSidebar{grid-template-columns:145px minmax(0,1fr);gap:13px}
+ .blogLayoutWithSidebar .cards{grid-template-columns:minmax(0,1fr)}
+ .categorySidebar{padding-right:8px}
+ .sidebarTitle{font-size:12px;padding:8px 7px 12px}
+ .sidebarItem{padding:10px 7px;font-size:11px}
+ .mainCategories{gap:1px;margin-bottom:19px}
+ .mainCategory{font-size:12px;padding:12px 14px}
+}
+@media(max-width:420px){
+ .blogLayoutWithSidebar{grid-template-columns:125px minmax(0,1fr);gap:10px}
+ .blogLayoutWithSidebar .cardText{padding:13px 12px}
+ .blogLayoutWithSidebar .cardText h3{font-size:18px}
+ .blogLayoutWithSidebar .cardText p{font-size:12px}
+ .sectionTitle h2{font-size:21px}
+}
+
 .sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:27px 0 18px}
 .sectionTitle h2{font-size:25px;letter-spacing:-.05em}
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
@@ -65,8 +106,7 @@
 .back{display:inline-block;color:#14784b;font-weight:800;margin:28px 0}
 @media(max-width:850px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){
- .blogPage{padding:20px 15px 60px}.hero{padding:35px 22px;border-radius:16px}
- .hero h1{font-size:36px}.cards{grid-template-columns:1fr;gap:14px}
+ .blogPage{padding:18px 15px 60px}.cards{grid-template-columns:1fr;gap:14px}
  .cardImage{aspect-ratio:1.75}.cardText{padding:16px}.cardText h3{font-size:20px}
  .articleShell{padding:24px 16px 65px}.articleHeader h1{font-size:34px}
  .dek{font-size:15px}.articleBody{font-size:15px;line-height:1.8}
@@ -74,23 +114,3 @@
  .cover{margin-bottom:24px}.cover img{border-radius:11px}
 }
 
-/* DB-driven category hierarchy, scoped to /blog only. */
-.categoryTree{display:flex;flex-wrap:wrap;align-items:stretch;gap:12px;margin:24px 0}
-.categoryTree>.categoryLink{display:flex;align-items:center;justify-content:center}
-.categoryGroup{flex:1 1 235px;min-width:0;display:flex;flex-direction:column;gap:11px;
-  background:#fff;border:1px solid #dce9e0;border-radius:14px;padding:15px 16px}
-.categoryRoot{font-weight:850;color:#274f38;font-size:16px;padding-bottom:9px;
-  border-bottom:1px solid #e8efe9}
-.categoryRoot[data-active=true]{color:#117d50;border-bottom-color:#5da67c}
-.subcategories{display:flex;flex-wrap:wrap;gap:7px}
-.subcategory{font-size:12px;color:#526b58;border:1px solid #dfe9e1;
-  border-radius:99px;background:#f8fbf8;padding:8px 11px}
-.subcategory:hover,.subcategory[data-active=true]{color:#fff;background:#148054;
-  border-color:#148054}
-@media(max-width:600px){
- .categoryTree{display:grid;grid-template-columns:1fr;gap:9px}
- .categoryGroup{padding:13px 14px}
- .categoryTree>.categoryLink{justify-self:start}
- .categoryRoot{font-size:15px}
- .subcategory{font-size:11px}
-}
