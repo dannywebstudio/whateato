@@ -14,6 +14,11 @@ export function release300PublicWhere():string {
        AND ready.has_four_locales=true
        AND ready.address_state<>'missing'
        AND NOT EXISTS (
+         SELECT 1 FROM restaurant_data_quality_reviews dq
+         WHERE dq.restaurant_id=r.id
+           AND dq.review_state IN ('pending','confirmed_hold')
+       )
+       AND NOT EXISTS (
          SELECT 1 FROM whateato_release_cohort_locale_tasks_v1 x
          WHERE x.restaurant_id=r.id
            AND (x.locale_state<>'published'
