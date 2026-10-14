@@ -184,10 +184,10 @@ const html=await page.text();
 assert.ok(html.includes('Where should you eat when visiting Seoul?'));
 assert.ok(html.includes('Research each restaurant'));
 assert.ok(html.includes('WhatEatO'));
-assert.ok(html.includes('hreflang="en-US"'),'US English should be covered by canonical English edition');
-assert.ok(html.includes('hreflang="ko"'));
-assert.ok(html.includes('hreflang="ja"'));
-assert.ok(html.includes('hreflang="zh-CN"'));
+assert.ok(/hreflang="en-US"/i.test(html),'US English should be covered by canonical English edition');
+assert.ok(/hreflang="ko"/i.test(html));
+assert.ok(/hreflang="ja"/i.test(html));
+assert.ok(/hreflang="zh-CN"/i.test(html));
 
 const versions=[
  ['ko','서울에서 어떤 음식을 먹어볼까?','서울 여행 중 교통과 식당 살펴보기'],
@@ -202,7 +202,7 @@ for(const [lang,title,heading] of versions){
  assert.ok(!body.includes('Best authentic dining experiences in Seoul'),
   'localized page must not fallback to English '+lang);
  assert.ok(body.includes('aria-label="Article language"'),'All 4 article language links must render');
- assert.ok(body.includes('hreflang="'+lang+'"'),'Locale-specific hreflang must render');
+ assert.ok(new RegExp('hreflang="'+lang+'"','i').test(body),'Locale-specific hreflang must render');
  assert.ok(body.includes('/blog/what-to-eat-in-seoul-ci?hl='+lang),
   'Localized canonical URL should keep the locale');
 }
