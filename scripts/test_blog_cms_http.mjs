@@ -3,6 +3,8 @@
 import assert from 'node:assert/strict';
 import {encode} from 'next-auth/jwt';
 import pg from 'pg';
+import {chromium} from 'playwright';
+import {mkdir} from 'node:fs/promises';
 const url=new URL(process.env.DATABASE_URL||'');
 assert.ok(['localhost','127.0.0.1'].includes(url.hostname));
 assert.equal(process.env.WHATEATO_CI_LOCAL_FIXTURE,'ONLY_LOCAL_EPHEMERAL');
@@ -78,6 +80,27 @@ assert.ok(html.includes('WhatEatO'));
 const results=await fetch(base+'/blog?q=neighborhoods');
 assert.equal(results.status,200);
 assert.ok((await results.text()).includes('Where should you eat when visiting Seoul?'));
+await mkdir('blog-browser-qa',{recursive:true});
+const browser=await chromium.launch({headless:true});
+try{
+ for(const vp of [{name:'desktop',width:1440,height:900},
+   {name:'mobile',width:390,height:844},{name:'small-mobile',width:360,height:740}]){
+  const ctx=await browser.newContext({viewport:{width:vp.width,height:vp.height}});
+  const page=await ctx.newPage();
+  await page.goto(base+'/blog?hl=en',{waitUntil:'domcontentloaded'});
+  assert.equal(await page.getByText('Where should you eat when visiting Seoul?',{exact:true}).count(),1);
+  await page.screenshot({path:'blog-browser-qa/'+vp.name+'-index.png',fullPage:true});
+  await page.goto(base+'/blog/what-to-eat-in-seoul-ci?hl=en',{waitUntil:'domcontentloaded'});
+  assert.ok((await page.locator('main h1').textContent()).includes('Where should you eat'));
+  assert.equal(await page.locator('main table').count(),1);
+  const dims=await page.evaluate(()=>({viewport:document.documentElement.clientWidth,
+    content:document.documentElement.scrollWidth}));
+  assert.ok(dims.content<=dims.viewport+2,
+    vp.name+' blog has horizontal overflow '+JSON.stringify(dims));
+  await page.screenshot({path:'blog-browser-qa/'+vp.name+'-article.png',fullPage:true});
+  await ctx.close();
+ }
+}finally{await browser.close()}
 const newer={...draft,translations:{en:{...draft.translations.en,
  title:'A completely different unpublished revision'}}};
 const changed=await request(prefix,{method:'PUT',
@@ -111,4 +134,5 @@ try{
  assert.equal(publication.rows[0].is_visible,false);
  assert.equal(publication.rows[0].revision,3);
 }finally{await db.end()}
+console.log('PASS: blog Chromium 1440/390/360 responsive listings and article QA');
 console.log('PASS: blog RBAC, no draft leak, review/publish, SEO page, full-text search, immutable public snapshot, republish and unpublish');
