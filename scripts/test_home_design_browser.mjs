@@ -22,6 +22,16 @@ assert.match(searchSource,/data-search-pagination/);
 assert.doesNotMatch(searchSource,/href=\{'\/map\?'\+toMap/);
 const relatedSource=readFileSync('src/components/RelatedSearchPosts.tsx','utf8');
 assert.match(relatedSource,/if\(posts.length===0\)return null/);
+assert.match(relatedSource,/data-related-blog-grid/);
+assert.match(relatedSource,/BlogStoryCard key=\{post.id\}/);
+const blogPageSource=readFileSync('src/app/blog/page.tsx','utf8');
+assert.match(blogPageSource,/BlogStoryCard key=\{item.id\}/);
+const sharedBlogCard=readFileSync('src/components/BlogStoryCard.tsx','utf8');
+assert.match(sharedBlogCard,/styles.cardImage/);
+assert.match(sharedBlogCard,/styles.cardText/);
+assert.match(sharedBlogCard,/styles.date/);
+assert.match(sharedBlogCard,/\/api\/blog\/images\//);
+assert.match(sharedBlogCard,/cover_image_id/);
 const focusApiSource=readFileSync('src/app/api/v1/map/focus/route.ts','utf8');
 assert.match(focusApiSource,/items:\[selected,\.\.\.nearby.slice\(0,3\)\]/);
 const browser=await chromium.launch({headless:true});
@@ -118,6 +128,33 @@ try{
    assert.ok((await contact.locator('main').innerText()).includes('advertising'));
   }
   await contact.close();
+  // Related stories use the canonical same Blog card in all screen sizes.
+  const storySearch=await context.newPage();
+  await mockCountry(storySearch,'KR');
+  await storySearch.goto(root+'/search?q=%EC%84%9C%EC%9A%B8&hl=ko',
+    {waitUntil:'domcontentloaded'});
+  const storyCards=storySearch.locator('[data-related-blog-grid] > a');
+  if(await storyCards.count()){
+   assert.equal(await storySearch.locator('[data-search-blog] [data-related-blog-grid]').count(),1);
+   assert.equal(await storyCards.first().locator('h3').count(),1);
+   assert.equal(await storyCards.first().locator('small').count(),1);
+   assert.equal(await storyCards.first().locator('img, span[aria-hidden="true"]').count(),1);
+   assert.equal(await storyCards.first().locator('span[class*="date"]').count(),1);
+   const storyImageWidth=await storyCards.first().locator('div[class*="cardImage"]')
+    .evaluate(el=>getComputedStyle(el).aspectRatio);
+   assert.equal(storyImageWidth,'1.55');
+  }else{
+   assert.equal(await storySearch.locator('[data-search-blog]').count(),0,
+    'Do not show Related Blog section without actual matches');
+  }
+  const storyPageWidth=await storySearch.evaluate(()=>({
+    viewport:document.documentElement.clientWidth,
+    actual:document.documentElement.scrollWidth
+  }));
+  assert.ok(storyPageWidth.actual<=storyPageWidth.viewport+2,
+   vp.name+' related blog overflow '+JSON.stringify(storyPageWidth));
+  await storySearch.screenshot({path:out+'/'+vp.name+'-search-blog-grid.png',fullPage:true});
+  await storySearch.close();
   if(vp.name==='desktop'){
    const chip=page.locator('main .chip').first();
    const style=await chip.evaluate(el=>({
