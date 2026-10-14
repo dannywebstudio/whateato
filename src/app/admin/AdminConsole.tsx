@@ -16,7 +16,8 @@ type Detail={
  images:{id:string;position:number;publication_state:string;rights_status:string;cms_photo_role:'cover'|'gallery';url:string}[];
 };
 type Batch={id:string;title:string;state:string;total:number;applied:number;failed:number};
-type Review={id:string;restaurant_id:string;restaurant_name:string;rating:number;body:string;created_at:string};
+type Review={id:string;restaurant_id:string;restaurant_name:string;rating:number;body:string;created_at:string;
+  categories:Record<string,number|null>|null;photos:{id:string;url:string;status:string}[]};
 type Day={weekday:number;closed:boolean;open:string;close:string;breakStart:string;breakEnd:string};
 const weekdays=['일','월','화','수','목','금','토'];
 const emptyDays=():Day[]=>weekdays.map((_,weekday)=>({weekday,closed:true,open:'11:00',close:'21:00',breakStart:'',breakEnd:''}));
@@ -58,6 +59,7 @@ export default function AdminConsole({role}:{role:Role}){
  const [currentBatch,setCurrentBatch]=useState<any>(null);
  const [bulkFile,setBulkFile]=useState<File|null>(null);const [imported,setImported]=useState(0);
  const [reviews,setReviews]=useState<Review[]>([]);
+ const [photosInspected,setPhotosInspected]=useState<Record<string,boolean>>({});
  const [reviewStatus,setReviewStatus]=useState<'pending'|'published'|'rejected'>('pending');
  const [reason,setReason]=useState('spam');
  const [image,setImage]=useState<File|null>(null);const [rights,setRights]=useState(false);
@@ -258,7 +260,12 @@ export default function AdminConsole({role}:{role:Role}){
  const reviewAction=async(id:string,approve:boolean,hide=false)=>{
    const reason_code=approve?'approved_guidelines':hide?'other':reason;
    if(!window.confirm(approve?'실제 검토한 리뷰를 승인할까?':hide?'이미 게시된 리뷰를 비공개 처리할까?':'해당 리뷰를 거절할까?'))return;
-   try{await post('/api/v1/owner/reviews/'+id,{decision:approve?'approve':hide?'hide':'reject',reason_code},'PATCH');
+   const selected=reviews.find(r=>r.id===id);
+   if(approve&&selected?.photos.length&&!photosInspected[id]){
+     setNotice('첨부된 음식 사진을 모두 확인한 후 승인 체크박스를 선택해.');return;
+   }
+   try{await post('/api/v1/owner/reviews/'+id,{decision:approve?'approve':hide?'hide':'reject',
+     reason_code,photos_reviewed:approve&&Boolean(photosInspected[id])},'PATCH');
      setNotice('리뷰 처리 완료');await loadReviews()}catch(e){inform(e)}
  };
  const batchAction=async(action:string)=>{
@@ -556,6 +563,22 @@ export default function AdminConsole({role}:{role:Role}){
      {reviews.map(r=><article key={r.id} className={styles.panel}>
        <div className={styles.row}><strong>{r.restaurant_name}</strong><span className={styles.badge}>★ {r.rating}</span></div>
        <p style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{r.body}</p>
+       {r.categories&&<div className={styles.chips}>
+         {Object.entries(r.categories).map(([key,score])=>
+           <span key={key} className={styles.chip}>{key.replaceAll('_',' ')} · {score===null?'N/A':score+'/5'}</span>)}
+       </div>}
+       {r.photos?.length>0&&<>
+         <h3>첨부 음식 사진 {r.photos.length}장</h3>
+         <div className={styles.reviewPhotos}>{r.photos.map(photo=>
+           /* eslint-disable-next-line @next/next/no-img-element */
+           <img key={photo.id} src={photo.url} loading="lazy" alt="관리자 검수용 방문자 음식사진"/>)}
+         </div>
+         {reviewStatus==='pending'&&<label className={styles.chip}>
+           <input type="checkbox" checked={Boolean(photosInspected[r.id])}
+             onChange={e=>setPhotosInspected(p=>({...p,[r.id]:e.target.checked}))}/>
+           사진을 모두 직접 확인했고 공개에 동의함
+         </label>}
+       </>}
        <div className={styles.small}>{r.created_at} · ID: {r.id}</div>
        <div className={styles.actions}>
          {reviewStatus==='pending'&&<><button className={styles.button} onClick={()=>void reviewAction(r.id,true)}>검토 후 승인</button>
