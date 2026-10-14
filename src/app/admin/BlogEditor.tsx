@@ -155,7 +155,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
   if(!(area instanceof HTMLTextAreaElement))return;
   const id=area.dataset.blogBlockId;
   const b=translation.blocks.find(x=>x.id===id);
-  if(!id||!b||!b.text)return;
+  if(!id||!b||typeof b.text!=='string')return;
   const start=area.selectionStart,end=area.selectionEnd;
   const selected=b.text.slice(start,end)||'text';
   const formatted=marker==='link'?'['+selected+'](https://example.com)':
@@ -261,9 +261,9 @@ export default function BlogEditor({owner}:{owner:boolean}){
          <button key={type} onClick={()=>addBlock(type)}>+ {type==='paragraph'?'문단':
            type==='heading'?'제목':type==='list'?'목록':type==='quote'?'인용':
            type==='table'?'표':type==='image'?'사진':'구분선'}</button>)}
-        <button onClick={()=>applyInline('bold')}>**굵게**</button>
-        <button onClick={()=>applyInline('italic')}>*기울임*</button>
-        <button onClick={()=>applyInline('link')}>링크</button>
+        <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('bold')}>**굵게**</button>
+        <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('italic')}>*기울임*</button>
+        <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('link')}>링크</button>
         {['🍜','🥢','🥘','☕','🍽️','📍','⭐','✨'].map(emoji=>
          <button key={emoji} title="아래 새 문단에 추가" onClick={()=>setBlocks([
            ...translation.blocks,{...newBlock('paragraph'),text:emoji+' '}])}>{emoji}</button>)}
