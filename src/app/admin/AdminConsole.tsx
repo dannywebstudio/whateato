@@ -1,9 +1,10 @@
 'use client';
 import {useCallback,useEffect,useState,type ChangeEvent} from 'react';
 import styles from './admin.module.css';
+import BlogEditor from './BlogEditor';
 
 type Role='owner'|'editor'|'moderator';
-type Tab='restaurants'|'batches'|'reviews';
+type Tab='restaurants'|'batches'|'reviews'|'blog';
 type Place={id:string;name_ko:string;region_sigungu:string|null;road_address_ko:string|null;publication_status:string};
 type Detail={
  restaurant:Place&{lot_address_ko:string|null;category_code:string|null;
@@ -348,11 +349,12 @@ export default function AdminConsole({role}:{role:Role}){
      </div>
    </section>}
    <nav className={styles.tabs} aria-label="관리 탭">
-     {(edit?[['restaurants','식당 편집'],['batches','대량 작업·승인']]:[]).concat(
+     {(edit?[['restaurants','식당 편집'],['batches','대량 작업·승인'],['blog','블로그 콘텐츠']]:[]).concat(
        moderate?[['reviews','방문후기 검수']]:[]
      ).map(([key,label])=><button key={key} aria-selected={tab===key} onClick={()=>{setTab(key as Tab);setNotice('')}}>{label}</button>)}
    </nav>
    {notice&&<div className={styles.status} role="status">{notice}</div>}
+   {tab==='blog'&&edit&&<BlogEditor owner={owner}/>}
    {tab==='restaurants'&&edit&&<div className={styles.split}>
      <section className={styles.panel}>
        <h2>식당 검색</h2><p className={styles.note}>기존 원본 식당 ID를 유지하며 콘텐츠만 수정해.</p>
