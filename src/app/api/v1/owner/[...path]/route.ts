@@ -7,6 +7,7 @@ import {POST as itemsPOST} from '@/app/api/v1/admin/bulk/batches/[id]/items/rout
 import {POST as actionsPOST} from '@/app/api/v1/admin/bulk/batches/[id]/actions/route';
 import {GET as reviewsGET} from '@/app/api/v1/admin/reviews/route';
 import {PATCH as reviewsPATCH} from '@/app/api/v1/admin/reviews/[id]/route';
+import {deleteReviewAsOwner} from '@/lib/admin-review-delete';
 
 // This is a SAME-ORIGIN BFF, never a transparent upstream proxy.
 // Server-only bearer secrets remain on the server; browser sees only Auth.js cookies.
@@ -14,12 +15,18 @@ export const runtime='nodejs';
 export const dynamic='force-dynamic';
 type Ctx={params:Promise<{path:string[]}>};
 const deny=(error:string,status:number)=>NextResponse.json({error},{status,headers:ownerHeaders});
-async function dispatch(req:NextRequest,ctx:Ctx,method:'GET'|'POST'|'PATCH'){
+async function dispatch(req:NextRequest,ctx:Ctx,method:'GET'|'POST'|'PATCH'|'DELETE'){
   const staff=await currentStaff();
   if(!staff)return deny('admin_login_or_grant_required',403);
   if(method!=='GET'&&!safeSameOrigin(req))return deny('cross_site_request',403);
   const p=(await ctx.params).path;
   if(!Array.isArray(p)||p.length>4)return deny('route_not_found',404);
+  if(method==='DELETE'){
+    if(p[0]!=='reviews'||p.length!==2||!isUuid(p[1]))
+      return deny('route_not_found',404);
+    if(staff.role!=='owner')return deny('owner_required',403);
+    return deleteReviewAsOwner(req,p[1]);
+  }
   const review=p[0]==='reviews';
   if(review&&!hasPermission(staff,'moderate'))return deny('insufficient_role',403);
   if(!review&&!hasPermission(staff,'edit'))return deny('insufficient_role',403);
@@ -71,3 +78,4 @@ async function dispatch(req:NextRequest,ctx:Ctx,method:'GET'|'POST'|'PATCH'){
 export async function GET(req:NextRequest,ctx:Ctx){return dispatch(req,ctx,'GET')}
 export async function POST(req:NextRequest,ctx:Ctx){return dispatch(req,ctx,'POST')}
 export async function PATCH(req:NextRequest,ctx:Ctx){return dispatch(req,ctx,'PATCH')}
+export async function DELETE(req:NextRequest,ctx:Ctx){return dispatch(req,ctx,'DELETE')}
