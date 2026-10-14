@@ -294,7 +294,7 @@ try{
   await ctx.close();
  }
 }finally{await browser.close()}
-const newer={...draft,translations:{en:{...draft.translations.en,
+const newer={...draft,translations:{...draft.translations,en:{...draft.translations.en,
  title:'A completely different unpublished revision'}}};
 const changed=await request(prefix,{method:'PUT',
  body:{draft:newer,expected_revision:2}});
