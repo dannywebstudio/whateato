@@ -6,6 +6,7 @@ import {getPool} from '@/lib/db';
 import {isUuid} from '@/lib/platform-v1';
 import {safeSameOrigin} from '@/lib/owner-cms-auth';
 import {savePhoto,deletePhoto,objectStorageReady} from '@/lib/cms-object-storage';
+import {purgeReviewPhotos} from '@/lib/visitor-photo-cleanup';
 
 export const runtime='nodejs';export const dynamic='force-dynamic';
 type Ctx={params:Promise<{id:string}>};
@@ -126,6 +127,7 @@ export async function DELETE(req:NextRequest,{params}:Ctx){
     ON CONFLICT(storage_key) DO NOTHING`,[found.rows[0].storage_key]);
   await client.query('DELETE FROM whateato_review_photo_assets WHERE id=$1',[photo]);
   await client.query('COMMIT');
+  await purgeReviewPhotos([found.rows[0].storage_key]);
   return reply({deleted:true});
  }catch{
   await client.query('ROLLBACK').catch(()=>{});
