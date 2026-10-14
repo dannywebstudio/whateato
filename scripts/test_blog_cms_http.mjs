@@ -148,9 +148,13 @@ const transportChild=await fetch(base+'/blog?category=transportation');
 assert.ok((await transportChild.text()).includes('Where should you eat when visiting Seoul?'));
 const beautyRoot=await fetch(base+'/blog?category=k-beauty');
 assert.ok(!(await beautyRoot.text()).includes('Where should you eat when visiting Seoul?'));
-const koreanView=await fetch(base+'/blog?hl=ko');
-const koreanPage=await koreanView.text();
-assert.ok(koreanPage.includes('교통 정보')&&koreanPage.includes('성형외과 후기'));
+const koreanTravelView=await fetch(base+'/blog?hl=ko&category=travel');
+const koreanTravelPage=await koreanTravelView.text();
+assert.ok(koreanTravelPage.includes('교통 정보')&&koreanTravelPage.includes('축제 정보'),
+  'Travel-only left sidebar renders localized travel subcategories');
+const koreanBeautyView=await fetch(base+'/blog?hl=ko&category=k-beauty');
+assert.ok((await koreanBeautyView.text()).includes('성형외과 후기'),
+  'K-Beauty-only left sidebar renders localized beauty subcategories');
 
 await mkdir('blog-browser-qa',{recursive:true});
 const browser=await chromium.launch({headless:true});
