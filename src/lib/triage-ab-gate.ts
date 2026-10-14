@@ -1,6 +1,7 @@
 // Enforced server-side visibility: ONLY curated 300 cohort A/B restaurants.
 // Unselected businesses, C flags and holds must never be publicly queried.
-// No opt-out flag. Missing Neon tables -> fail closed, not all results.
+// No opt-out flag. Verified published weekly opening intervals with a source are mandatory.
+// Restaurants with unknown hours remain in database but are hidden from public listings.
 export function triageABPublicWhere():string {
  return `
    AND EXISTS (
@@ -12,6 +13,21 @@ export function triageABPublicWhere():string {
        AND selected.review_state NOT IN ('hold')
        AND triage.grade IN ('A','B')
        AND triage.visibility IN ('full','basic_map','basic_search_only')
+   )
+   AND EXISTS (
+     SELECT 1 FROM restaurant_opening_hours hours
+     WHERE hours.restaurant_id=r.id
+       AND hours.publication_state='published'
+       AND hours.verified_at IS NOT NULL
+       AND NULLIF(BTRIM(hours.source_url),'') IS NOT NULL
+       AND EXISTS (
+         SELECT 1 FROM restaurant_opening_intervals slots
+         WHERE slots.restaurant_id=hours.restaurant_id
+           AND slots.weekday BETWEEN 0 AND 6
+           AND slots.start_minute>=0
+           AND slots.end_minute>slots.start_minute
+           AND slots.end_minute<=1440
+       )
    )
    AND NOT EXISTS (
      SELECT 1 FROM restaurant_data_quality_reviews dq
