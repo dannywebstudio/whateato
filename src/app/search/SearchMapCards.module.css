@@ -84,3 +84,11 @@
  .grid :global(.we-card-map .we-map-button),
  .grid :global(.we-card-map .we-card-visit){font-size:9px;padding:5px 6px}
 }
+
+/* Numbered, bounded search navigation; no global Map mutations. */
+.pagination{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:28px auto 16px}
+.pagination a{display:inline-flex;align-items:center;justify-content:center;min-width:35px;min-height:35px;border:1px solid #d8e6dc;border-radius:9px;color:#256749;padding:6px 10px;font-size:13px;font-weight:700}
+.pagination a:hover{background:#eef8f1;border-color:#8fcaaa}
+.pagination a.active{background:#137750;color:white;border-color:#137750}
+.count{color:#596e60;font-size:13px;width:100%;text-align:center;margin-bottom:5px}
+@media(max-width:620px){.pagination{gap:5px}.pagination a{min-width:31px;padding:5px 8px}}
