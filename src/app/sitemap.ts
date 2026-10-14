@@ -1,11 +1,12 @@
 import type {MetadataRoute} from 'next';
 import {getPool} from '@/lib/db';
+import {triageABPublicWhere} from '@/lib/triage-ab-gate';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 
-// No search/filter URLs. Only after launch and only actively published
-// restaurants with approved Korean descriptions enter the sitemap.
+// No search/filter URLs. Only after launch, visible restaurant details
+// with source-verified opening hours and approved Korean description enter sitemap.
 export default async function sitemap():Promise<MetadataRoute.Sitemap>{
   if(process.env.NEXT_PUBLIC_LAUNCH_READY!=='true')return [];
   const origin=(process.env.NEXT_PUBLIC_SITE_URL||'https://example.com').replace(/\/$/,'');
@@ -23,6 +24,7 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
         AND l.verified_at IS NOT NULL
         AND char_length(BTRIM(l.short_description))>=35
       WHERE r.publication_status='published' AND r.business_status='active'
+      ${triageABPublicWhere()}
       ORDER BY r.id
       LIMIT 10000`);
     for(const row of res.rows){
