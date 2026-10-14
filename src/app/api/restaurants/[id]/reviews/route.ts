@@ -126,7 +126,7 @@ export async function DELETE(request:NextRequest,{params}:Context){
    if(audited.rowCount){
     await client.query(`UPDATE whateato_user_reviews SET moderation_status='rejected',
        body='Review removed by its author. Original text is no longer available.',
-       rating=3,updated_at=now() WHERE id=$1`,[rid]);
+       updated_at=now() WHERE id=$1`,[rid]);
    }else{
     await client.query('DELETE FROM whateato_user_reviews WHERE id=$1',[rid]);
    }
