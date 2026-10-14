@@ -1,7 +1,8 @@
 'use client';
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState,type ChangeEvent,type DragEvent} from 'react';
-import {BLOG_CATEGORIES,BLOG_LOCALES,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
+import {BLOG_LOCALES,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
+import BlogCategoryManager from './BlogCategoryManager';
 import {BlogBody} from '@/components/BlogBody';
 import styles from './blog-editor.module.css';
 
@@ -13,7 +14,7 @@ type Detail={id:string;slug:string;revision:number;category:BlogDraft['category'
  review_requested_at:string|null;published_revision:number|null;is_visible:boolean|null;
  images:BlogImage[]};
 const blankLocale=():BlogTranslation=>({title:'',excerpt:'',seo_title:'',seo_description:'',blocks:[]});
-const emptyDraft=():BlogDraft=>({category:'food-guides',tags:[],related_restaurant_ids:[],
+const emptyDraft=():BlogDraft=>({category:'restaurants',tags:[],related_restaurant_ids:[],
  translations:{en:blankLocale()}});
 const newBlock=(type:BlogBlock['type']):BlogBlock=>{
  const id=crypto.randomUUID();
@@ -37,6 +38,7 @@ const safeSlug=(s:string)=>s.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').rep
 
 export default function BlogEditor({owner}:{owner:boolean}){
  const [posts,setPosts]=useState<BlogRow[]>([]);
+ const [categories,setCategories]=useState<BlogCategoryInfo[]>([]);
  const [current,setCurrent]=useState<Detail|null>(null);
  const [draft,setDraft]=useState<BlogDraft>(emptyDraft);
  const [locale,setLocale]=useState<BlogLocale>('en');
@@ -53,11 +55,15 @@ export default function BlogEditor({owner}:{owner:boolean}){
  const editorRef=useRef<HTMLDivElement|null>(null);
  const translation=draft.translations[locale]||blankLocale();
  const error=(e:unknown)=>setMessage(e instanceof Error?e.message:String(e));
+ const refreshCategories=useCallback(async()=>{
+   const response=await api('/api/v1/owner/blog/categories');
+   setCategories(response.items||[]);
+ },[]);
  const refresh=useCallback(async()=>{
   const data=await api('/api/v1/owner/blog');
   setPosts(data.items||[]);
  },[]);
- useEffect(()=>{void refresh().catch(error)},[refresh]);
+ useEffect(()=>{void refresh().catch(error);void refreshCategories().catch(error)},[refresh,refreshCategories]);
  const open=async(id:string)=>{
   if(dirty&&!window.confirm('저장되지 않은 수정 사항이 있어. 이동할까?'))return;
   setBusy(true);setMessage('');
@@ -226,9 +232,19 @@ export default function BlogEditor({owner}:{owner:boolean}){
       </div>
       <div className={styles.twoCols}>
        <label>카테고리 <select value={draft.category}
-         onChange={e=>update({category:e.target.value as BlogDraft['category']})}>
-         {Object.entries(BLOG_CATEGORIES).map(([value,label])=>
-          <option key={value} value={value}>{label}</option>)}
+         onChange={e=>update({category:e.target.value})}>
+         {!categories.some(cat=>cat.slug===draft.category&&cat.is_active)&&
+            <option value={draft.category}>{draft.category} · 비활성 (다른 분류 선택)</option>}
+         {categories.filter(cat=>cat.is_active&&!cat.parent_slug)
+           .sort((a,b)=>a.position-b.position||a.slug.localeCompare(b.slug))
+           .map(root=><optgroup key={root.slug} label={blogCategoryName(root,'ko')}>
+             <option value={root.slug}>{blogCategoryName(root,'ko')} (전체)</option>
+             {categories.filter(cat=>cat.is_active&&cat.parent_slug===root.slug)
+               .sort((a,b)=>a.position-b.position||a.slug.localeCompare(b.slug))
+               .map(child=><option key={child.slug} value={child.slug}>
+                 └ {blogCategoryName(child,'ko')}
+               </option>)}
+           </optgroup>)}
        </select></label>
        <label>태그 (쉼표 구분, 최대 8개)<input value={tagsText} onChange={e=>{
          setTagsText(e.target.value);setDirty(true)}} placeholder="seoul, korean-bbq, solo-dining"/></label>
@@ -321,6 +337,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
        {!translation.blocks.length&&<p className={styles.blank}>상단에서 + 문단 또는 + 제목을 눌러 본문을 작성해.</p>}
       </>}
      </div>
+     <BlogCategoryManager items={categories} owner={owner} onChanged={refreshCategories}/>
      <section className={styles.mediaPanel}>
       <h4>블로그 사진 관리</h4>
       <div className={styles.photoDrop}
