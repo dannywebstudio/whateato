@@ -35,7 +35,7 @@ export default function SearchBox({target='search',initial=''}:{target?:'search'
   const p=new URLSearchParams();
   if(q.trim())p.set('q',q.trim());
   if(selected.length)p.set('f',selected.join(','));
-  p.set('hl',/[가-힣]/.test(q)?'ko':lang);
+  p.set('hl',lang); // Respect explicit language preference even for Korean-language searches.
   router.push('/'+target+'?'+p.toString());
  }
  const normalized=normalizeLocale(lang);
