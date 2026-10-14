@@ -15,6 +15,7 @@ restaurant gallery or card layout.
   smallint `rating` field stores a rounded compatibility value for legacy readers and is
   NOT the new authoritative one-decimal rating.
 - Review 30–1500 characters, food photos up to five total, each JPG/PNG/WebP ≤3 MB.
+  To control abuse, up to 20 photo uploads per account in a rolling 24-hour window.
   Photos are decoded, oriented, downscaled to fit 1200×1200, EXIF stripped,
   and encoded WebP in private, branch-scoped Neon S3 object storage.
 - A visitor attests they are allowed to publish their images. Media stays private until
