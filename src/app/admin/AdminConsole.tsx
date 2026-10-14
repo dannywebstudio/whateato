@@ -59,6 +59,7 @@ export default function AdminConsole({role}:{role:Role}){
  const [currentBatch,setCurrentBatch]=useState<any>(null);
  const [bulkFile,setBulkFile]=useState<File|null>(null);const [imported,setImported]=useState(0);
  const [reviews,setReviews]=useState<Review[]>([]);
+ const [deletingReviewId,setDeletingReviewId]=useState<string|null>(null);
  const [photosInspected,setPhotosInspected]=useState<Record<string,boolean>>({});
  const [reviewStatus,setReviewStatus]=useState<'pending'|'published'|'rejected'>('pending');
  const [reason,setReason]=useState('spam');
@@ -267,6 +268,24 @@ export default function AdminConsole({role}:{role:Role}){
    try{await post('/api/v1/owner/reviews/'+id,{decision:approve?'approve':hide?'hide':'reject',
      reason_code,photos_reviewed:approve&&Boolean(photosInspected[id])},'PATCH');
      setNotice('리뷰 처리 완료');await loadReviews()}catch(e){inform(e)}
+ };
+ const deleteReview=async(r:Review)=>{
+   if(!owner||deletingReviewId)return;
+   const typed=window.prompt(
+     '복구할 수 없는 삭제야. 해당 방문 후기의 본문·별점·첨부사진을 삭제하고 평점 집계에서도 제외해.\n'+
+     '식당: '+r.restaurant_name+'\n삭제하려면 DELETE를 정확히 입력해.'
+   );
+   if(typed!=='DELETE')return;
+   setDeletingReviewId(r.id);setNotice('');
+   try{
+     await post('/api/v1/owner/reviews/'+r.id,{
+       confirm_review_id:r.id,confirmation:'DELETE',reason_code:reason
+     },'DELETE');
+     setPhotosInspected(prev=>{const next={...prev};delete next[r.id];return next});
+     setNotice('방문 후기가 완전히 삭제됐어. 첨부 사진도 공개에서 제거되고 비공개 저장소에서 삭제 처리해.');
+     await loadReviews();
+   }catch(e){inform(e)}
+   finally{setDeletingReviewId(null)}
  };
  const batchAction=async(action:string)=>{
    if(!batchId)return;
@@ -556,7 +575,8 @@ export default function AdminConsole({role}:{role:Role}){
      <label className={styles.field}>보기<select value={reviewStatus} onChange={e=>setReviewStatus(e.target.value as typeof reviewStatus)}>
        <option value="pending">승인 대기</option><option value="published">게시 중</option><option value="rejected">거절·숨김</option>
      </select></label>
-     <label className={styles.field}>거절 사유<select value={reason} onChange={e=>setReason(e.target.value)}>
+     {owner&&<p className={styles.note}>‘숨김’은 공개만 중단해. ‘완전 삭제’는 본문·점수·사진을 복구할 수 없게 삭제하며, 삭제 사유와 최소 작업 이력만 남아.</p>}
+     <label className={styles.field}>거절 / 삭제 사유<select value={reason} onChange={e=>setReason(e.target.value)}>
        {['spam','abusive','personal_data','off_topic','unverifiable_claim','other'].map(v=><option key={v} value={v}>{v}</option>)}
      </select></label>
      {!reviews.length&&<p className={styles.note}>대기 중인 후기가 없어.</p>}
@@ -585,6 +605,10 @@ export default function AdminConsole({role}:{role:Role}){
          <button className={styles.button+' '+styles.danger} onClick={()=>void reviewAction(r.id,false)}>거절</button></>}
          {reviewStatus==='published'&&<button className={styles.button+' '+styles.danger}
            onClick={()=>void reviewAction(r.id,false,true)}>게시된 후기 숨김</button>}
+         {owner&&<button className={styles.button+' '+styles.danger}
+           disabled={deletingReviewId!==null} onClick={()=>void deleteReview(r)}>
+           {deletingReviewId===r.id?'삭제 처리 중…':'완전 삭제'}
+         </button>}
        </div>
      </article>)}
    </section>}
