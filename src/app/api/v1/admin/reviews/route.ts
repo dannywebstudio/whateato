@@ -27,7 +27,13 @@ export async function GET(request:NextRequest){
       created_at:string;updated_at:string
     }>(`
       SELECT rv.id::text AS id,rv.restaurant_id::text AS restaurant_id,
-        r.name_ko AS restaurant_name,rv.rating,rv.body,
+        r.name_ko AS restaurant_name,
+        round(coalesce((s.taste::numeric+coalesce(s.service,0)+coalesce(s.tourist_friendliness,0)
+          +coalesce(s.value_for_money,0)+coalesce(s.cleanliness,0))/
+          (1+(s.service IS NOT NULL)::int+(s.tourist_friendliness IS NOT NULL)::int+
+             (s.value_for_money IS NOT NULL)::int+(s.cleanliness IS NOT NULL)::int),
+          rv.rating::numeric),1)::float8 AS rating,
+        rv.body,
         rv.created_at::text AS created_at,rv.updated_at::text AS updated_at,
         CASE WHEN s.review_id IS NULL THEN NULL ELSE jsonb_build_object(
           'taste',s.taste,'service',s.service,'tourist_friendliness',s.tourist_friendliness,
