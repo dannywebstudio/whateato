@@ -133,8 +133,12 @@ export default function Header(){
     <span className="brand-accent">EatO</span>
    </Link>
    <div className="navlinks">
-    <Link href={'/map?hl='+encodeURIComponent(lang)}>Map</Link>
-    <Link href={'/blog?hl='+encodeURIComponent(lang)}>Blog</Link>
+    <Link href={'/map?hl='+encodeURIComponent(lang)}>
+     {{ko:'지도',en:'Map',ja:'地図','zh-CN':'地图'}[lang]}
+    </Link>
+    <Link href={'/blog?hl='+encodeURIComponent(lang)}>
+     {{ko:'블로그',en:'Blog',ja:'ブログ','zh-CN':'博客'}[lang]}
+    </Link>
    </div>
   </div>
   <div className="preferences">
