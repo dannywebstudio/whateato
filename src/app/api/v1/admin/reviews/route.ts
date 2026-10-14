@@ -28,8 +28,16 @@ export async function GET(request:NextRequest){
     }>(`
       SELECT rv.id::text AS id,rv.restaurant_id::text AS restaurant_id,
         r.name_ko AS restaurant_name,rv.rating,rv.body,
-        rv.created_at::text AS created_at,rv.updated_at::text AS updated_at
+        rv.created_at::text AS created_at,rv.updated_at::text AS updated_at,
+        CASE WHEN s.review_id IS NULL THEN NULL ELSE jsonb_build_object(
+          'taste',s.taste,'service',s.service,'tourist_friendliness',s.tourist_friendliness,
+          'value_for_money',s.value_for_money,'cleanliness',s.cleanliness) END AS categories,
+        coalesce((SELECT jsonb_agg(jsonb_build_object(
+          'id',p.id::text,'url','/api/v1/owner/review-photos/'||p.id::text,'status',p.moderation_state)
+          ORDER BY p.position)
+          FROM whateato_review_photo_assets p WHERE p.review_id=rv.id),'[]'::jsonb) AS photos
       FROM whateato_user_reviews rv
+      LEFT JOIN whateato_review_category_scores s ON s.review_id=rv.id
       JOIN restaurants r ON r.id=rv.restaurant_id
       WHERE rv.moderation_status=$3
       ORDER BY rv.created_at ASC,rv.id ASC
