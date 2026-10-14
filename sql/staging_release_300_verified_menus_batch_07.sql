@@ -6,7 +6,7 @@ WITH source_data(restaurant_id,ko,en,ja,zh,position,ref) AS (VALUES ('d8f7d410-d
 ('40e82be1-5b56-47f0-9b02-2776798b710e'::uuid,'생 망고빙수','Fresh mango shaved ice','生マンゴーピンス','鲜芒果刨冰',21,'https://www.tabling.co.kr/place/677cd21566de5f0698890f93'),
 ('40e82be1-5b56-47f0-9b02-2776798b710e'::uuid,'옥수수 빙수','Corn shaved ice','とうもろこしピンス','玉米刨冰',22,'https://www.tabling.co.kr/place/677cd21566de5f0698890f93'),
 ('40e82be1-5b56-47f0-9b02-2776798b710e'::uuid,'우유 팥 빙수','Milk and red-bean shaved ice','ミルクあずきピンス','牛奶红豆刨冰',23,'https://www.tabling.co.kr/place/677cd21566de5f0698890f93'),
-('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'물냉면','Cold buckwheat noodles in broth','水冷麺','汤冷面',21,'https://www.tabling.co.kr/place/677ccaa266de5f06987ba6b9'),
+('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'물냉면','Cold noodles in broth','水冷麺','汤冷面',21,'https://www.tabling.co.kr/place/677ccaa266de5f06987ba6b9'),
 ('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'비빔냉면','Spicy mixed cold noodles','ビビン冷麺','韩式辣拌冷面',22,'https://polle.com/place/19i7QA/%ED%95%A8%ED%9D%A5%20%EA%B3%B0%EB%B3%B4%EB%83%89%EB%A9%B4'),
 ('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'찐만두','Steamed dumplings','蒸し餃子','蒸饺',23,'https://www.tabling.co.kr/place/677ccaa266de5f06987ba6b9'))
 INSERT INTO restaurant_menus (id,restaurant_id,price_krw,position,publication_state,evidence_ref)
@@ -27,7 +27,7 @@ WITH source_data(restaurant_id,ko,en,ja,zh,position,ref) AS (VALUES ('d8f7d410-d
 ('40e82be1-5b56-47f0-9b02-2776798b710e'::uuid,'생 망고빙수','Fresh mango shaved ice','生マンゴーピンス','鲜芒果刨冰',21,'https://www.tabling.co.kr/place/677cd21566de5f0698890f93'),
 ('40e82be1-5b56-47f0-9b02-2776798b710e'::uuid,'옥수수 빙수','Corn shaved ice','とうもろこしピンス','玉米刨冰',22,'https://www.tabling.co.kr/place/677cd21566de5f0698890f93'),
 ('40e82be1-5b56-47f0-9b02-2776798b710e'::uuid,'우유 팥 빙수','Milk and red-bean shaved ice','ミルクあずきピンス','牛奶红豆刨冰',23,'https://www.tabling.co.kr/place/677cd21566de5f0698890f93'),
-('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'물냉면','Cold buckwheat noodles in broth','水冷麺','汤冷面',21,'https://www.tabling.co.kr/place/677ccaa266de5f06987ba6b9'),
+('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'물냉면','Cold noodles in broth','水冷麺','汤冷面',21,'https://www.tabling.co.kr/place/677ccaa266de5f06987ba6b9'),
 ('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'비빔냉면','Spicy mixed cold noodles','ビビン冷麺','韩式辣拌冷面',22,'https://polle.com/place/19i7QA/%ED%95%A8%ED%9D%A5%20%EA%B3%B0%EB%B3%B4%EB%83%89%EB%A9%B4'),
 ('1839eefc-25fe-4720-8d23-080ca084f119'::uuid,'찐만두','Steamed dumplings','蒸し餃子','蒸饺',23,'https://www.tabling.co.kr/place/677ccaa266de5f06987ba6b9'))
 INSERT INTO restaurant_menu_localizations(menu_id,locale,name)
