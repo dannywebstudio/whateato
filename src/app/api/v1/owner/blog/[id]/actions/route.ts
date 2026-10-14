@@ -38,6 +38,15 @@ export async function POST(req:NextRequest,{params}:Ctx){
   if(data.revision!==p.expected_revision){
    await client.query('ROLLBACK');return respond({error:'draft_revision_conflict_reload_first'},409);
   }
+  if(action!=='unpublish'){
+    const cat=await client.query(`
+      SELECT 1 FROM whateato_blog_categories c
+      WHERE c.slug=$1 AND c.is_active=true
+        AND (c.parent_slug IS NULL OR EXISTS(
+         SELECT 1 FROM whateato_blog_categories root
+         WHERE root.slug=c.parent_slug AND root.is_active=true)) LIMIT 1`,[data.category]);
+    if(!cat.rowCount){await client.query('ROLLBACK');return respond({error:'category_inactive_or_missing'},409)}
+  }
   if(action==='submit'){
     const draft=parseBlogDraft({
       category:data.category,tags:data.tags,related_restaurant_ids:data.related_restaurant_ids,
