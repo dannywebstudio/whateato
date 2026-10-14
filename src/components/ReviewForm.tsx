@@ -323,7 +323,10 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
        <div>
          <span>{t.ratingLabel}</span>
          <strong>{value===null?'—':value.toFixed(1)} <small>/ 5</small></strong>
-         <div className={styles.summaryStars} aria-hidden="true">★★★★★</div>
+         <div className={styles.summaryStars} aria-hidden="true">
+           {[0,1,2,3,4].map(i=><span key={i}
+             data-filled={value!==null&&value>=i+0.5}>★</span>)}
+         </div>
        </div>
        <div>
          <span>{t.imageCount}</span>
