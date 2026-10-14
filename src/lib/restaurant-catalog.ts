@@ -1,6 +1,7 @@
 import {getPool} from '@/lib/db';
 import {restaurantPublicName} from '@/lib/restaurant-public-name';
 import {release300PublicWhere} from '@/lib/release-300-gate';
+import {triageABPublicWhere,triageDisplayCategorySql} from '@/lib/triage-ab-gate';
 import {orderRestaurantTags} from '@/lib/restaurant-tag-order';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {loadRatingDisplays,type RatingDisplay} from '@/lib/ratings-display';
@@ -59,7 +60,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     SELECT COUNT(*) OVER()::integer AS total_count,r.id::text AS id,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
-      COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,r.category_code,r.region_sido,r.region_sigungu,
+      COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,${triageDisplayCategorySql()} AS category_code,r.region_sido,r.region_sigungu,
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name)
          FROM restaurant_menus m
@@ -93,6 +94,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
       ${release300PublicWhere()}
+      ${triageABPublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
@@ -179,7 +181,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       COALESCE(l.short_description,k.short_description) AS short_description,
       COALESCE(l.full_description,k.full_description) AS full_description,
       COALESCE(al.display_address,r.road_address_ko,r.lot_address_ko) AS address,r.road_address_ko,r.lot_address_ko,r.region_sido,r.region_sigungu,
-      r.category_code,r.latitude,r.longitude,
+      ${triageDisplayCategorySql()} AS category_code,r.latitude,r.longitude,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
@@ -191,6 +193,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.id=$1 AND r.publication_status='published' AND r.business_status='active'
       ${release300PublicWhere()}
+      ${triageABPublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
