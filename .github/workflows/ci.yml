@@ -24,6 +24,7 @@ jobs:
       - run: node scripts/verify_research_flags.mjs
       - run: node scripts/verify_release_300_contract.mjs
       - run: node scripts/verify_google_free_tier_guard.mjs
+      - run: node scripts/verify_fast_track_abc_contract.mjs
       - run: node scripts/enrichment_v1.mjs inspect data/enrichment-packets/review/on-the-border-gwanghwamun-20261012.json
       - run: node scripts/enrichment_v1.mjs inspect data/enrichment-packets/review/hoho-daehangno-20261012.json
       - run: node scripts/report_enrichment_progress.mjs
