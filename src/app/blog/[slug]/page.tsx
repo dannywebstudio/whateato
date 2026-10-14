@@ -3,6 +3,7 @@ import {notFound} from 'next/navigation';
 import type {Metadata} from 'next';
 import {findPublishedBlog,relatedBlogRestaurants} from '@/lib/blog-public';
 import {getBlogCategories,blogCategoryName} from '@/lib/blog-categories';
+import {BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS} from '@/lib/blog-model';
 import {BlogBody as RenderBody} from '@/components/BlogBody';
 import styles from '../blog.module.css';
 export const runtime='nodejs';export const dynamic='force-dynamic';
@@ -16,9 +17,16 @@ export async function generateMetadata({params,searchParams}:Ctx):Promise<Metada
  return {
   title:t.seo_title||published.title,
   description:t.seo_description||published.excerpt,
-  alternates:{canonical:'/blog/'+slug,
-   languages:Object.fromEntries(Object.keys(published.draft.translations).map(l=>
-    [l,'/blog/'+slug+'?hl='+encodeURIComponent(l)]))},
+  alternates:{
+   canonical:'/blog/'+slug+(published.locale==='en'?'':'?hl='+encodeURIComponent(published.locale)),
+   languages:{
+    ...Object.fromEntries(BLOG_REQUIRED_LOCALES.filter(l=>
+      Boolean(published.draft.translations[l]?.title)).map(l=>
+      [l,'/blog/'+slug+(l==='en'?'':'?hl='+encodeURIComponent(l))])),
+    'en-US':'/blog/'+slug,
+    'x-default':'/blog/'+slug
+   }
+  },
   robots:{index:ready,follow:ready},
   openGraph:{type:'article',title:t.seo_title||published.title,
    description:t.seo_description||published.excerpt,
@@ -49,7 +57,7 @@ export default async function BlogStory({params,searchParams}:Ctx){
   ...(published.cover_image_id?{image:[(process.env.NEXT_PUBLIC_SITE_URL||
     'https://whateato.com').replace(/\/$/,'')+'/api/blog/images/'+published.cover_image_id]}:{})
  };
- return <main className={styles.articleShell}>
+ return <main className={styles.articleShell} lang={published.locale==='en'?'en-US':published.locale}>
    <nav className={styles.breadcrumb} aria-label="Breadcrumb">
       <Link href="/blog">Blog</Link><span>›</span>
       {parentCategory&&<>
@@ -66,6 +74,13 @@ export default async function BlogStory({params,searchParams}:Ctx){
      <p className={styles.dek}>{published.excerpt}</p>
      <div className={styles.meta}><span>WhatEatO Editorial</span><span>·</span>
       <time dateTime={published.published_at}>{date}</time></div>
+     <nav className={styles.languageSwitch} aria-label="Article language">
+      {BLOG_REQUIRED_LOCALES.map(l=><Link key={l}
+       aria-current={published.locale===l?'page':undefined}
+       href={'/blog/'+slug+(l==='en'?'':'?hl='+encodeURIComponent(l))}>
+       {BLOG_LOCALE_LABELS[l]}
+      </Link>)}
+     </nav>
    </header>
    {published.cover_image_id&&<figure className={styles.cover}>
      {/* eslint-disable-next-line @next/next/no-img-element */}
