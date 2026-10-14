@@ -178,6 +178,7 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
  const [mode,setMode]=useState<EditorMode>('loading');
  const [submittedRating,setSubmittedRating]=useState<number|null>(null);
  const [somePhotosFailed,setSomePhotosFailed]=useState(false);
+ const [showSavedBody,setShowSavedBody]=useState(false);
  const [rights,setRights]=useState(false);
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState('');
@@ -188,7 +189,7 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
  useEffect(()=>{
   if(!canWrite)return;
   let active=true;
-  setMode('loading');
+  setMode('loading');setShowSavedBody(false);
   setBody('');setScores(init());setFiles([]);setOwnPhotos([]);
   setSavedReview(null);setStatus('');setHasOwn(false);
   void fetch('/api/restaurants/'+encodeURIComponent(restaurantId)+'/reviews?mine=1',
@@ -210,6 +211,7 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
  },[canWrite,restaurantId]);
  const beginEdit=()=>{
    if(!savedReview)return;
+   setShowSavedBody(false);
    setBody(savedReview.body);
    setScores(savedReview.categories?{...init(),...savedReview.categories}:
       {...init(),taste:savedReview.rating});
@@ -219,7 +221,7 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
  };
  const cancelEdit=()=>{
    setScores(init());setBody('');setFiles([]);setOwnPhotos([]);setRights(false);
-   setMode('summary');setMessage('');
+   setMode('summary');setShowSavedBody(false);setMessage('');
  };
  const savedScore=()=>{
    if(!savedReview)return null;
@@ -294,7 +296,7 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
    setSubmittedRating(total);setSomePhotosFailed(failed.length>0);
    setOwnPhotos([]);setFiles(failed);setRights(false);
    setBody('');setScores(init());
-   setMode('success');setMessage('');
+   setShowSavedBody(false);setMode('success');setMessage('');
   }catch{setMessage(t.fail)}finally{setBusy(false)}
  }
  if(mode==='loading')return <section className={styles.wrap} aria-live="polite">
@@ -341,9 +343,10 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
            <span>{label}</span>
          </li>)}
      </ol>
-     {mode==='summary'&&<details className={styles.savedDetails}>
+     {mode==='summary'&&<details className={styles.savedDetails}
+       onToggle={e=>setShowSavedBody(e.currentTarget.open)}>
        <summary>{t.openDetails}</summary>
-       <p>{savedReview.body}</p>
+       {showSavedBody&&<p>{savedReview.body}</p>}
      </details>}
      <div className={styles.completeActions}>
        {success&&<button type="button" className={styles.primaryAction}
