@@ -1,0 +1,114 @@
+#!/usr/bin/env node
+// Local synthetic PostgreSQL + real Next HTTP only. Never write to Neon staging/production.
+import assert from 'node:assert/strict';
+import {encode} from 'next-auth/jwt';
+import pg from 'pg';
+const url=new URL(process.env.DATABASE_URL||'');
+assert.ok(['localhost','127.0.0.1'].includes(url.hostname));
+assert.equal(process.env.WHATEATO_CI_LOCAL_FIXTURE,'ONLY_LOCAL_EPHEMERAL');
+const base='http://127.0.0.1:3000';
+async function signed(sub){
+ const t=await encode({token:{sub},secret:process.env.AUTH_SECRET,
+   salt:'authjs.session-token',maxAge:3600});
+ return {'Cookie':'authjs.session-token='+t,'Origin':base,'Content-Type':'application/json'};
+}
+const owner=await signed('cccccccc-cccc-4ccc-8ccc-ccccccccccc3');
+const editor=await signed('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2');
+const moderator=await signed('dddddddd-dddd-4ddd-8ddd-ddddddddddd4');
+async function request(path,{method='GET',headers=owner,body}={}){
+ const r=await fetch(base+path,{method,headers,redirect:'manual',
+   ...(body===undefined?{}:{body:JSON.stringify(body)})});
+ const json=await r.json().catch(()=>({}));
+ return {status:r.status,body:json};
+}
+assert.equal((await request('/api/v1/owner/blog',{headers:{}})).status,403);
+assert.equal((await request('/api/v1/owner/blog',{headers:moderator})).status,403);
+assert.equal((await request('/api/v1/owner/blog',{method:'POST',
+ headers:{...owner,Origin:'https://evil.invalid'},body:{slug:'new-restaurant-guide'}})).status,403);
+const created=await request('/api/v1/owner/blog',{method:'POST',headers:editor,
+ body:{slug:'what-to-eat-in-seoul-ci'}});
+assert.equal(created.status,201,JSON.stringify(created.body));
+const id=created.body.id;
+const dupe=await request('/api/v1/owner/blog',{method:'POST',body:{slug:'what-to-eat-in-seoul-ci'}});
+assert.equal(dupe.status,409);
+const prefix='/api/v1/owner/blog/'+id;
+const detail=await request(prefix);
+assert.equal(detail.status,200,JSON.stringify(detail.body));
+assert.equal(detail.body.article.revision,1);
+const notYetPublic=await fetch(base+'/blog/what-to-eat-in-seoul-ci?hl=en',{redirect:'manual'});
+assert.equal(notYetPublic.status,404,'Draft articles must not leak');
+const blocks=[
+ {id:'introduction',type:'heading',level:2,text:'Best authentic dining experiences in Seoul'},
+ {id:'text',type:'paragraph',text:'Explore unique Korean dining spots with verified street addresses, real local cooking and seasonal menus. '.repeat(5)},
+ {id:'places',type:'list',items:['Research each restaurant','Check the real opening hours','Enjoy responsibly']},
+ {id:'comparison',type:'table',rows:[['Situation','Recommendation'],['Solo meal','Look for local cafes']]}
+];
+const draft={category:'food-guides',tags:['korean-food','seoul'],
+ related_restaurant_ids:['11111111-1111-4111-8111-111111111111'],
+ translations:{en:{title:'Where should you eat when visiting Seoul?',
+   excerpt:'A thoughtful guide to discovering Korean food and local restaurants in the neighborhoods of Seoul.',
+   seo_title:'Where to Eat in Seoul — WhatEatO',seo_description:'A practical dining guide for Seoul travelers.',
+   blocks}}};
+assert.equal((await request(prefix,{method:'PUT',headers:moderator,
+ body:{draft,expected_revision:1}})).status,403);
+assert.equal((await request(prefix,{method:'PUT',
+ body:{draft,expected_revision:123}})).status,409);
+const saved=await request(prefix,{method:'PUT',headers:editor,
+ body:{draft,expected_revision:1}});
+assert.equal(saved.status,200,JSON.stringify(saved.body));
+assert.equal(saved.body.revision,2);
+const forbiddenPublish=await request(prefix+'/actions',{method:'POST',headers:editor,
+ body:{action:'publish',expected_revision:2}});
+assert.equal(forbiddenPublish.status,403);
+const beforeSubmit=await request(prefix+'/actions',{method:'POST',
+ body:{action:'publish',expected_revision:2}});
+assert.equal(beforeSubmit.status,409);
+const submitted=await request(prefix+'/actions',{method:'POST',headers:editor,
+ body:{action:'submit',expected_revision:2}});
+assert.equal(submitted.status,200,JSON.stringify(submitted.body));
+const published=await request(prefix+'/actions',{method:'POST',
+ body:{action:'publish',expected_revision:2}});
+assert.equal(published.status,200,JSON.stringify(published.body));
+const page=await fetch(base+'/blog/what-to-eat-in-seoul-ci?hl=en');
+assert.equal(page.status,200);
+const html=await page.text();
+assert.ok(html.includes('Where should you eat when visiting Seoul?'));
+assert.ok(html.includes('Research each restaurant'));
+assert.ok(html.includes('WhatEatO'));
+const results=await fetch(base+'/blog?q=neighborhoods');
+assert.equal(results.status,200);
+assert.ok((await results.text()).includes('Where should you eat when visiting Seoul?'));
+const newer={...draft,translations:{en:{...draft.translations.en,
+ title:'A completely different unpublished revision'}}};
+const changed=await request(prefix,{method:'PUT',
+ body:{draft:newer,expected_revision:2}});
+assert.equal(changed.status,200);
+assert.equal(changed.body.revision,3);
+const stillPublic=await (await fetch(base+'/blog/what-to-eat-in-seoul-ci')).text();
+assert.ok(stillPublic.includes('Where should you eat when visiting Seoul?'));
+assert.ok(!stillPublic.includes('A completely different unpublished revision'));
+const submittedAgain=await request(prefix+'/actions',{method:'POST',
+ body:{action:'submit',expected_revision:3}});
+assert.equal(submittedAgain.status,200);
+const republish=await request(prefix+'/actions',{method:'POST',
+ body:{action:'publish',expected_revision:3}});
+assert.equal(republish.status,200);
+const changedPublic=await (await fetch(base+'/blog/what-to-eat-in-seoul-ci')).text();
+assert.ok(changedPublic.includes('A completely different unpublished revision'));
+const unpub=await request(prefix+'/actions',{method:'POST',
+ body:{action:'unpublish',expected_revision:3}});
+assert.equal(unpub.status,200);
+assert.equal((await fetch(base+'/blog/what-to-eat-in-seoul-ci')).status,404);
+assert.equal((await request('/api/blog/images/22222222-2222-4222-8222-222222222222',
+ {headers:{}})).status,404);
+const db=new pg.Client({connectionString:process.env.DATABASE_URL});
+await db.connect();
+try{
+ const audit=await db.query('SELECT action FROM whateato_blog_audit WHERE post_id=$1 ORDER BY id',[id]);
+ assert.ok(audit.rows.some(x=>x.action==='published'));
+ assert.ok(audit.rows.some(x=>x.action==='unpublished'));
+ const publication=await db.query('SELECT is_visible,revision FROM whateato_blog_publications WHERE post_id=$1',[id]);
+ assert.equal(publication.rows[0].is_visible,false);
+ assert.equal(publication.rows[0].revision,3);
+}finally{await db.end()}
+console.log('PASS: blog RBAC, no draft leak, review/publish, SEO page, full-text search, immutable public snapshot, republish and unpublish');
