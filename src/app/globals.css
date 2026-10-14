@@ -207,3 +207,24 @@
  .chip:hover:not(:disabled),.chip:active:not(:disabled){transform:none}
  .chip::after{display:none}
 }
+
+/* Signature What glyph: ink-forward angular W + crafted green brush accent.
+   Applied consistently to Header and Home without an external font or image. */
+.brand-signature{position:relative;display:inline-block;color:#17211c;
+ letter-spacing:-.078em;isolation:isolate}
+.brand-signature .brand-w{display:inline-block;position:relative;
+ color:#121c17;font-weight:950;letter-spacing:-.103em;transform:skewX(-6deg)}
+.brand-signature .brand-w::after{content:"";position:absolute;
+ left:8%;right:5%;bottom:.04em;height:.075em;border-radius:80% 24% 90% 20%;
+ background:#14845a;opacity:.94;transform:rotate(-9deg);z-index:1}
+.brand-signature::after{content:"";position:absolute;left:40%;right:1%;
+ height:.095em;min-height:2px;bottom:-.11em;border-radius:80% 18% 90% 20%;
+ background:linear-gradient(90deg,#197d55,#36aa73 76%,transparent);
+ transform:rotate(-4deg);opacity:.95;pointer-events:none}
+.brand-logo .brand-signature{margin-right:.035em}
+.brand-logo .brand-signature::after{bottom:-.09em}
+.hero h1 .brand-signature{color:#17211c}
+.hero h1 .hero-accent{color:#188a64}
+.hero-signature{margin-right:.025em}
+.brand-logo:hover .brand-signature::after{background:linear-gradient(90deg,#0f7351,#4aba8d 76%,transparent)}
+@media(prefers-reduced-motion:reduce){.brand-signature .brand-w{transition:none}}
