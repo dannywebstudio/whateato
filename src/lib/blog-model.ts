@@ -91,13 +91,41 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
 export function articleText(t:BlogTranslation){
  return t.blocks.map(b=>b.text||b.items?.join(' ')||b.rows?.flat().join(' ')||b.caption||'').join(' ');
 }
+// One approved article = one atomic four-language publication snapshot.
+export const BLOG_REQUIRED_LOCALES= ['en','ko','ja','zh-CN'] as const;
+export const BLOG_LOCALE_LABELS:Record<BlogLocale,string>={
+ en:'English · US',ko:'한국어',ja:'日本語','zh-CN':'简体中文'
+};
+export function blogLocaleReadiness(
+ draft:BlogDraft,locale:BlogLocale
+):{ready:boolean;error:string|null}{
+ const t=draft.translations[locale];
+ if(!t)return {ready:false,error:locale+'_translation_missing'};
+ const minTitle=locale==='en'?8:4;
+ const minSummary=locale==='en'?50:22;
+ const minBody=locale==='en'?200:110;
+ const minSeoDescription=locale==='en'?40:20;
+ const base=locale.replace('-','_');
+ if(t.title.trim().length<minTitle)return {ready:false,error:base+'_title_required'};
+ if(t.excerpt.trim().length<minSummary)return {ready:false,error:base+'_summary_too_short'};
+ if(t.seo_title.trim().length<minTitle)return {ready:false,error:base+'_seo_title_required'};
+ if(t.seo_description.trim().length<minSeoDescription)
+  return {ready:false,error:base+'_seo_description_too_short'};
+ if(articleText(t).trim().length<minBody)return {ready:false,error:base+'_article_too_short'};
+ if(!t.blocks.some(b=>b.type==='heading'&&(b.text||'').trim().length>=3))
+  return {ready:false,error:base+'_article_heading_required'};
+ if(t.blocks.some(b=>b.type==='image'&&!b.image_id))
+  return {ready:false,error:base+'_select_images_before_publishing'};
+ return {ready:true,error:null};
+}
 export function publishableBlog(draft:BlogDraft):string|null{
- const english=draft.translations.en;
- if(!english||english.title.length<8)return 'english_title_required';
- if(english.excerpt.length<50)return 'english_summary_min_50';
- if(articleText(english).trim().length<200)return 'english_article_min_200';
- if(!english.blocks.some(b=>b.type==='heading'))return 'article_heading_required';
- if(Object.values(draft.translations).some(t=>t?.blocks.some(b=>b.type==='image'&&!b.image_id)))
-   return 'select_images_before_publishing';
+ for(const locale of BLOG_REQUIRED_LOCALES){
+  const {error}=blogLocaleReadiness(draft,locale);
+  if(error)return error;
+ }
+ // Detect accidental copy/paste of the same article into different language tabs.
+ const signatures=BLOG_REQUIRED_LOCALES.map(locale=>articleText(draft.translations[locale]!)
+  .toLowerCase().replace(/\s+/g,' ').trim());
+ if(new Set(signatures).size!==signatures.length)return 'duplicate_locale_article_content';
  return null;
 }
