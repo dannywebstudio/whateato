@@ -3,15 +3,17 @@ import {useCallback,useEffect,useState,type ChangeEvent} from 'react';
 import styles from './admin.module.css';
 
 type Role='owner'|'editor'|'moderator';
-type Tab='restaurants'|'batches'|'reviews'|'photos';
+type Tab='restaurants'|'batches'|'reviews';
 type Place={id:string;name_ko:string;region_sigungu:string|null;road_address_ko:string|null;publication_status:string};
 type Detail={
- restaurant:Place&{lot_address_ko:string|null;category_code:string|null};
+ restaurant:Place&{lot_address_ko:string|null;category_code:string|null;
+  region_sido:string|null;region_dong:string|null;latitude:number|null;longitude:number|null;
+  cms_origin:boolean;business_status:string};
  locales:{locale:string;display_name:string;short_description:string|null;full_description:string|null;source_notes:string|null}[];
  menus:{id:string;menu_key:string;position:number;price_krw:number|null;locale:string|null;name:string|null;description:string|null;publication_state:string}[];
  tags:{tag_code:string;verification_state:string;evidence_ref:string|null}[];
  hours:{weekday:number|null;start_minute:number|null;end_minute:number|null;source_url:string;publication_state:string}[];
- images:{id:string;position:number;publication_state:string;rights_status:string;url:string}[];
+ images:{id:string;position:number;publication_state:string;rights_status:string;cms_photo_role:'cover'|'gallery';url:string}[];
 };
 type Batch={id:string;title:string;state:string;total:number;applied:number;failed:number};
 type Review={id:string;restaurant_id:string;restaurant_name:string;rating:number;body:string;created_at:string};
@@ -59,6 +61,14 @@ export default function AdminConsole({role}:{role:Role}){
  const [reviewStatus,setReviewStatus]=useState<'pending'|'published'|'rejected'>('pending');
  const [reason,setReason]=useState('spam');
  const [image,setImage]=useState<File|null>(null);const [rights,setRights]=useState(false);
+ const [photoRole,setPhotoRole]=useState<'cover'|'gallery'>('cover');
+ const [creating,setCreating]=useState(false);
+ const [newVenue,setNewVenue]=useState({name_ko:'',road_address_ko:'',lot_address_ko:'',
+   region_sido:'',region_sigungu:'',region_dong:'',latitude:'',longitude:'',source_url:''});
+ const [address,setAddress]=useState({road_address_ko:'',lot_address_ko:'',
+   region_sido:'',region_sigungu:'',region_dong:'',latitude:'',longitude:''});
+ const [addressProof,setAddressProof]=useState('');
+ const [publishNew,setPublishNew]=useState(false);
  const [imageEvidence,setImageEvidence]=useState('');const [rightsEvidence,setRightsEvidence]=useState('');const [imagePosition,setImagePosition]=useState(0);
  const [imageResult,setImageResult]=useState('');
  const edit=role!=='moderator';const owner=role==='owner';const moderate=role!=='editor';
@@ -74,7 +84,14 @@ export default function AdminConsole({role}:{role:Role}){
  const select=async(id:string)=>{
    setBusy(true);try{
     const data:Detail=await json('/api/v1/owner/catalog/'+id);
-    setSelected(data);setImageResult('');
+    setSelected(data);setImageResult('');setPublishNew(false);
+    setAddress({road_address_ko:data.restaurant.road_address_ko||'',
+      lot_address_ko:data.restaurant.lot_address_ko||'',
+      region_sido:data.restaurant.region_sido||'',region_sigungu:data.restaurant.region_sigungu||'',
+      region_dong:data.restaurant.region_dong||'',
+      latitude:data.restaurant.latitude===null?'':String(data.restaurant.latitude),
+      longitude:data.restaurant.longitude===null?'':String(data.restaurant.longitude)});
+    setAddressProof('');
     const chosen=data.locales.find(x=>x.locale===locale)||data.locales.find(x=>x.locale==='en');
     setDisplayName(chosen?.display_name||data.restaurant.name_ko);
     setIntro(chosen?.short_description||'');setFull(chosen?.full_description||'');
@@ -142,6 +159,28 @@ export default function AdminConsole({role}:{role:Role}){
    const id=selected.restaurant.id;
    const result:Item[]=[];const add=(kind:string,payload:Record<string,unknown>)=>
      result.push({source_key:'cms-'+crypto.randomUUID(),restaurant_id:id,kind,payload});
+   const baseline={road_address_ko:selected.restaurant.road_address_ko||'',
+     lot_address_ko:selected.restaurant.lot_address_ko||'',
+     region_sido:selected.restaurant.region_sido||'',
+     region_sigungu:selected.restaurant.region_sigungu||'',region_dong:selected.restaurant.region_dong||'',
+     latitude:selected.restaurant.latitude===null?'':String(selected.restaurant.latitude),
+     longitude:selected.restaurant.longitude===null?'':String(selected.restaurant.longitude)};
+   const addressChanged=(Object.keys(baseline) as (keyof typeof baseline)[]).some(
+     k=>address[k].trim()!==baseline[k].trim());
+   if(addressChanged){
+     if(!/^https:\/\//.test(addressProof))throw Error('주소 수정에는 HTTPS 확인 출처가 필요해.');
+     const coords=(v:string,min:number,max:number)=>{
+       if(!v.trim())return null;const n=Number(v);
+       if(!Number.isFinite(n)||n<min||n>max)throw Error('위도·경도 값을 확인해.');
+       return n;
+     };
+     const latitude=coords(address.latitude,33,39.5),longitude=coords(address.longitude,124,132);
+     if((latitude===null)!==(longitude===null))throw Error('위도와 경도는 두 값 모두 입력하거나 모두 비워야 해.');
+     add('address',{road_address_ko:address.road_address_ko.trim(),
+       lot_address_ko:address.lot_address_ko.trim()||null,
+       region_sido:address.region_sido.trim(),region_sigungu:address.region_sigungu.trim(),
+       region_dong:address.region_dong.trim()||null,latitude,longitude,evidence_url:addressProof.trim()});
+   }
    if(intro.trim()&&displayName.trim()){
      if(!source.trim())throw Error('소개 출처·검증 메모를 작성해.');
      add('localization',{locale,display_name:displayName.trim(),
@@ -177,7 +216,26 @@ export default function AdminConsole({role}:{role:Role}){
      });
      add('hours',{source_url:hoursEvidence.trim(),days:normalized});
    }
+   if(publishNew){
+     if(!selected.restaurant.cms_origin||selected.restaurant.publication_status!=='draft')
+       throw Error('신규 수동 등록 식당만 게시 요청할 수 있어.');
+     if(!/^https:\/\//.test(addressProof))throw Error('신규 식당의 게시 근거 URL을 입력해.');
+     add('restaurant_publish',{evidence_url:addressProof.trim(),confirm_live:true});
+   }
    return result;
+ };
+ const createRestaurant=async()=>{
+   setBusy(true);
+   try{
+     const lat=newVenue.latitude.trim()?Number(newVenue.latitude):null;
+     const lon=newVenue.longitude.trim()?Number(newVenue.longitude):null;
+     if((lat===null)!==(lon===null))throw Error('위도와 경도를 함께 입력해.');
+     const payload={...newVenue,lot_address_ko:newVenue.lot_address_ko.trim()||null,
+       region_dong:newVenue.region_dong.trim()||null,latitude:lat,longitude:lon};
+     const r=await post('/api/v1/owner/catalog',payload);
+     setCreating(false);setQ(newVenue.name_ko);await select(r.restaurant_id);
+     setNotice('신규 식당은 비공개 초안이야. 영어 소개·주소·좌표 검증 후 게시 요청해.');
+   }catch(e){inform(e)}finally{setBusy(false)}
  };
  const save=async()=>{
    setBusy(true);setNotice('');
@@ -236,12 +294,13 @@ export default function AdminConsole({role}:{role:Role}){
    form.set('restaurant_id',selected.restaurant.id);
    form.set('file',image);form.set('source_reference',imageEvidence);
    form.set('rights_confirmation',rights?'yes':'no');form.set('rights_reference',rightsEvidence);
-   form.set('position',String(imagePosition));
+   form.set('position',String(photoRole==='cover'?0:imagePosition));
+   form.set('photo_role',photoRole);
    const resp=await fetch('/api/v1/owner/media',{method:'POST',credentials:'same-origin',body:form});
    const result=await resp.json();
    if(!resp.ok)throw Error(result.error||'upload_failed');
    await select(selected.restaurant.id);
-   setImageResult('업로드 완료 · 검수 대기 '+result.image_id);
+   setImageResult((photoRole==='cover'?'카드 대표사진':'상세 갤러리')+' 업로드 완료 · 검수 대기 '+result.image_id);
  };
  return <div>
    <header className={styles.hero}>
@@ -263,7 +322,7 @@ export default function AdminConsole({role}:{role:Role}){
      </div>
    </section>}
    <nav className={styles.tabs} aria-label="관리 탭">
-     {(edit?[['restaurants','식당 편집'],['batches','대량 작업·승인'],['photos','사진 관리']]:[]).concat(
+     {(edit?[['restaurants','식당 편집'],['batches','대량 작업·승인']]:[]).concat(
        moderate?[['reviews','방문후기 검수']]:[]
      ).map(([key,label])=><button key={key} aria-selected={tab===key} onClick={()=>{setTab(key as Tab);setNotice('')}}>{label}</button>)}
    </nav>
