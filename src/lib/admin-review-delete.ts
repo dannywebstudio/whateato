@@ -50,8 +50,12 @@ export async function deleteReviewAsOwner(req:NextRequest,id:string){
      SELECT storage_key FROM whateato_review_photo_assets WHERE review_id=$1
      ON CONFLICT(storage_key) DO NOTHING`,[id]);
   }
-  // Foreign-key cascades remove moderation history, category scores and photo
-  // metadata. This avoids retaining the original user narrative after deletion.
+  // Review photo/category FKs are RESTRICT by design, so remove child
+  // metadata in the same transaction before deleting the original review.
+  await client.query('DELETE FROM whateato_review_photo_assets WHERE review_id=$1',[id]);
+  await client.query('DELETE FROM whateato_review_category_scores WHERE review_id=$1',[id]);
+  // Existing moderation audit has ON DELETE CASCADE; the independent minimal
+  // deletion ledger above remains, without retaining original review text.
   await client.query('DELETE FROM whateato_user_reviews WHERE id=$1',[id]);
   await client.query('COMMIT');
  }catch{
