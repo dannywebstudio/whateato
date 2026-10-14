@@ -52,7 +52,7 @@ WITH duplicates AS (
   WHEN NOT permit_supported THEN 'source_status_or_name_unverified'
   WHEN address IS NULL THEN 'address_absent'
   WHEN approved_source_review AND good_geo THEN 'reviewed_localized_food'
-  WHEN NOT good_geo THEN 'permit_only_no_map_coordinates'
+  WHEN good_geo IS NOT TRUE THEN 'permit_only_no_map_coordinates'
   ELSE 'permit_verified_name_address_only' END reason_code
  FROM flags f
 )
