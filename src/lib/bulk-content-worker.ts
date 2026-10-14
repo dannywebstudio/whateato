@@ -3,15 +3,21 @@ import type {BulkInput} from '@/lib/bulk-content-admin';
 
 // Every operation runs in an item savepoint within one transaction.
 // A failed item rolls back completely, without rolling back successful siblings.
-export async function applyBulkItem(client:PoolClient,item:BulkInput):Promise<void>{
+export async function applyBulkItem(client:PoolClient,item:BulkInput,itemId?:string):Promise<void>{
   const id=item.restaurant_id,p=item.payload;
-  const active=await client.query<{id:string}>(`
-    SELECT id::text FROM restaurants WHERE id=$1::uuid
-      AND business_status='active' AND publication_status='published'
-    FOR SHARE`,[id]);
-  // Visibility release can apply even after a record has been hidden;
-  // confirmed holds must not be changed for legally closed/deleted records.
-  if(!active.rowCount)throw Error('restaurant_not_active');
+  const availability=await client.query<{publication_status:string;business_status:string;cms_draft:boolean}>(`
+    SELECT r.publication_status,r.business_status,
+      EXISTS(SELECT 1 FROM whateato_cms_restaurant_origins c WHERE c.restaurant_id=r.id) AS cms_draft
+    FROM restaurants r WHERE r.id=$1::uuid FOR UPDATE`,[id]);
+  if(!availability.rowCount)throw Error('restaurant_missing');
+  const {publication_status,business_status,cms_draft}=availability.rows[0];
+  const isLive=publication_status==='published'&&business_status==='active';
+  const isOwnerDraft=cms_draft&&publication_status==='draft'&&business_status==='unknown';
+  if(item.kind==='restaurant_publish'){
+    if(!isOwnerDraft)throw Error('not_cms_draft');
+  }else if(!isLive&&!isOwnerDraft)throw Error('restaurant_not_editable');
+  if((item.kind==='visibility_hide'||item.kind==='visibility_restore')&&!isLive)
+    throw Error('visibility_requires_published_restaurant');
   switch(item.kind){
     case 'localization': {
       await client.query(`
@@ -115,6 +121,62 @@ export async function applyBulkItem(client:PoolClient,item:BulkInput):Promise<vo
             AS x(weekday smallint,start_minute smallint,end_minute smallint)`,
         [id,JSON.stringify(rows)]);
       }
+      return;
+    }
+    case 'address':{
+      if(!itemId)throw Error('missing_address_audit_item_id');
+      const original=await client.query<{snapshot:unknown}>(`
+        SELECT jsonb_build_object(
+          'road_address_ko',road_address_ko,'lot_address_ko',lot_address_ko,
+          'region_sido',region_sido,'region_sigungu',region_sigungu,'region_dong',region_dong,
+          'latitude',latitude,'longitude',longitude,
+          'localized_addresses',(SELECT coalesce(jsonb_agg(to_jsonb(al)),'[]'::jsonb)
+             FROM restaurant_address_localizations_v1 al WHERE al.restaurant_id=restaurants.id)
+        ) AS snapshot FROM restaurants WHERE id=$1`,[id]);
+      if(!original.rowCount)throw Error('restaurant_missing');
+      await client.query(`
+        UPDATE restaurants SET road_address_ko=$2,lot_address_ko=$3,
+          region_sido=$4,region_sigungu=$5,region_dong=$6,
+          latitude=$7,longitude=$8,
+          location=CASE WHEN $7::float8 IS NOT NULL AND $8::float8 IS NOT NULL
+            THEN ST_SetSRID(ST_MakePoint($8::float8,$7::float8),4326)::geography ELSE NULL END,
+          updated_at=now() WHERE id=$1`,[
+        id,p.road_address_ko,p.lot_address_ko,p.region_sido,p.region_sigungu,p.region_dong,
+        p.latitude,p.longitude
+      ]);
+      // Existing translated address strings refer to the old location.
+      // Preserve them in append-only history, and only then invalidate the stale copies.
+      await client.query('DELETE FROM restaurant_address_localizations_v1 WHERE restaurant_id=$1',[id]);
+      await client.query(`
+        INSERT INTO whateato_cms_address_history
+          (restaurant_id,batch_item_id,previous_data,new_data,evidence_url)
+        VALUES($1,$2,$3::jsonb,$4::jsonb,$5)`,[
+        id,itemId,JSON.stringify(original.rows[0].snapshot),JSON.stringify(p),p.evidence_url
+      ]);
+      return;
+    }
+    case 'restaurant_publish':{
+      if(!cms_draft)throw Error('not_manual_cms_origin');
+      const ready=await client.query<{english:boolean;address:boolean;coordinates:boolean;held:boolean}>(`
+        SELECT
+          EXISTS(SELECT 1 FROM restaurant_localizations l WHERE l.restaurant_id=r.id
+                 AND l.locale='en' AND l.publication_state='published'
+                 AND l.short_description IS NOT NULL) AS english,
+          (length(trim(coalesce(r.road_address_ko,'')))>=5 AND
+            length(trim(coalesce(r.region_sido,'')))>0 AND
+            length(trim(coalesce(r.region_sigungu,'')))>0) AS address,
+          (r.latitude BETWEEN 33 AND 39.5 AND r.longitude BETWEEN 124 AND 132) AS coordinates,
+          EXISTS(SELECT 1 FROM restaurant_data_quality_reviews q
+            WHERE q.restaurant_id=r.id AND q.review_state='confirmed_hold') AS held
+        FROM restaurants r WHERE r.id=$1`,[id]);
+      const status=ready.rows[0];
+      if(!status?.english||!status.address||!status.coordinates||status.held)
+        throw Error('manual_restaurant_not_ready_for_publication');
+      await client.query(`
+        UPDATE restaurants SET publication_status='published',business_status='active',
+          updated_at=now() WHERE id=$1`,[id]);
+      await client.query(`
+        UPDATE whateato_cms_restaurant_origins SET published_at=now() WHERE restaurant_id=$1`,[id]);
       return;
     }
     case 'visibility_hide':{
