@@ -1,9 +1,11 @@
 import RestaurantExperienceCard from '@/components/RestaurantExperienceCard';
+// Reuse the exact Map card stylesheet; only Search page grid sizing differs.
+import '../map/map.css';
+import cardGridStyles from './SearchMapCards.module.css';
 import Link from 'next/link';
 import type {Metadata} from 'next';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import SearchBoxSynced from '@/components/SearchBoxSynced';
-import VerifiedRestaurantPhoto from '@/components/VerifiedRestaurantPhoto';
 import {searchRestaurantCatalog,type RestaurantSearchResponse} from '@/lib/restaurant-catalog';
 import {normalizeLocale,normalizeTags,normalizeText} from '@/lib/platform-v1';
 
@@ -55,14 +57,15 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
     <p className="hint">{!searched?t.initial:found?t.ready:t.unavailable}</p>
     {found&&<>
       <p className="hint">{locale==='ko'?'영업 상태는 등록된 영업시간 기준이며, 식당 사정에 따라 실제와 다를 수 있습니다.':locale==='en'?'Hours-based status may differ from actual operations.':locale==='ja'?'営業状況は登録された営業時間に基づき、実際と異なる場合があります。':'营业状态按登记营业时间计算，实际情况可能有所不同。'}</p>
-      <div className="restaurant-card-grid">{found.items.map(r=>{
+      <div className={"map-explore-cards "+cardGridStyles.grid} data-card-layout="map">{found.items.map(r=>{
         const detailParams=new URLSearchParams({hl:locale});
         if(q)detailParams.set('q',q);
         if(filterString)detailParams.set('f',filterString);
         if(region)detailParams.set('region',region);
         if(offset)detailParams.set('offset',String(offset));
         const href='/restaurant/'+r.id+'?'+detailParams.toString();
-        return <RestaurantExperienceCard key={r.id} name={r.name} category={r.category_code} address={r.address||r.address_ko} description={r.short_description} menu={r.main_menu} href={href} locale={locale} status={r.opening_hours?.state||'unknown'} hours={r.opening_hours?.today_hours} rating={r.ratings.external?.rating??r.ratings.whateato?.rating??null} tags={r.tags.map(t=>t.label)} imageUrl={r.featured_image_metadata?.url||null}/>
+        const mapHref='/map?'+new URLSearchParams({q:r.name,hl:locale}).toString();
+        return <RestaurantExperienceCard key={r.id} variant="map" mapHref={mapHref} name={r.name} category={r.category_code} address={r.address||r.address_ko} description={r.short_description} menu={r.main_menu} href={href} locale={locale} status={r.opening_hours?.state||'unknown'} hours={r.opening_hours?.today_hours} rating={r.ratings.external?.rating??r.ratings.whateato?.rating??null} tags={r.tags.map(t=>t.label)} imageUrl={r.featured_image_metadata?.url||null}/>
       })}</div>
       {found.items.length===0&&<p className="empty">{t.empty}</p>}
       {found.has_more&&offset<10000&&
