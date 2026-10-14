@@ -5,6 +5,7 @@ import {getPublicReviews,validUuid,validateReview} from '@/lib/reviews';
 import {categoryInput} from '@/lib/review-categories';
 import {safeSameOrigin} from '@/lib/owner-cms-auth';
 import {boundedJson} from '@/lib/bulk-content-admin';
+import {purgeReviewPhotos} from '@/lib/visitor-photo-cleanup';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -112,8 +113,12 @@ export async function DELETE(request:NextRequest,{params}:Context){
   const review=await client.query<{id:string}>(`
     SELECT id::text FROM whateato_user_reviews WHERE restaurant_id=$1 AND account_id=$2
     FOR UPDATE`,[id,accountId]);
+  let queuedKeys:string[]=[];
   if(review.rows.length){
    const rid=review.rows[0].id;
+   const images=await client.query<{storage_key:string}>(`
+     SELECT storage_key FROM whateato_review_photo_assets WHERE review_id=$1`,[rid]);
+   queuedKeys=images.rows.map(x=>x.storage_key);
    await client.query(`INSERT INTO whateato_review_photo_cleanup(storage_key)
      SELECT storage_key FROM whateato_review_photo_assets WHERE review_id=$1
      ON CONFLICT(storage_key) DO NOTHING`,[rid]);
@@ -132,6 +137,7 @@ export async function DELETE(request:NextRequest,{params}:Context){
    }
   }
   await client.query('COMMIT');
+  await purgeReviewPhotos(queuedKeys);
   return reply({deleted:true});
  }catch{
   await client.query('ROLLBACK').catch(()=>{});
