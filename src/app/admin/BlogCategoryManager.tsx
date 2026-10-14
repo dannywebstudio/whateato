@@ -1,7 +1,6 @@
 'use client';
 import {useState} from 'react';
-import type {BlogCategoryInfo} from '@/lib/blog-model';
-import {blogCategoryName} from '@/lib/blog-categories';
+import {blogCategoryName,type BlogCategoryInfo} from '@/lib/blog-model';
 import styles from './blog-editor.module.css';
 type Shape={en:string;ko:string;ja:string;zhCN:string;slug:string;parent_slug:string;position:string};
 const empty=():Shape=>({en:'',ko:'',ja:'',zhCN:'',slug:'',parent_slug:'',position:'100'});
