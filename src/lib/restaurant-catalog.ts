@@ -1,5 +1,6 @@
 import {getPool} from '@/lib/db';
 import {restaurantPublicName} from '@/lib/restaurant-public-name';
+import {release300PublicWhere} from '@/lib/release-300-gate';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {loadRatingDisplays,type RatingDisplay} from '@/lib/ratings-display';
 import {escapeLike,isUuid,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
@@ -90,6 +91,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
+      ${release300PublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
@@ -187,6 +189,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.id=$1 AND r.publication_status='published' AND r.business_status='active'
+      ${release300PublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
