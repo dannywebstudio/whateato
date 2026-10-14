@@ -17,7 +17,7 @@ export type RestaurantSearchInput={
 };
 export type RestaurantSearchResponse={
   locale:Locale;q:string;region:string;filters:string[];
-  items:RestaurantSearchItem[];limit:number;offset:number;has_more:boolean;
+  items:RestaurantSearchItem[];limit:number;offset:number;has_more:boolean;total_count:number;
   ratings_note:string;
 };
 export type RestaurantDetailInfo={
@@ -53,7 +53,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
   const pool=getPool();
   if(!pool)throw new CatalogDatabaseUnavailable();
   const sql=`
-    SELECT r.id::text AS id,
+    SELECT COUNT(*) OVER()::integer AS total_count,r.id::text AS id,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
       COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,r.category_code,r.region_sido,r.region_sigungu,
@@ -155,12 +155,12 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     END,
       r.name_ko ASC,r.id ASC
     LIMIT ($7::integer + 1) OFFSET $8`;
-  const res=await pool.query<RestaurantSearchItem>(sql,
+  const res=await pool.query<RestaurantSearchItem & {total_count:number}>(sql,
     [locale,q,'%'+escapeLike(q)+'%',region,'%'+escapeLike(region)+'%',filters,limit,offset]);
   const items=res.rows.slice(0,limit);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,items.map(x=>x.id)),loadRatingDisplays(pool,items.map(x=>x.id))]);
   return {locale,q,region,filters,items:items.map(x=>({...x,opening_hours:opening[x.id]||null,ratings:ratings[x.id]||{external:null,whateato:null}})),limit,offset,
-    has_more:res.rows.length>limit,
+    has_more:res.rows.length>limit,total_count:res.rows[0]?.total_count??0,
     ratings_note:'editorial_score is an independently approved WhatEatO score; null means unverified'};
 }
 
