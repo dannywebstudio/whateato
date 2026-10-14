@@ -39,7 +39,7 @@ export default async function BlogPage({searchParams}:Props){
      {category&&<input type="hidden" name="category" value={category}/>}
      <div className="searchfield">
        <span aria-hidden="true">⌕</span>
-       <input name="q" type="search" defaultValue={q} maxLength={90}
+       <input name="q" type="text" defaultValue={q} maxLength={90}
          placeholder={t.placeholder} aria-label={t.search}/>
        <button aria-label={t.search} type="submit">→</button>
      </div>
