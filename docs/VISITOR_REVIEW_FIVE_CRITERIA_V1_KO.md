@@ -58,3 +58,13 @@ restaurant gallery or card layout.
   after the deployment, before release to the live service or main branch.
 - Existing older design-lock baseline check and Phase 2 fixture check may flag unrelated
   inherited issues. Do not disable these gates without owner approval.
+
+
+## Owner review deletion
+- In Admin CMS > 방문후기 관리, owners have an explicit **완전 삭제** button on pending, published and rejected records, while moderators can only approve/reject/hide.
+- Two-step protection: reviewer state/reason selection plus typed `DELETE`; the browser sends the exact review UUID and the server verifies it. No action on dismiss or mismatch. Cross-origin DELETE and unprivileged users receive 403.
+- The server removes the review text/rating, five-category scores, moderated photo metadata, and prior review moderation audit in **one transaction**. The public website immediately loses the review and its contribution to the average.
+- Separate migration `018_owner_review_delete_audit.sql` stores only a deletion event's review UUID, restaurant UUID, previous state, reason, photo count and timestamp; no original text, account details, Google ID, IP, or images.
+- Detached private image objects are deleted from S3 immediately on a best-effort basis; failed purges stay queued in the database for explicitly triggered `scripts/purge_review_photo_queue.mjs` retries. No hidden daily job and no automatic content deletion.
+- Owner action is **irreversible**; the previous "게시된 후기 숨김" action remains available for reversible removal from public display.
+- Staging-only schema rollout and tests are required before Render deployment; the production DB, original site and public layout are not changed.
