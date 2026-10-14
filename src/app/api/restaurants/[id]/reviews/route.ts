@@ -94,7 +94,7 @@ export async function POST(request:NextRequest,{params}:Context){
   }
   // Any edited review must be freshly moderated, including preexisting photos.
   await client.query(`UPDATE whateato_review_photo_assets SET moderation_state='pending'
-      WHERE review_id=$1 AND moderation_state='approved'`,[reviewId]);
+      WHERE review_id=$1 AND moderation_state IN ('approved','rejected')`,[reviewId]);
   await client.query('COMMIT');
   return reply({id:reviewId,status:'pending',average:parsed?.average??rating,
     message:'Review received; pending moderation'},202);
