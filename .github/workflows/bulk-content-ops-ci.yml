@@ -79,6 +79,14 @@ jobs:
           node scripts/test_owner_review_delete_http.mjs
           node scripts/test_blog_cms_http.mjs
           node scripts/test_review_form_browser.mjs
+      - name: Upload blog listing and article desktop/mobile visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-browser-qa
+          path: blog-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload review form desktop and phone QA snapshots
         if: always()
         uses: actions/upload-artifact@v4
