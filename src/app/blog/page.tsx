@@ -24,33 +24,55 @@ export default async function BlogPage({searchParams}:Props){
    if(nextPage>1)params.set('page',String(nextPage));
    return '/blog?'+params;
  };
+ const labels={
+  en:{all:'All Stories',search:'Search',placeholder:'Search stories, places or topics...',latest:'Latest Stories',results:'Search results',everything:'All'},
+  ko:{all:'전체',search:'검색',placeholder:'블로그 글, 여행지, 키워드 검색...',latest:'최신 글',results:'검색 결과',everything:'전체'},
+  ja:{all:'すべて',search:'検索',placeholder:'記事・地域・キーワードを検索...',latest:'最新記事',results:'検索結果',everything:'すべて'},
+  'zh-CN':{all:'全部',search:'搜索',placeholder:'搜索文章、地区或关键词...',latest:'最新文章',results:'搜索结果',everything:'全部'}
+ } as const;
+ const t=labels[locale];
+ const openRoot=groups.find(root=>root.slug===selectedParent);
+ const showSidebar=Boolean(openRoot&&openRoot.children.length);
  return <main className={styles.blogPage}>
-   <header className={styles.hero}>
-     <span className={styles.eyebrow}>WHATEATO JOURNAL · KOREA</span>
-     <h1>Eat well. Explore Korea. Discover more.</h1>
-     <p>Restaurant discoveries, travel essentials, shopping recommendations and K-Beauty insights, all in one place.</p>
-   </header>
-   <form action="/blog" method="get" className={styles.search} role="search">
+   <form action="/blog" method="get" className={'search-form '+styles.blogSearch} role="search">
      <input type="hidden" name="hl" value={locale}/>
      {category&&<input type="hidden" name="category" value={category}/>}
-     <input name="q" defaultValue={q} maxLength={90} placeholder="Search guides, food or neighborhoods…"
-       aria-label="Search WhatEatO blog"/>
-     <button type="submit">Search stories →</button>
+     <div className="searchfield">
+       <span aria-hidden="true">⌕</span>
+       <input name="q" type="search" defaultValue={q} maxLength={90}
+         placeholder={t.placeholder} aria-label={t.search}/>
+       <button aria-label={t.search} type="submit">→</button>
+     </div>
    </form>
-   <nav aria-label="Blog categories" className={styles.categoryTree}>
-     <Link className={styles.categoryLink} data-active={!category} href={url(1,'')}>All Stories</Link>
-     {groups.map(root=><div className={styles.categoryGroup} key={root.slug}>
-       <Link href={url(1,root.slug)} className={styles.categoryRoot}
-         data-active={selectedParent===root.slug}>{blogCategoryName(root,locale)}</Link>
-       {root.children.length>0&&<div className={styles.subcategories}>
-         {root.children.map(child=><Link key={child.slug} href={url(1,child.slug)}
-           className={styles.subcategory} data-active={category===child.slug}>
-           {blogCategoryName(child,locale)}</Link>)}
-       </div>}
-     </div>)}
+   <nav aria-label="Blog main categories" className={styles.mainCategories}>
+     <Link className={styles.mainCategory} data-active={!category} href={url(1,'')}
+       aria-current={!category?'page':undefined}>{t.all}</Link>
+     {groups.map(root=><Link key={root.slug} href={url(1,root.slug)}
+       className={styles.mainCategory} data-active={selectedParent===root.slug}
+       aria-current={category===root.slug?'page':undefined}>
+       {blogCategoryName(root,locale)}
+     </Link>)}
    </nav>
+   <div className={showSidebar?styles.blogLayoutWithSidebar:styles.blogLayout}>
+     {showSidebar&&openRoot&&<aside className={styles.categorySidebar}>
+       <div className={styles.sidebarTitle}>{blogCategoryName(openRoot,locale)}</div>
+       <nav aria-label={blogCategoryName(openRoot,locale)+' subcategories'}
+         className={styles.sidebarItems}>
+         <Link href={url(1,openRoot.slug)}
+           className={styles.sidebarItem} data-active={category===openRoot.slug}
+           aria-current={category===openRoot.slug?'page':undefined}>
+           {t.everything} {blogCategoryName(openRoot,locale)}
+         </Link>
+         {openRoot.children.map(child=><Link key={child.slug} href={url(1,child.slug)}
+           className={styles.sidebarItem} data-active={category===child.slug}
+           aria-current={category===child.slug?'page':undefined}>
+           {blogCategoryName(child,locale)}
+         </Link>)}
+       </nav>
+     </aside>}
+     <section className={styles.storyContent}>
    <div className={styles.sectionTitle}>
-     <h2>{q?'Search results':category?(blogCategoryName(selectedCategory,locale)):'Latest stories'}</h2>
+     <h2>{q?t.results:category?(blogCategoryName(selectedCategory,locale)):t.latest}</h2>
    </div>
    {result.items.length?<div className={styles.cards}>
       {result.items.map(item=><Link className={styles.card} key={item.id}
@@ -76,6 +98,8 @@ export default async function BlogPage({searchParams}:Props){
    <div className={styles.pagination}>
      {page>1&&<Link href={url(page-1)}>← Previous</Link>}
      {result.more&&<Link href={url(page+1)}>More stories →</Link>}
+   </div>
+     </section>
    </div>
  </main>;
 }
