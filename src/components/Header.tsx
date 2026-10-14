@@ -132,7 +132,10 @@ export default function Header(){
     <span className="brand-signature"><span className="brand-w">W</span>hat</span>
     <span className="brand-accent">EatO</span>
    </Link>
-   <div className="navlinks"><Link href="/map">Map</Link><Link href="/blog">Blog</Link></div>
+   <div className="navlinks">
+    <Link href={'/map?hl='+encodeURIComponent(lang)}>Map</Link>
+    <Link href={'/blog?hl='+encodeURIComponent(lang)}>Blog</Link>
+   </div>
   </div>
   <div className="preferences">
    <div className="country-control">
