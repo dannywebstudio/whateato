@@ -128,6 +128,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
    setRestaurantMatches(r.items||[])}catch(e){error(e)}
  };
  const upload=async()=>{
+  if(dirty){setMessage('이미지 업로드 전에 초안을 먼저 저장해.');return}
   if(!current||!file||!rights){setMessage('사진, 출처, 사용권 확인을 입력해.');return}
   setBusy(true);
   try{
