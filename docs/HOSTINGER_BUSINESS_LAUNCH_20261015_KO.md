@@ -5,6 +5,21 @@
 **Previously running:** Render preview `https://whateato-cms-preview.onrender.com` — leave as rollback/QA, do not delete.
 **Dedicated launch database:** Neon project `aged-wildflower-47196131`, branch `launch-hostinger-20261015` (`br-muddy-cloud-b36g5pir`), created from verified Staging at launch cut. It is NOT the existing Neon default/primary branch.
 
+## IMPORTANT — Hostinger plan correction (2026-10-15)
+
+**Owner confirmed they have Hostinger Premium, NOT Business.**
+According to Hostinger's official support, **Premium shared web hosting does not offer managed Node.js / Next.js server-side web app deployment**. Do NOT tell the owner to select their Premium plan for a new Node.js web app; this path is blocked until the hosting plan is upgraded to a compatible Business/Unlimited-tier or Cloud plan. Naming/pricing of plans may vary by region and account. Do not purchase or upgrade automatically.
+
+Two viable launch paths:
+- **Keep Hostinger Premium for domain/DNS and deploy Next.js on Render.** Point a registered domain to Render based on the host's verified domain/DNS instructions; the Render service must run the approved release branch and Neon launch DB, and be independently checked before Search Console registration.
+- **Upgrade Hostinger** to a plan showing support for Node.js apps, then use the existing migration guide below to move the full-stack app to Hostinger.
+
+Official reference: https://www.hostinger.com/support/how-to-deploy-a-nodejs-website-in-hostinger/
+Hostinger announcement: https://www.hostinger.com/changelog/nodejs-hosting-now-available-on-business-plans-and-higher
+
+**The rest of the Hostinger web-app setup instructions below apply ONLY after upgrading from Premium to a supported plan.** The release branch and dedicated Neon launch branch are already ready; neither is proof the site has moved.
+
+
 ## 진행 상태
 
 - [x] GitHub release branch created from approved CMS preview.
