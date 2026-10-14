@@ -15,7 +15,9 @@ export async function GET(_req:NextRequest,{params}:Ctx){
     pool.query(`SELECT id::text,name_ko,road_address_ko,lot_address_ko,region_sigungu,
       category_code,business_status,publication_status,region_sido,region_dong,
       latitude,longitude,
-      EXISTS(SELECT 1 FROM whateato_cms_restaurant_origins o WHERE o.restaurant_id=restaurants.id) AS cms_origin
+      EXISTS(SELECT 1 FROM whateato_cms_restaurant_origins o WHERE o.restaurant_id=restaurants.id) AS cms_origin,
+      (SELECT o.source_url FROM whateato_cms_restaurant_origins o
+        WHERE o.restaurant_id=restaurants.id) AS cms_source_url
       FROM restaurants WHERE id=$1`,[id]),
     pool.query(`SELECT locale,display_name,short_description,full_description,source_notes,publication_state
       FROM restaurant_localizations WHERE restaurant_id=$1 ORDER BY locale`,[id]),
