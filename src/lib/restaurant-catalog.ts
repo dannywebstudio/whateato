@@ -1,4 +1,8 @@
 import {getPool} from '@/lib/db';
+import {restaurantPublicName} from '@/lib/restaurant-public-name';
+import {release300PublicWhere} from '@/lib/release-300-gate';
+import {triageABPublicWhere,triageDisplayCategorySql} from '@/lib/triage-ab-gate';
+import {orderRestaurantTags} from '@/lib/restaurant-tag-order';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {loadRatingDisplays,type RatingDisplay} from '@/lib/ratings-display';
 import {escapeLike,isUuid,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
@@ -56,7 +60,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     SELECT COUNT(*) OVER()::integer AS total_count,r.id::text AS id,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
-      COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,r.category_code,r.region_sido,r.region_sigungu,
+      COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,${triageDisplayCategorySql()} AS category_code,r.region_sido,r.region_sigungu,
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name)
          FROM restaurant_menus m
@@ -89,6 +93,8 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
+      ${release300PublicWhere()}
+      ${triageABPublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
@@ -159,7 +165,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     [locale,q,'%'+escapeLike(q)+'%',region,'%'+escapeLike(region)+'%',filters,limit,offset]);
   const items=res.rows.slice(0,limit);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,items.map(x=>x.id)),loadRatingDisplays(pool,items.map(x=>x.id))]);
-  return {locale,q,region,filters,items:items.map(x=>({...x,opening_hours:opening[x.id]||null,ratings:ratings[x.id]||{external:null,whateato:null}})),limit,offset,
+  return {locale,q,region,filters,items:items.map(x=>({...x,name:restaurantPublicName(x.name),tags:orderRestaurantTags(x.tags),opening_hours:opening[x.id]||null,ratings:ratings[x.id]||{external:null,whateato:null}})),limit,offset,
     has_more:res.rows.length>limit,total_count:res.rows[0]?.total_count??0,
     ratings_note:'editorial_score is an independently approved WhatEatO score; null means unverified'};
 }
@@ -175,7 +181,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       COALESCE(l.short_description,k.short_description) AS short_description,
       COALESCE(l.full_description,k.full_description) AS full_description,
       COALESCE(al.display_address,r.road_address_ko,r.lot_address_ko) AS address,r.road_address_ko,r.lot_address_ko,r.region_sido,r.region_sigungu,
-      r.category_code,r.latitude,r.longitude,
+      ${triageDisplayCategorySql()} AS category_code,r.latitude,r.longitude,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
@@ -186,6 +192,8 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.id=$1 AND r.publication_status='published' AND r.business_status='active'
+      ${release300PublicWhere()}
+      ${triageABPublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
@@ -226,7 +234,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       ORDER BY position,id LIMIT 25`,[id])
   ]);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,[id]),loadRatingDisplays(pool,[id])]);
-  return {locale,restaurant:{...row.rows[0],opening_hours:opening[id]||null,ratings:ratings[id]||{external:null,whateato:null}},menus:menus.rows,tags:tags.rows,images:images.rows,
+  return {locale,restaurant:{...row.rows[0],name:restaurantPublicName(row.rows[0].name),opening_hours:opening[id]||null,ratings:ratings[id]||{external:null,whateato:null}},menus:menus.rows,tags:orderRestaurantTags(tags.rows),images:images.rows,
     image_note:'Licensed media delivered via internal route only when server-owned media storage is configured.',
     rating_note:'Independent editorial score is not a Google/Naver or user-review average.'};
 }

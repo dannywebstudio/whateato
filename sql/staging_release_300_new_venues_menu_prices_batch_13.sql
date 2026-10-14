@@ -1,0 +1,85 @@
+-- Staging-only, source-matched branch menus with published four-language labels.
+-- Listed reference prices (not current guarantees); observation provenance saved.
+INSERT INTO restaurant_menus(id,restaurant_id,price_krw,position,publication_state,evidence_ref)
+VALUES
+('00000000-0000-4000-8000-000000009601'::uuid,'3954efcf-50a7-4c7d-b089-44252662f74c'::uuid,9000,20,'published','https://yeokjeonfnc.com/index.html | https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982 | https://www.diningcode.com/profile.php?rid=8vPaTkYZz1QZ | address 수표로 109 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009602'::uuid,'3954efcf-50a7-4c7d-b089-44252662f74c'::uuid,9000,21,'published','https://yeokjeonfnc.com/index.html | https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982 | https://www.diningcode.com/profile.php?rid=8vPaTkYZz1QZ | address 수표로 109 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009603'::uuid,'3954efcf-50a7-4c7d-b089-44252662f74c'::uuid,8000,22,'published','https://yeokjeonfnc.com/index.html | https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982 | https://www.diningcode.com/profile.php?rid=8vPaTkYZz1QZ | address 수표로 109 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009604'::uuid,'3954efcf-50a7-4c7d-b089-44252662f74c'::uuid,7000,23,'published','https://yeokjeonfnc.com/index.html | https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982 | https://www.diningcode.com/profile.php?rid=8vPaTkYZz1QZ | address 수표로 109 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009605'::uuid,'ae7cd325-e248-4962-9f5f-f374071cb940'::uuid,18000,20,'published','https://www.tabling.co.kr/place/677cc7a066de5f06987510c4 | https://polle.com/place/12FgDw/%EA%B0%80%EB%B4%89%EB%A3%A8 | address 새문안로5길 5-27 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009606'::uuid,'ae7cd325-e248-4962-9f5f-f374071cb940'::uuid,16000,21,'published','https://www.tabling.co.kr/place/677cc7a066de5f06987510c4 | https://polle.com/place/12FgDw/%EA%B0%80%EB%B4%89%EB%A3%A8 | address 새문안로5길 5-27 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009607'::uuid,'ae7cd325-e248-4962-9f5f-f374071cb940'::uuid,13000,22,'published','https://www.tabling.co.kr/place/677cc7a066de5f06987510c4 | https://polle.com/place/12FgDw/%EA%B0%80%EB%B4%89%EB%A3%A8 | address 새문안로5길 5-27 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009608'::uuid,'ae7cd325-e248-4962-9f5f-f374071cb940'::uuid,12000,23,'published','https://www.tabling.co.kr/place/677cc7a066de5f06987510c4 | https://polle.com/place/12FgDw/%EA%B0%80%EB%B4%89%EB%A3%A8 | address 새문안로5길 5-27 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009609'::uuid,'63390cdd-f899-4d26-93e0-376fcf6a21c5'::uuid,17000,20,'published','https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89 | https://www.diningcode.com/profile.php?rid=dldRztjhNEWt | address 종로10길 14 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009610'::uuid,'63390cdd-f899-4d26-93e0-376fcf6a21c5'::uuid,18000,21,'published','https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89 | https://www.diningcode.com/profile.php?rid=dldRztjhNEWt | address 종로10길 14 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009611'::uuid,'63390cdd-f899-4d26-93e0-376fcf6a21c5'::uuid,18000,22,'published','https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89 | https://www.diningcode.com/profile.php?rid=dldRztjhNEWt | address 종로10길 14 cross-referenced 2026-10-14; price is listed reference, not live guarantee'),
+('00000000-0000-4000-8000-000000009612'::uuid,'63390cdd-f899-4d26-93e0-376fcf6a21c5'::uuid,20000,23,'published','https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89 | https://www.diningcode.com/profile.php?rid=dldRztjhNEWt | address 종로10길 14 cross-referenced 2026-10-14; price is listed reference, not live guarantee')
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO restaurant_menu_localizations(menu_id,locale,name)
+VALUES
+('00000000-0000-4000-8000-000000009601'::uuid,'ko','치즈라볶이'),
+('00000000-0000-4000-8000-000000009601'::uuid,'en','Cheese spicy rice cakes and ramen'),
+('00000000-0000-4000-8000-000000009601'::uuid,'ja','チーズラポッキ'),
+('00000000-0000-4000-8000-000000009601'::uuid,'zh-CN','芝士辣炒年糕方便面'),
+('00000000-0000-4000-8000-000000009602'::uuid,'ko','짜빠구리'),
+('00000000-0000-4000-8000-000000009602'::uuid,'en','Jjapaguri (mixed instant noodles)'),
+('00000000-0000-4000-8000-000000009602'::uuid,'ja','チャパグリ'),
+('00000000-0000-4000-8000-000000009602'::uuid,'zh-CN','韩式双拼拌面'),
+('00000000-0000-4000-8000-000000009603'::uuid,'ko','갈릭빠다포테이토'),
+('00000000-0000-4000-8000-000000009603'::uuid,'en','Garlic butter potato fries'),
+('00000000-0000-4000-8000-000000009603'::uuid,'ja','ガーリックバターポテト'),
+('00000000-0000-4000-8000-000000009603'::uuid,'zh-CN','蒜香黄油薯条'),
+('00000000-0000-4000-8000-000000009604'::uuid,'ko','살얼음파인애플'),
+('00000000-0000-4000-8000-000000009604'::uuid,'en','Frozen pineapple'),
+('00000000-0000-4000-8000-000000009604'::uuid,'ja','フローズンパイナップル'),
+('00000000-0000-4000-8000-000000009604'::uuid,'zh-CN','冰镇菠萝'),
+('00000000-0000-4000-8000-000000009605'::uuid,'ko','잡탕밥'),
+('00000000-0000-4000-8000-000000009605'::uuid,'en','Mixed seafood and vegetable rice'),
+('00000000-0000-4000-8000-000000009605'::uuid,'ja','五目海鮮あんかけご飯'),
+('00000000-0000-4000-8000-000000009605'::uuid,'zh-CN','杂烩盖饭'),
+('00000000-0000-4000-8000-000000009606'::uuid,'ko','유산슬밥'),
+('00000000-0000-4000-8000-000000009606'::uuid,'en','Yusanseul over rice'),
+('00000000-0000-4000-8000-000000009606'::uuid,'ja','柳酸絲ご飯'),
+('00000000-0000-4000-8000-000000009606'::uuid,'zh-CN','溜三丝盖饭'),
+('00000000-0000-4000-8000-000000009607'::uuid,'ko','소고기덮밥'),
+('00000000-0000-4000-8000-000000009607'::uuid,'en','Beef rice bowl'),
+('00000000-0000-4000-8000-000000009607'::uuid,'ja','牛肉丼'),
+('00000000-0000-4000-8000-000000009607'::uuid,'zh-CN','牛肉盖饭'),
+('00000000-0000-4000-8000-000000009608'::uuid,'ko','잡채밥'),
+('00000000-0000-4000-8000-000000009608'::uuid,'en','Stir-fried glass noodles over rice'),
+('00000000-0000-4000-8000-000000009608'::uuid,'ja','チャプチェご飯'),
+('00000000-0000-4000-8000-000000009608'::uuid,'zh-CN','杂菜盖饭'),
+('00000000-0000-4000-8000-000000009609'::uuid,'ko','단지 화덕 막창'),
+('00000000-0000-4000-8000-000000009609'::uuid,'en','Clay-oven grilled makchang'),
+('00000000-0000-4000-8000-000000009609'::uuid,'ja','壺窯焼きマクチャン'),
+('00000000-0000-4000-8000-000000009609'::uuid,'zh-CN','陶罐炉烤猪肠'),
+('00000000-0000-4000-8000-000000009610'::uuid,'ko','단지 화덕 파막창'),
+('00000000-0000-4000-8000-000000009610'::uuid,'en','Clay-oven grilled makchang with green onion'),
+('00000000-0000-4000-8000-000000009610'::uuid,'ja','壺窯焼きねぎマクチャン'),
+('00000000-0000-4000-8000-000000009610'::uuid,'zh-CN','陶罐炉葱香烤猪肠'),
+('00000000-0000-4000-8000-000000009611'::uuid,'ko','단지 화덕 돼지불막창'),
+('00000000-0000-4000-8000-000000009611'::uuid,'en','Spicy clay-oven grilled pork makchang'),
+('00000000-0000-4000-8000-000000009611'::uuid,'ja','壺窯焼き辛口豚マクチャン'),
+('00000000-0000-4000-8000-000000009611'::uuid,'zh-CN','陶罐炉辣烤猪肠'),
+('00000000-0000-4000-8000-000000009612'::uuid,'ko','단지 화덕 소막창'),
+('00000000-0000-4000-8000-000000009612'::uuid,'en','Clay-oven grilled beef makchang'),
+('00000000-0000-4000-8000-000000009612'::uuid,'ja','壺窯焼き牛マクチャン'),
+('00000000-0000-4000-8000-000000009612'::uuid,'zh-CN','陶罐炉烤牛肠')
+ON CONFLICT(menu_id,locale) DO NOTHING;
+
+INSERT INTO whateato_menu_price_observations_v1 (menu_id,source_url,price_krw,checked_on,observation_note)
+VALUES
+('00000000-0000-4000-8000-000000009601'::uuid,'https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982',9000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009602'::uuid,'https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982',9000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009603'::uuid,'https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982',8000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009604'::uuid,'https://polle.com/place/3TLHDi/%EC%97%AD%EC%A0%84%ED%95%A0%EB%A8%B8%EB%8B%88%EB%A7%A5%EC%A3%BC%201982',7000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009605'::uuid,'https://www.tabling.co.kr/place/677cc7a066de5f06987510c4',18000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009606'::uuid,'https://www.tabling.co.kr/place/677cc7a066de5f06987510c4',16000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009607'::uuid,'https://www.tabling.co.kr/place/677cc7a066de5f06987510c4',13000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009608'::uuid,'https://www.tabling.co.kr/place/677cc7a066de5f06987510c4',12000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009609'::uuid,'https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89',17000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009610'::uuid,'https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89',18000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009611'::uuid,'https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89',18000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.'),
+('00000000-0000-4000-8000-000000009612'::uuid,'https://polle.com/place/3c2zRa/%EB%8B%A8%EB%A7%89',20000,'2026-10-14','Listed price for exact branch address; latest in-store price not guaranteed.')
+ON CONFLICT(menu_id,source_url) DO NOTHING;

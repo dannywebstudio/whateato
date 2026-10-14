@@ -1,4 +1,8 @@
 import {getPool} from '@/lib/db';
+import {restaurantPublicName} from '@/lib/restaurant-public-name';
+import {release300PublicWhere} from '@/lib/release-300-gate';
+import {triageABPublicWhere,triageDisplayCategorySql} from '@/lib/triage-ab-gate';
+import {orderRestaurantTags} from '@/lib/restaurant-tag-order';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {escapeLike,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
 import {CatalogDatabaseUnavailable,type CatalogTag} from '@/lib/restaurant-catalog';
@@ -97,7 +101,7 @@ export async function getGeoCatalog(input:QueryParams & {
       COALESCE(al.display_address,r.road_address_ko,r.lot_address_ko) AS address,
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name) FROM restaurant_menus m LEFT JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale=$1 LEFT JOIN restaurant_menu_localizations kl ON kl.menu_id=m.id AND kl.locale='ko' WHERE m.restaurant_id=r.id AND m.publication_state='published' ORDER BY m.position LIMIT 1) AS main_menu,r.latitude,r.longitude,
-      r.category_code,r.region_sigungu,
+      ${triageDisplayCategorySql()} AS category_code,r.region_sigungu,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       COALESCE((SELECT json_agg(json_build_object(
@@ -115,6 +119,8 @@ export async function getGeoCatalog(input:QueryParams & {
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
+      ${release300PublicWhere()}
+      ${triageABPublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
@@ -186,7 +192,7 @@ export async function getGeoCatalog(input:QueryParams & {
   const selected=res.rows.slice(0,limit);
   const opening=await getOpeningHours(db,selected.map(r=>r.id));
   const items=selected.map(r=>({
-    ...r,opening_hours:opening[r.id]||null,...(nearby?{distance_km:Number(r.distance_km)}:{}),
+    ...r,name:restaurantPublicName(r.name),tags:orderRestaurantTags(r.tags),opening_hours:opening[r.id]||null,...(nearby?{distance_km:Number(r.distance_km)}:{}),
   }));
   return {
     mode:input.mode,locale,bounds,filters,q,items,limit,

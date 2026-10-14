@@ -124,6 +124,13 @@ export default async function RestaurantDetail({params,searchParams}:Params){
       <h2 className="detail-section-title">{t.description}</h2>
       <p className="restaurant-description-text" style={{margin:'9px 0 22px',lineHeight:1.75,whiteSpace:'pre-line'}}>{r.full_description||r.short_description}</p>
     </>}
+    {detail.tags.length>1&&<section aria-label={t.tags}>
+      <h2 className="detail-section-title">{t.tags}</h2>
+      <div className="restaurant-facts" style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:23}}>
+        {detail.tags.slice(0,24).map(tag=>
+          <span className="meta-chip" key={tag.code}>{tag.label}</span>)}
+      </div>
+    </section>}
     <section className="result detail-address-panel" style={{display:'flex',flexDirection:'column',gap:14}}>
       <div style={{minWidth:0}}>
         <strong>{t.address}</strong>
