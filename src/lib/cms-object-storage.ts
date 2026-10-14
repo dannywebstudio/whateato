@@ -30,7 +30,7 @@ export async function probeObjectStorage():Promise<boolean>{
   }catch{return false}
 }
 export async function savePhoto(key:string,bytes:Buffer){
- if(!/^media\/cms\/[0-9a-f-]{36}\.webp$/.test(key)||bytes.length>8*1024*1024)
+ if(!/^media\/(?:cms|reviews)\/[0-9a-f-]{36}\.webp$/.test(key)||bytes.length>8*1024*1024)
    throw Error('invalid_media_key_or_size');
  const {s3,bucket}=client();
  await s3.send(new PutObjectCommand({Bucket:bucket,Key:key,Body:bytes,ContentType:'image/webp',
@@ -45,7 +45,7 @@ export async function photoExists(key:string){
  await s3.send(new HeadObjectCommand({Bucket:bucket,Key:key}));
 }
 export async function readPhoto(key:string):Promise<Buffer>{
- if(!/^media\/cms\/[0-9a-f-]{36}\.webp$/.test(key))throw Error('invalid_media_key');
+ if(!/^media\/(?:cms|reviews)\/[0-9a-f-]{36}\.webp$/.test(key))throw Error('invalid_media_key');
  const {s3,bucket}=client();
  const out=await s3.send(new GetObjectCommand({Bucket:bucket,Key:key}));
  if(!out.Body||Number(out.ContentLength||0)>8*1024*1024)throw Error('image_too_large');
