@@ -55,7 +55,7 @@ export async function PATCH(request:NextRequest,{params}:Context){
           ))
           AND ($2::text='rejected' OR $5::boolean OR NOT EXISTS (
             SELECT 1 FROM whateato_review_photo_assets p WHERE p.review_id=v.id
-              AND p.moderation_state='pending'))
+              AND p.moderation_state<>'hidden'))
         RETURNING v.id,v.restaurant_id,v.moderation_status
       ),
       photos AS (
