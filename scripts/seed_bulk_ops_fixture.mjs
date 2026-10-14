@@ -11,7 +11,7 @@ await client.connect();
 try{
  await client.query('CREATE EXTENSION IF NOT EXISTS postgis');
  await client.query(`CREATE TABLE restaurants(
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name_ko text NOT NULL,
   road_address_ko text,
   lot_address_ko text,
