@@ -25,7 +25,7 @@ export async function GET(req:NextRequest){
 
 const respond=(value:unknown,status=200)=>NextResponse.json(value,{status,headers:ownerHeaders});
 const word=(v:unknown,max:number,min=1)=>typeof v==='string'&&v.trim().length>=min&&
-  [...v.trim()].length<=max&&!/[\\u0000-\\u001f\\u007f]/.test(v);
+  [...v.trim()].length<=max&&!/[\u0000-\u001f\u007f]/.test(v);
 export async function POST(req:NextRequest){
  const staff=await currentStaff();
  if(!staff||!hasPermission(staff,'edit'))return respond({error:'forbidden'},403);
