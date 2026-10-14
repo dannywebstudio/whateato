@@ -46,7 +46,7 @@ export async function listPublishedBlog(input:{q?:string;locale?:string;category
 export async function findPublishedBlog(slug:string,language:unknown):Promise<BlogPostPublic|null>{
  if(!validBlogSlug(slug))return null;
  const pool=getPool();if(!pool)return null;
- const result=await pool.query<{id:string;slug:string;snapshot:BlogDraft&{cover_image_id?:string};published_at:string}>(`
+ const result=await pool.query<{id:string;slug:string;snapshot:BlogDraft&{cover_image_id?:string};published_at:string;verified_cover_id:string|null}>(`
  SELECT p.id::text,p.slug,u.snapshot,u.published_at::text
  FROM whateato_blog_posts p JOIN whateato_blog_publications u ON u.post_id=p.id
  WHERE p.slug=$1 AND u.is_visible=true LIMIT 1`,[slug]);
