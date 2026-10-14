@@ -83,6 +83,11 @@ const reject=await req(moderate,{method:'PATCH',headers:adminHeaders,body:{
  decision:'reject',reason_code:'off_topic'}});
 assert.equal(reject.status,200);
 assert.equal((await req(path,{headers:{}})).body.reviews.length,0);
+const retried=await req(path,{method:'POST',body:{categories:scores,body:text}});
+assert.equal(retried.status,202,'Author can resubmit corrected review');
+const stalePhoto=await req(moderate,{method:'PATCH',headers:adminHeaders,
+ body:{decision:'approve',reason_code:'approved_guidelines'}});
+assert.equal(stalePhoto.status,409,'Previously rejected photo requires fresh inspection');
 const removed=await req(path,{method:'DELETE'});
 assert.equal(removed.status,200,JSON.stringify(removed.body));
 assert.equal((await req(path+'?mine=1')).body.review,null,'Deleted review must disappear from author editor');
