@@ -53,6 +53,19 @@ const inactive=await request('/api/v1/owner/blog/categories/korean-snacks',{
 assert.equal(inactive.status,200);
 const absentPublic=await request('/api/blog/categories',{headers:{}});
 assert.equal(absentPublic.body.items.some(x=>x.slug==='korean-snacks'),false);
+const cannotNestThird=await request('/api/v1/owner/blog/categories',{
+ method:'POST',body:{slug:'third-level',parent_slug:'transportation',
+ names:{en:'Third Level',ko:'3단계'},position:11}});
+assert.equal(cannotNestThird.status,409,'Only root and one nested level are supported');
+const temporary=await request('/api/v1/owner/blog',{method:'POST',
+ body:{slug:'hidden-category-should-fail'}});
+assert.equal(temporary.status,201);
+const invalidSelection=await request('/api/v1/owner/blog/'+temporary.body.id,{
+ method:'PUT',body:{expected_revision:1,draft:{
+  category:'korean-snacks',tags:[],related_restaurant_ids:[],
+  translations:{en:{title:'',excerpt:'',seo_title:'',seo_description:'',blocks:[]}}
+ }}});
+assert.equal(invalidSelection.status,409,'Archived category cannot be assigned to a new draft');
 const restored=await request('/api/v1/owner/blog/categories/korean-snacks',{
  method:'PATCH',body:{is_active:true}});
 assert.equal(restored.status,200);
