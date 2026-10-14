@@ -81,6 +81,11 @@ try{
   // Header Contact sits immediately beside Blog and renders mailto on desktop/mobile.
   const navNames=await page.locator('.navlinks a').allTextContents();
   assert.deepEqual(navNames.map(v=>v.trim()),['지도','블로그','Contact']);
+  const positions=await page.locator('.navlinks a').evaluateAll(nodes=>
+   nodes.map(el=>{const r=el.getBoundingClientRect();return {center:r.top+r.height/2,height:r.height}}));
+  assert.ok(positions.every(p=>Math.abs(p.center-positions[1].center)<=1),
+   vp.name+' nav links not vertically aligned: '+JSON.stringify(positions));
+  assert.ok(positions.every(p=>p.height===positions[1].height));
   const contact=await context.newPage();
   await mockCountry(contact,'KR');
   await contact.goto(root+'/contact?hl=ko',{waitUntil:'networkidle'});
@@ -88,7 +93,10 @@ try{
   assert.equal(await contact.locator('.navlinks a').last().textContent(),'Contact');
   assert.equal(await contact.locator('.navlinks a').last().getAttribute('href'),'/contact?hl=ko');
   assert.equal(await contact.locator('main h1').textContent(),'Contact');
-  assert.equal(await contact.locator('main a[href="mailto:pakrsky2@naver.com"]').count(),2);
+  assert.equal(await contact.getByText('이메일 보내기').count(),0);
+  assert.equal(await contact.locator('main button').count(),0);
+  assert.equal(await contact.locator('main [class*="panel"]').count(),0);
+  assert.equal(await contact.locator('main a[href="mailto:pakrsky2@naver.com"]').count(),1);
   assert.ok((await contact.locator('main').innerText()).includes('광고, 장소 등록&수정 요청 :'));
   assert.ok((await contact.locator('main').innerText()).includes('pakrsky2@naver.com'));
   const contactWidth=await contact.evaluate(()=>({
@@ -101,7 +109,7 @@ try{
    await contact.locator('#country').selectOption('JP');
    await contact.waitForURL(u=>u.pathname==='/contact'&&u.searchParams.get('hl')==='ja');
    assert.ok((await contact.locator('main').innerText()).includes('広告、店舗の登録・情報修正'));
-   assert.equal(await contact.locator('main a[href="mailto:pakrsky2@naver.com"]').count(),2);
+   assert.equal(await contact.locator('main a[href="mailto:pakrsky2@naver.com"]').count(),1);
    await contact.locator('#country').selectOption('CN');
    await contact.waitForURL(u=>u.pathname==='/contact'&&u.searchParams.get('hl')==='zh-CN');
    assert.ok((await contact.locator('main').innerText()).includes('广告合作'));
