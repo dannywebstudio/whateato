@@ -17,6 +17,13 @@ assert.match(searchSource,/data-card-layout="map"/);
 assert.match(searchSource,/variant="map"/);
 assert.match(searchSource,/mapHref=\{mapHref\}/);
 assert.match(cardSource,/we-card-['"]\+variant/);
+assert.match(searchSource,/new URLSearchParams\(\{focus:r.id,hl:locale\}\)/);
+assert.match(searchSource,/data-search-pagination/);
+assert.doesNotMatch(searchSource,/href=\{'\/map\?'\+toMap/);
+const relatedSource=readFileSync('src/components/RelatedSearchPosts.tsx','utf8');
+assert.match(relatedSource,/if\(posts.length===0\)return null/);
+const focusApiSource=readFileSync('src/app/api/v1/map/focus/route.ts','utf8');
+assert.match(focusApiSource,/items:\[selected,\.\.\.nearby.slice\(0,3\)\]/);
 const browser=await chromium.launch({headless:true});
 async function mockCountry(page,country){
  await page.route('**/api/visitor-country',route=>route.fulfill({
@@ -147,6 +154,33 @@ try{
   }
   await context.close();
  }
+ // A clicked Search card opens exact-UUID focus with 4 cards, target first.
+ const focusId='11111111-1111-4111-8111-111111111111';
+ const chosen=[
+  {id:focusId,name:'선택된 식당',latitude:37.571,longitude:126.982},
+  {id:'22222222-2222-4222-8222-222222222222',name:'근처 식당 A',latitude:37.5711,longitude:126.9822},
+  {id:'33333333-3333-4333-8333-333333333333',name:'근처 식당 B',latitude:37.572,longitude:126.981},
+  {id:'44444444-4444-4444-8444-444444444444',name:'근처 식당 C',latitude:37.573,longitude:126.98}
+ ].map(x=>({...x,name_ko:x.name,address:'서울',address_ko:'서울',short_description:null,
+  main_menu:null,editorial_score:null,category_code:'한식',region_sigungu:'중구',tags:[],
+  opening_hours:null}));
+ const focused=await browser.newContext({locale:'ko-KR',viewport:{width:390,height:844}});
+ const focusedPage=await focused.newPage();
+ await mockCountry(focusedPage,'KR');
+ await focusedPage.route('**/api/v1/map/focus?*',route=>{
+  const requested=new URL(route.request().url()).searchParams.get('id');
+  assert.equal(requested,focusId);
+  return route.fulfill({status:200,contentType:'application/json',
+   body:JSON.stringify({focus_id:focusId,center:[126.982,37.571],items:chosen,limit:4})});
+ });
+ await focusedPage.goto(root+'/map?focus='+focusId+'&hl=ko',{waitUntil:'domcontentloaded'});
+ await focusedPage.locator('.map-explore-cards .we-card-map').first().waitFor({timeout:20000});
+ assert.equal(await focusedPage.locator('.map-explore-cards .we-card-map').count(),4);
+ assert.equal(await focusedPage.locator('.map-explore-cards .we-card-map').first().locator('h3').textContent(),'선택된 식당');
+ assert.equal(await focusedPage.locator('.map-explore-pagination span').textContent(),'1 / 1');
+ assert.equal(await focusedPage.locator('.map-explore-cards .we-card-map h3').last().textContent(),'근처 식당 C');
+ await focusedPage.screenshot({path:out+'/mobile-focused-four-map-cards.png',fullPage:true});
+ await focused.close();
  // Locale in a Google/shared direct URL must not be silently overwritten by IP.
  const seo=await browser.newContext({locale:'en-US',timezoneId:'America/New_York'});
  const seoPage=await seo.newPage();await mockCountry(seoPage,'JP');
