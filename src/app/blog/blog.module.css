@@ -79,6 +79,11 @@
 .articleHeader h1{font-size:clamp(33px,5vw,53px);letter-spacing:-.06em;line-height:1.17;margin:14px 0 20px}
 .dek{font-size:17px;line-height:1.75;color:#536a5b;margin:0 0 22px}
 .meta{display:flex;align-items:center;gap:11px;flex-wrap:wrap;font-size:12px;color:#768579}
+.languageSwitch{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:18px}
+.languageSwitch a{border-radius:99px;border:1px solid #d7e5d9;background:#fff;
+ font-size:12px;font-weight:700;color:#576f5e;padding:8px 12px}
+.languageSwitch a[aria-current="page"]{border-color:#168353;background:#eff8f1;color:#116b46}
+.languageSwitch a:hover{background:#e8f5eb}
 .cover{max-width:1000px;margin:0 auto 38px}
 .cover img{display:block;width:100%;aspect-ratio:1.65;object-fit:cover;border-radius:16px}
 .articleBody{max-width:780px;margin:0 auto;font-size:16px;line-height:1.95;overflow-wrap:anywhere}
