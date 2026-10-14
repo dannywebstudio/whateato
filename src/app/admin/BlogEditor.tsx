@@ -180,6 +180,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
    <Link href="/blog" target="_blank" rel="noopener noreferrer">공개 블로그 ↗</Link>
   </div>
   {message&&<p className={styles.notification} role="status">{message}</p>}
+  <BlogCategoryManager items={categories} owner={owner} onChanged={refreshCategories}/>
   <div className={styles.workspace}>
    <aside className={styles.sidebar}>
     <h3>새 글 작성</h3>
@@ -337,7 +338,6 @@ export default function BlogEditor({owner}:{owner:boolean}){
        {!translation.blocks.length&&<p className={styles.blank}>상단에서 + 문단 또는 + 제목을 눌러 본문을 작성해.</p>}
       </>}
      </div>
-     <BlogCategoryManager items={categories} owner={owner} onChanged={refreshCategories}/>
      <section className={styles.mediaPanel}>
       <h4>블로그 사진 관리</h4>
       <div className={styles.photoDrop}
