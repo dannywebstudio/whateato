@@ -36,7 +36,10 @@ export async function GET(request:NextRequest,{params}:Context){
        ORDER BY p.position) FROM whateato_review_photo_assets p
        WHERE p.review_id=r.id),'[]'::jsonb) AS photos
     FROM whateato_user_reviews r LEFT JOIN whateato_review_category_scores s ON s.review_id=r.id
-    WHERE r.restaurant_id=$1 AND r.account_id=$2 LIMIT 1`,[id,accountId]);
+    WHERE r.restaurant_id=$1 AND r.account_id=$2
+      AND NOT (r.moderation_status='rejected' AND
+        r.body='Review removed by its author. Original text is no longer available.')
+    LIMIT 1`,[id,accountId]);
    return reply({review:result.rows[0]||null});
   }
   const reviews=await getPublicReviews(id);
