@@ -115,6 +115,21 @@ try{
      u.searchParams.get('q')==='홍대'&&u.searchParams.get('hl')==='ko');
    assert.equal(await page.locator('#country').inputValue(),'KR');
    assert.equal(await page.locator('#language').inputValue(),'ko');
+   // Search results and Map MUST use one identical restaurant card component.
+   assert.equal(await page.locator('[data-card-layout="map"]').count(),1);
+   const searchCards=page.locator('[data-card-layout="map"] .we-card.we-card-map');
+   assert.equal(await page.locator('.search-results-page .we-card-search').count(),0);
+   if(await searchCards.count()){
+    assert.equal(await searchCards.count(),await page.locator('[data-card-layout="map"] .we-card-visual').count());
+    assert.equal(await searchCards.first().locator('.we-card-head h3 a').count(),1);
+    assert.equal(await searchCards.first().locator('.we-card-visit').count(),1);
+    assert.equal(await searchCards.first().locator('.we-map-button').count(),1);
+    const leftEdge=await searchCards.first().evaluate(el=>getComputedStyle(el).borderLeftWidth);
+    assert.equal(leftEdge,'5px');
+   }
+   const gridWidths=await page.evaluate(()=>({viewport:document.documentElement.clientWidth,actual:document.documentElement.scrollWidth}));
+   assert.ok(gridWidths.actual<=gridWidths.viewport+2,'Search map-card overflow '+JSON.stringify(gridWidths));
+   await page.screenshot({path:out+'/'+vp.name+'-search-map-cards.png',fullPage:true});
   }
   await context.close();
  }
