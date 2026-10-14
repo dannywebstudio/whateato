@@ -1,11 +1,17 @@
 import {isUuid} from '@/lib/platform-v1';
-export const BLOG_CATEGORIES={
- 'food-guides':'Food Guides','neighborhoods':'Neighborhoods','korean-food':'Korean Food',
- 'dining-tips':'Dining Tips','food-culture':'Food Culture'
-} as const;
+// Category taxonomy is stored in whateato_blog_categories and managed by CMS.
+export type BlogCategoryInfo={
+ slug:string;parent_slug:string|null;names:Record<string,string>;
+ position:number;is_active:boolean
+};
+export const blogCategorySlug=(x:unknown):x is string=>typeof x==='string'&&
+ x.length>=3&&x.length<=64&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(x);
+export function blogCategoryName(item:BlogCategoryInfo|undefined,locale:string='en'){
+ return item?.names?.[locale]||item?.names?.en||item?.names?.ko||item?.slug||'Stories';
+}
 export const BLOG_LOCALES=['en','ja','zh-CN','ko'] as const;
 export type BlogLocale=typeof BLOG_LOCALES[number];
-export type BlogCategory=keyof typeof BLOG_CATEGORIES;
+export type BlogCategory=string;
 export type BlogBlock={id:string;type:'paragraph'|'heading'|'quote'|'list'|'table'|'image'|'divider';
  text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;caption?:string};
 export type BlogTranslation={title:string;excerpt:string;seo_title:string;seo_description:string;blocks:BlogBlock[]};
@@ -25,7 +31,7 @@ export function validBlogSlug(slug:unknown):slug is string{
 }
 export function parseBlogDraft(raw:unknown):BlogDraft|null{
  if(!record(raw)||!exact(raw,['category','tags','related_restaurant_ids','translations'])||
-   typeof raw.category!=='string'||!(raw.category in BLOG_CATEGORIES)||
+   !blogCategorySlug(raw.category)||
    !strArray(raw.tags,40,8,/^[a-z][a-z0-9-]{1,39}$/)||
    !strArray(raw.related_restaurant_ids,36,8)||
    !(raw.related_restaurant_ids as string[]).every(isUuid)||
