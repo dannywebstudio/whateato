@@ -13,7 +13,10 @@ export async function GET(_req:NextRequest,{params}:Ctx){
  try{
    const [venue,locales,menus,tags,hours,media]=await Promise.all([
     pool.query(`SELECT id::text,name_ko,road_address_ko,lot_address_ko,region_sigungu,
-      category_code,business_status,publication_status FROM restaurants WHERE id=$1`,[id]),
+      category_code,business_status,publication_status,region_sido,region_dong,
+      latitude,longitude,
+      EXISTS(SELECT 1 FROM whateato_cms_restaurant_origins o WHERE o.restaurant_id=restaurants.id) AS cms_origin
+      FROM restaurants WHERE id=$1`,[id]),
     pool.query(`SELECT locale,display_name,short_description,full_description,source_notes,publication_state
       FROM restaurant_localizations WHERE restaurant_id=$1 ORDER BY locale`,[id]),
     pool.query(`SELECT m.id::text,COALESCE(k.external_key,m.id::text) AS menu_key,
@@ -29,7 +32,7 @@ export async function GET(_req:NextRequest,{params}:Ctx){
       intervals.start_minute,intervals.end_minute FROM restaurant_opening_hours h
       LEFT JOIN restaurant_opening_intervals intervals ON intervals.restaurant_id=h.restaurant_id
       WHERE h.restaurant_id=$1 ORDER BY intervals.weekday,intervals.start_minute`,[id]),
-    pool.query(`SELECT id::text,position,alt_ko,publication_state,rights_status,
+    pool.query(`SELECT id::text,position,alt_ko,publication_state,rights_status,cms_photo_role,
       ('/api/v1/images/'||id::text) AS url FROM restaurant_images
       WHERE restaurant_id=$1 ORDER BY position,id LIMIT 100`,[id])
    ]);
