@@ -1,6 +1,7 @@
 import {getPool} from '@/lib/db';
 import {restaurantPublicName} from '@/lib/restaurant-public-name';
 import {release300PublicWhere} from '@/lib/release-300-gate';
+import {orderRestaurantTags} from '@/lib/restaurant-tag-order';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {loadRatingDisplays,type RatingDisplay} from '@/lib/ratings-display';
 import {escapeLike,isUuid,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
@@ -162,7 +163,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     [locale,q,'%'+escapeLike(q)+'%',region,'%'+escapeLike(region)+'%',filters,limit,offset]);
   const items=res.rows.slice(0,limit);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,items.map(x=>x.id)),loadRatingDisplays(pool,items.map(x=>x.id))]);
-  return {locale,q,region,filters,items:items.map(x=>({...x,name:restaurantPublicName(x.name),opening_hours:opening[x.id]||null,ratings:ratings[x.id]||{external:null,whateato:null}})),limit,offset,
+  return {locale,q,region,filters,items:items.map(x=>({...x,name:restaurantPublicName(x.name),tags:orderRestaurantTags(x.tags),opening_hours:opening[x.id]||null,ratings:ratings[x.id]||{external:null,whateato:null}})),limit,offset,
     has_more:res.rows.length>limit,total_count:res.rows[0]?.total_count??0,
     ratings_note:'editorial_score is an independently approved WhatEatO score; null means unverified'};
 }
@@ -230,7 +231,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       ORDER BY position,id LIMIT 25`,[id])
   ]);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,[id]),loadRatingDisplays(pool,[id])]);
-  return {locale,restaurant:{...row.rows[0],name:restaurantPublicName(row.rows[0].name),opening_hours:opening[id]||null,ratings:ratings[id]||{external:null,whateato:null}},menus:menus.rows,tags:tags.rows,images:images.rows,
+  return {locale,restaurant:{...row.rows[0],name:restaurantPublicName(row.rows[0].name),opening_hours:opening[id]||null,ratings:ratings[id]||{external:null,whateato:null}},menus:menus.rows,tags:orderRestaurantTags(tags.rows),images:images.rows,
     image_note:'Licensed media delivered via internal route only when server-owned media storage is configured.',
     rating_note:'Independent editorial score is not a Google/Naver or user-review average.'};
 }
