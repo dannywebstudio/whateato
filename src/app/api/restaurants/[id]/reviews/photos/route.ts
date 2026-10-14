@@ -39,10 +39,7 @@ export async function POST(req:NextRequest,{params}:Ctx){
    chunks.push(next.value);
   }
  }catch{return reply({error:'upload_stream_failed'},400)}
- const buffered=new Request(req.url,{method:'POST',headers:{
-   'Content-Type':req.headers.get('content-type')||''},
-   body:Buffer.concat(chunks).toString('binary')});
- // Use raw bytes for multipart; never roundtrip binary through UTF-8.
+ // Parse the bounded multipart buffer without text transcoding.
  let data:FormData;
  try{
   const raw=Buffer.concat(chunks);
@@ -50,7 +47,6 @@ export async function POST(req:NextRequest,{params}:Ctx){
    'Content-Type':req.headers.get('content-type')||''},body:new Uint8Array(raw)});
   data=await parsed.formData();
  }catch{return reply({error:'invalid_multipart'},400)}
- void buffered;
  const file=data.get('file'),permission=data.get('rights_confirmation');
  if(!(file instanceof File)||file.size<256||file.size>3_000_000||
   !['image/jpeg','image/png','image/webp'].includes(file.type)||
