@@ -18,7 +18,7 @@ const listing=await published.json();
 assert.equal(listing.moderation_status,'published');
 assert.equal(listing.items.length,1);
 const chosen=listing.items[0];
-assert.equal(chosen.rating,5);
+assert.equal(chosen.rating,4.5,'Moderation shows the five-category average, not the legacy rounded rating');
 const patch=()=>fetch(base+'/'+chosen.id,{
  method:'PATCH',headers,body:JSON.stringify({decision:'hide',reason_code:'other'})
 });
