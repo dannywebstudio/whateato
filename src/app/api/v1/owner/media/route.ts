@@ -21,12 +21,14 @@ export async function POST(req:NextRequest){
  const file=input.get('file'),id=input.get('restaurant_id');
  const source=input.get('source_reference'),permission=input.get('rights_reference');
  const position=Number(input.get('position')||0);
+ const role=input.get('photo_role');
  if(!(file instanceof File)||file.size<64||file.size>8*1024*1024||
    !['image/jpeg','image/png','image/webp'].includes(file.type)||
    typeof id!=='string'||!isUuid(id)||
    typeof source!=='string'||!/^https:\/\/\S{5,695}$/.test(source)||
    typeof permission!=='string'||!/^https:\/\/\S{5,695}$/.test(permission)||
-   input.get('rights_confirmation')!=='yes'||!Number.isInteger(position)||position<0||position>100)
+   input.get('rights_confirmation')!=='yes'||!['cover','gallery'].includes(String(role))||
+   !Number.isInteger(position)||position<0||position>100)
    return respond({error:'invalid_image_metadata_or_rights'},400);
  const pool=getPool();if(!pool)return respond({error:'database_not_configured'},503);
  let bytes:Buffer,meta:sharp.OutputInfo;
@@ -36,7 +38,8 @@ export async function POST(req:NextRequest){
    if(!info.width||!info.height||info.width<320||info.height<240)
      return respond({error:'image_too_small_min_320x240'},400);
    const optimized=await sharp(original,{limitInputPixels:32_000_000,failOn:'error'})
-      .rotate().resize({width:1600,height:1200,fit:'inside',withoutEnlargement:true})
+      .rotate().resize({width:role==='cover'?1200:1200,height:role==='cover'?810:900,
+        fit:'cover',position:'centre',withoutEnlargement:true})
       .webp({quality:78,effort:5}).toBuffer({resolveWithObject:true});
    bytes=optimized.data;meta=optimized.info;
    if(bytes.length>8*1024*1024)return respond({error:'optimized_image_too_large'},413);
@@ -44,23 +47,26 @@ export async function POST(req:NextRequest){
  const photoId=randomUUID();const key='media/cms/'+photoId+'.webp';
  try{
    const exists=await pool.query(`SELECT id FROM restaurants
-      WHERE id=$1 AND business_status='active' AND publication_status='published'`,[id]);
+      WHERE id=$1 AND
+      ((business_status='active' AND publication_status='published') OR
+      (business_status='unknown' AND publication_status='draft' AND EXISTS (
+        SELECT 1 FROM whateato_cms_restaurant_origins o WHERE o.restaurant_id=restaurants.id)))`,[id]);
    if(!exists.rowCount)return respond({error:'restaurant_not_publishable'},409);
    await savePhoto(key,bytes);
    try{
      await pool.query(`
        WITH image AS(
         INSERT INTO restaurant_images(id,restaurant_id,storage_key,alt_ko,source_reference,
-           usage_rights_reference,rights_status,publication_state,position)
-        VALUES($1,$2,$3,$4,$5,$6,'pending','draft',$7) RETURNING id
+           usage_rights_reference,rights_status,publication_state,position,cms_photo_role)
+        VALUES($1,$2,$3,$4,$5,$6,'pending','draft',$7,$11) RETURNING id
        )
        INSERT INTO whateato_admin_media_uploads(image_id,storage_provider,width,height,file_bytes,mime_type)
        SELECT id,'s3_compatible',$8,$9,$10,'image/webp' FROM image`,
-       [photoId,id,key,file.name.slice(0,120),source,permission,position,meta.width,meta.height,bytes.length]);
+       [photoId,id,key,file.name.slice(0,120),source,permission,position,meta.width,meta.height,bytes.length,role]);
    }catch(error){
      await deletePhoto(key).catch(()=>{});
      throw error;
    }
-   return respond({image_id:photoId,state:'pending',width:meta.width,height:meta.height,bytes:bytes.length},201);
+   return respond({image_id:photoId,state:'pending',photo_role:role,width:meta.width,height:meta.height,bytes:bytes.length},201);
  }catch{return respond({error:'photo_storage_unavailable'},503)}
 }
