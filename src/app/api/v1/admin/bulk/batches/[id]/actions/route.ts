@@ -96,7 +96,7 @@ export async function POST(req:NextRequest,{params}:Context){
         await applyBulkItem(client,{
           restaurant_id:row.restaurant_id,source_key:row.source_key,
           kind:row.kind,payload:row.payload
-        });
+        },row.id);
         await client.query(`
           UPDATE whateato_bulk_items SET state='applied',applied_at=now(),error_code=NULL
           WHERE id=$1`,[row.id]);
