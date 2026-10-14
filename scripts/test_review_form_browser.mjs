@@ -44,8 +44,12 @@ try{
   await page.getByText('Thanks for sharing your visit',{exact:true}).waitFor();
   assert.equal(await page.locator('textarea').count(),0,'Reload must not reopen editor');
   assert.equal(await page.locator('[aria-pressed="true"]').count(),0,'Saved ratings must not auto-select editable stars');
-  assert.equal(await page.getByText(review,{exact:true}).count(),0,'Saved narrative hidden until explicitly requested');
+  assert.equal(await page.getByText(review,{exact:true}).count(),0,'Saved narrative not rendered before request');
   await page.screenshot({path:out+'/'+viewport.name+'-saved.png',fullPage:true});
+  await page.getByText('Read saved review',{exact:true}).click();
+  await page.getByText(review,{exact:true}).waitFor({state:'visible'});
+  await page.getByText('Read saved review',{exact:true}).click();
+  await page.getByText(review,{exact:true}).waitFor({state:'detached'});
   const width=await page.evaluate(()=>({
    clientWidth:document.documentElement.clientWidth,
    scrollWidth:document.documentElement.scrollWidth
