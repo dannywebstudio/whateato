@@ -105,14 +105,17 @@ export async function POST(req:NextRequest,{params}:Context){
           VALUES ($1,$2,'applied')`,[id,row.id]);
         await client.query('RELEASE SAVEPOINT bulk_item');
         applied++;
-      }catch{
+      }catch(error){
         await client.query('ROLLBACK TO SAVEPOINT bulk_item');
+        // Only disclose worker-defined stable error codes; never leak SQL or user input.
+        const reason=error instanceof Error&&/^[a-z][a-z0-9_]{2,79}$/.test(error.message)
+          ?error.message:'apply_failed';
         await client.query(`
-          UPDATE whateato_bulk_items SET state='failed',error_code='apply_failed'
-          WHERE id=$1`,[row.id]);
+          UPDATE whateato_bulk_items SET state='failed',error_code=$2
+          WHERE id=$1`,[row.id,reason]);
         await client.query(`
           INSERT INTO whateato_bulk_audit(batch_id,item_id,action,reason_code)
-          VALUES ($1,$2,'failed','apply_failed')`,[id,row.id]);
+          VALUES ($1,$2,'failed',$3)`,[id,row.id,reason]);
         await client.query('RELEASE SAVEPOINT bulk_item');
         failed++;
       }
