@@ -52,11 +52,16 @@ jobs:
       - run: node --check scripts/test_review_hide_http.mjs
       - run: node --check scripts/test_visitor_review_categories_http.mjs
       - run: node --check scripts/test_owner_review_delete_http.mjs
+      - run: node --check scripts/test_review_form_browser.mjs
       - run: node --check scripts/run_bulk_batch.mjs
       - run: node --check scripts/import_bulk_ndjson.mjs
       - run: node scripts/seed_bulk_ops_fixture.mjs
       - run: npm run typecheck
       - run: npm run build
+      - name: Install isolated Chromium for review form visual QA
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.1
+          npx playwright install --with-deps chromium
       - name: Start local app and run isolated Postgres HTTP tests
         run: |
           npm run start -- --hostname 127.0.0.1 --port 3000 > /tmp/whateato-bulk-ci.log 2>&1 &
@@ -71,6 +76,15 @@ jobs:
           node scripts/test_cms_venue_address_http.mjs
           node scripts/test_visitor_review_categories_http.mjs
           node scripts/test_owner_review_delete_http.mjs
+          node scripts/test_review_form_browser.mjs
+      - name: Upload review form desktop and phone QA snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-form-browser-qa
+          path: review-form-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Print local errors on failure
         if: failure()
         run: cat /tmp/whateato-bulk-ci.log || true
