@@ -59,7 +59,7 @@ export default function Header(){
  }
  function navigateLanguage(language:Language,force=false){
   const path=window.location.pathname;
-  if(path==='/'||!/^\/(search|map|blog(?:\/|$)|restaurant\/)/.test(path))return;
+  if(path==='/'||!/^\/(search|map|blog(?:\/|$)|contact(?:\/|$)|restaurant\/)/.test(path))return;
   const params=new URLSearchParams(window.location.search);
   // Explicit language URLs from search engines and shared links are respected
   // on initial auto detection. Only manual choice can replace such a URL.
@@ -139,6 +139,7 @@ export default function Header(){
     <Link href={'/blog?hl='+encodeURIComponent(lang)}>
      {{ko:'블로그',en:'Blog',ja:'ブログ','zh-CN':'博客'}[lang]}
     </Link>
+    <Link href={'/contact?hl='+encodeURIComponent(lang)}>Contact</Link>
    </div>
   </div>
   <div className="preferences">
