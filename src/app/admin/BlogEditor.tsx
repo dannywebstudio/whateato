@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState,type ChangeEvent,type DragEvent} from 'react';
-import {BLOG_LOCALES,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
+import {BLOG_LOCALES,BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS,blogLocaleReadiness,publishableBlog,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
 import BlogCategoryManager from './BlogCategoryManager';
 import {BlogBody} from '@/components/BlogBody';
 import styles from './blog-editor.module.css';
@@ -54,6 +54,11 @@ export default function BlogEditor({owner}:{owner:boolean}){
  const [rights,setRights]=useState(false);
  const editorRef=useRef<HTMLDivElement|null>(null);
  const translation=draft.translations[locale]||blankLocale();
+ const readiness=BLOG_REQUIRED_LOCALES.map(lang=>({
+  locale:lang,...blogLocaleReadiness(draft,lang)
+ }));
+ const readyCount=readiness.filter(item=>item.ready).length;
+ const readyToPublish=publishableBlog(draft)===null;
  const error=(e:unknown)=>setMessage(e instanceof Error?e.message:String(e));
  const refreshCategories=useCallback(async()=>{
    const response=await api('/api/v1/owner/blog/categories');
@@ -125,8 +130,8 @@ export default function BlogEditor({owner}:{owner:boolean}){
    await json('/api/v1/owner/blog/'+current.id+'/actions',{
      action:name,expected_revision:current.revision});
    await open(current.id);await refresh();
-   setMessage(name==='submit'?'검수 요청 완료':name==='publish'?
-    '발행 완료 · 공개 블로그에서 볼 수 있어.':'블로그 공개가 중단됐어.');
+   setMessage(name==='submit'?'4개 언어 검수 요청 완료':name==='publish'?
+    '한국어·영어·일본어·중국어 4개 언어가 함께 발행됐어.':'블로그 공개가 중단됐어.');
   }catch(e){error(e)}finally{setBusy(false)}
  };
  const searchRestaurant=async()=>{
@@ -176,7 +181,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
  return <div className={styles.blogCms} ref={editorRef}>
   <div className={styles.heading}>
    <div><span>WHATEATO · EDITORIAL CMS</span><h2>블로그 콘텐츠 관리</h2>
-    <p>초안과 공개 글은 분리돼. 저장 → 검수 요청 → Owner 승인 발행 순서야.</p></div>
+    <p>4개 언어 동시 발행 · 한국어 / English (US) / 日本語 / 简体中文</p></div>
    <Link href="/blog" target="_blank" rel="noopener noreferrer">공개 블로그 ↗</Link>
   </div>
   {message&&<p className={styles.notification} role="status">{message}</p>}
@@ -208,17 +213,38 @@ export default function BlogEditor({owner}:{owner:boolean}){
       <div className={styles.actions}>
        <button disabled={busy||!dirty} className={styles.greenButton} onClick={()=>void save()}>
         {busy?'처리 중…':'초안 저장'}</button>
-       <button disabled={busy||dirty} className={styles.smallButton} onClick={()=>void action('submit')}>검수 요청</button>
-       {owner&&<button disabled={busy||dirty||!current.review_requested_at}
-         className={styles.publishButton} onClick={()=>void action('publish')}>승인하고 발행</button>}
+       <button disabled={busy||dirty||!readyToPublish} className={styles.smallButton}
+         onClick={()=>void action('submit')}>4개 언어 검수 요청</button>
+       {owner&&<button disabled={busy||dirty||!current.review_requested_at||!readyToPublish}
+         className={styles.publishButton} onClick={()=>void action('publish')}>4개 언어 동시 발행</button>}
        {owner&&current.is_visible&&<button disabled={busy} className={styles.dangerButton}
          onClick={()=>void action('unpublish')}>공개 중단</button>}
       </div>
      </div>
+     <div className={styles.languageReadiness} aria-label="언어별 발행 준비 상태">
+      <div className={styles.readinessTitle}>
+       <strong>4개 언어 동시 발행 준비</strong>
+       <span>{readyCount} / 4 준비 완료</span>
+      </div>
+      <div className={styles.readinessItems}>
+       {readiness.map(item=><button key={item.locale} type="button"
+        aria-pressed={locale===item.locale} data-ready={item.ready}
+        onClick={()=>setLocale(item.locale)}>
+        <span aria-hidden="true">{item.ready?'✓':'○'}</span>
+        {BLOG_LOCALE_LABELS[item.locale]}
+        <span className={styles.readinessStatus}>{item.ready?'완료':'작성 필요'}</span>
+       </button>)}
+      </div>
+      {!readyToPublish&&<p>
+       모든 언어의 제목·요약·본문·SEO 정보와 소제목을 작성하면 검수 요청이 활성화돼.
+       영어는 미국 방문객을 포함하는 동일한 버전이야.
+      </p>}
+     </div>
      <div className={styles.languageTabs} role="group" aria-label="작성 언어">
       {BLOG_LOCALES.map(l=><button key={l} aria-pressed={locale===l}
-       onClick={()=>setLocale(l)}>{l==='en'?'English':l==='ko'?'한국어':l==='ja'?'日本語':'简体中文'}
-       {draft.translations[l]?.title?' ✓':''}</button>)}
+       data-complete={readiness.find(item=>item.locale===l)?.ready}
+       onClick={()=>setLocale(l)}>{BLOG_LOCALE_LABELS[l]}
+       {readiness.find(item=>item.locale===l)?.ready?' ✓':''}</button>)}
      </div>
      <div className={styles.details}>
       <label>제목 <input value={translation.title} maxLength={140}
