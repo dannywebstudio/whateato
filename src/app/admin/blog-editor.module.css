@@ -105,3 +105,26 @@
 .photoDrop>span:first-child{font-size:27px}
 .photoDrop strong{font-size:13px;color:#36754e}
 .photoDrop>span:last-child{font-size:11px;color:#7b8c7c;overflow-wrap:anywhere}
+
+/* Dynamically managed taxonomy; entirely private CMS styles. */
+.categoryManager{margin:10px 22px 20px;padding:18px;border:1px solid #d6e8dc;
+ border-radius:14px;background:#fbfdfb;display:grid;gap:14px}
+.categoryManagerHeading{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.categoryManagerHeading h3{font-size:19px;margin:0 0 4px}
+.categoryManagerHeading p{font-size:12px;margin:0;color:#74877a}
+.categoryManagerHeading span{font-size:11px;background:#e9f5ec;border-radius:50px;padding:7px 11px;color:#266b47}
+.categoryItems{display:grid;gap:7px;max-height:390px;overflow:auto}
+.categoryItem{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+ gap:10px;padding:10px 12px;border:1px solid #dfeae2;border-radius:10px;background:white}
+.categoryItem[data-nested=true]{margin-left:22px;background:#f8fbf8}
+.categoryItem[data-inactive=true]{opacity:.6}
+.categoryItem strong{font-size:13px;color:#294b35}
+.categoryItem small{font-size:11px;color:#7c8b7d;display:block;margin-top:5px;overflow-wrap:anywhere}
+.categoryForm{display:grid;gap:15px;border-top:1px dashed #d3e4d8;padding-top:18px}
+.categoryForm h4{font-size:17px;margin:0}
+.categoryForm .actions button{padding:10px 15px}
+.muted{color:#6e8674;font-size:12px;line-height:1.7}
+@media(max-width:620px){
+ .categoryManager{margin:10px 12px 16px;padding:13px}
+ .categoryItem[data-nested=true]{margin-left:11px}
+}
