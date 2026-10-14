@@ -1,6 +1,7 @@
 -- WhatEatO integrated editorial blog. Drafts never leak into public results.
 -- Review/publish uses immutable snapshots: editing a live article won't change it until reapproval.
 BEGIN;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE TABLE IF NOT EXISTS whateato_blog_posts(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  slug text NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(slug) BETWEEN 3 AND 90),
