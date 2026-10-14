@@ -40,3 +40,13 @@
 - Application rollback = turn `WHATEATO_OWNER_CMS_ENABLED=false` and deploy previous commit; rollback does not destroy audits/data.
 - Publication batches are append-only audit; user can unpublish localized items, menus or admin visibility holds via new authorized batches. No hard deletion of restaurant permit records.
 - Never run synthetic fixture scripts against staging or production.
+
+## CMS v1.1: new restaurants, addresses and photo roles
+- Owner CMS-only UI: photo management is now the **last section of the restaurant content editor**, not a separate navigation tab. Photograph category must be selected at upload: `cover` for search cards (1200×810 px recommended, only one published cover), or `gallery` for detail-page carousel (1200×900 px recommended). Native source files still limited to 8MiB JPEG/PNG/WebP; WebP transformation and rights approval still required.
+- A verified new cover supersedes prior published cover atomically; it does not delete object bytes.
+- Manually added restaurant is a **private draft**, tracked in `whateato_cms_restaurant_origins` and checked for a matching existing name+road address before insert. Staff/editor can prepare content. A manually approved `restaurant_publish` batch item publishes only after English profile, valid street/location and coordinates are confirmed. A missing coordinate prevents publication. No automatic publishing.
+- Address editor creates an `address` operation in the existing reviewed batch workflow. It updates map coordinates and PostGIS point together. Prior road/lot/region/coordinates and old localized addresses are backed up in `whateato_cms_address_history`, and stale translations are invalidated. Foreign visitors see the Korean verified address fallback until fresh translations are published.
+- `db/migrations/016_cms_restaurant_address_media.sql` must be applied to **staging only first**. It adds batch kinds, provenance, address audit and typed media column, with no mutation of existing restaurant content.
+- Human reviewer sees the complete proposed payload before approving, including address and photograph roles.
+- CI isolated PostGIS 16 + HTTP scenario checks duplicate protection, new draft creation, English-first publish and address audit. Never seed synthetic rows in staging or production.
+- Production deployment and migration remain separate owner-governed steps. Existing homepage/search/detail visual styling unchanged; only approved data selection and CMS UI change.
