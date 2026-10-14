@@ -19,16 +19,27 @@ export async function PATCH(req:NextRequest,{params}:Ctx){
  const decision=(body as {decision?:unknown}).decision;
  if(!['approve','reject','hide'].includes(String(decision)))return respond({error:'invalid_action'},400);
  const pool=getPool();if(!pool)return respond({error:'database_not_configured'},503);
+ const client=await pool.connect();
  try{
-   const image=await pool.query<{storage_key:string;rights_status:string;publication_state:string}>(`
-     SELECT storage_key,rights_status,publication_state FROM restaurant_images WHERE id=$1`,[id]);
-   if(!image.rows.length)return respond({error:'image_not_found'},404);
+   await client.query('BEGIN');
+   const image=await client.query<{storage_key:string;rights_status:string;publication_state:string;cms_photo_role:string;restaurant_id:string}>(`
+     SELECT storage_key,rights_status,publication_state,cms_photo_role,restaurant_id::text
+     FROM restaurant_images WHERE id=$1 FOR UPDATE`,[id]);
+   if(!image.rows.length){await client.query('ROLLBACK');return respond({error:'image_not_found'},404)}
    if(decision==='approve'){
-     if(!objectStorageReady())return respond({error:'private_storage_not_configured'},503);
-     if(image.rows[0].rights_status!=='pending')return respond({error:'not_pending'},409);
+     if(!objectStorageReady()){await client.query('ROLLBACK');return respond({error:'private_storage_not_configured'},503)}
+     if(image.rows[0].rights_status!=='pending'){await client.query('ROLLBACK');return respond({error:'not_pending'},409)}
      await photoExists(image.rows[0].storage_key);
    }
-   const updated=await pool.query(`
+   if(decision==='approve'&&image.rows[0].cms_photo_role==='cover'){
+     // A venue has one approved representative image. Old media is retained
+     // as a non-public draft and can be explicitly re-reviewed later.
+     await client.query(`
+       UPDATE restaurant_images SET publication_state='draft'
+       WHERE restaurant_id=$1 AND id<>$2 AND cms_photo_role='cover'
+         AND publication_state='published'`,[image.rows[0].restaurant_id,id]);
+   }
+   const updated=await client.query(`
      UPDATE restaurant_images SET
        rights_status=CASE
          WHEN $2='approve' THEN 'approved'
@@ -41,7 +52,14 @@ export async function PATCH(req:NextRequest,{params}:Ctx){
      )
      AND EXISTS(SELECT 1 FROM whateato_admin_media_uploads a WHERE a.image_id=$1)
      RETURNING id`,[id,decision]);
-   if(!updated.rowCount)return respond({error:'invalid_image_transition'},409);
-   return respond({image_id:id,status:decision});
- }catch{return respond({error:'image_review_unavailable'},503)}
+   if(!updated.rowCount){
+     await client.query('ROLLBACK');
+     return respond({error:'invalid_image_transition'},409);
+   }
+   await client.query('COMMIT');
+   return respond({image_id:id,status:decision,photo_role:image.rows[0].cms_photo_role});
+ }catch{
+   await client.query('ROLLBACK').catch(()=>{});
+   return respond({error:'image_review_unavailable'},503)
+ }finally{client.release()}
 }
