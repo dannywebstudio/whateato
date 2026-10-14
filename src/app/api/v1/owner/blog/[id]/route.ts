@@ -50,6 +50,16 @@ export async function PUT(req:NextRequest,{params}:Ctx){
  const client=await pool.connect();
  try{
   await client.query('BEGIN');
+  const validCategory=await client.query(`
+    SELECT 1 FROM whateato_blog_categories c
+    WHERE c.slug=$1 AND c.is_active=true
+      AND (c.parent_slug IS NULL OR EXISTS(
+        SELECT 1 FROM whateato_blog_categories parent
+        WHERE parent.slug=c.parent_slug AND parent.is_active=true))
+    LIMIT 1`,[draft.category]);
+  if(!validCategory.rowCount){
+    await client.query('ROLLBACK');return respond({error:'category_inactive_or_missing'},409);
+  }
   const result=await client.query<{revision:number}>(`
     UPDATE whateato_blog_drafts SET
       category=$2,tags=$3,related_restaurant_ids=$4,translations=$5::jsonb,
