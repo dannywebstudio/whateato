@@ -50,6 +50,7 @@ export default function Header(){
  const router=useRouter();
  function sync(countryCode:string,language:Language){
   setCountry(countryCode);setLang(language);setFlagUnavailable(false);
+  document.documentElement.lang=language==='en'?'en-US':language;
   try{
    localStorage.setItem('we_country',countryCode);
    localStorage.setItem('we_language',language);
