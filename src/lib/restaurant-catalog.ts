@@ -85,7 +85,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
           AND NULLIF(BTRIM(a.evidence_ref),'') IS NOT NULL
           AND a.verified_at IS NOT NULL),'[]'::json) AS tags
     FROM restaurants r
-    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$1
+    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$1 AND al.verified_at IS NOT NULL
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$1 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
@@ -183,7 +183,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.methodology_version ELSE NULL END AS editorial_methodology
     FROM restaurants r
-    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$2
+    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$2 AND al.verified_at IS NOT NULL
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$2 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
