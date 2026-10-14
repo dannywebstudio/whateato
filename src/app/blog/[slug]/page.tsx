@@ -2,7 +2,7 @@ import Link from 'next/link';
 import {notFound} from 'next/navigation';
 import type {Metadata} from 'next';
 import {findPublishedBlog,relatedBlogRestaurants} from '@/lib/blog-public';
-import {BLOG_CATEGORIES} from '@/lib/blog-model';
+import {getBlogCategories,blogCategoryName} from '@/lib/blog-categories';
 import {BlogBody as RenderBody} from '@/components/BlogBody';
 import styles from '../blog.module.css';
 export const runtime='nodejs';export const dynamic='force-dynamic';
@@ -31,7 +31,11 @@ export default async function BlogStory({params,searchParams}:Ctx){
  const published=await findPublishedBlog(slug,hl);
  if(!published)notFound();
  const t=published.draft.translations[published.locale]||published.draft.translations.en!;
- const restaurants=await relatedBlogRestaurants(published.draft,published.locale);
+ const [restaurants,categories]=await Promise.all([
+   relatedBlogRestaurants(published.draft,published.locale),getBlogCategories(true)
+ ]);
+ const activeCategory=categories.find(c=>c.slug===published.draft.category);
+ const parentCategory=categories.find(c=>c.slug===activeCategory?.parent_slug);
  const date=new Date(published.published_at).toLocaleDateString('en-US',{
    year:'numeric',month:'long',day:'numeric'});
  const structured={
@@ -48,12 +52,16 @@ export default async function BlogStory({params,searchParams}:Ctx){
  return <main className={styles.articleShell}>
    <nav className={styles.breadcrumb} aria-label="Breadcrumb">
       <Link href="/blog">Blog</Link><span>›</span>
+      {parentCategory&&<>
+        <Link href={'/blog?category='+parentCategory.slug}>
+          {blogCategoryName(parentCategory,published.locale)}</Link><span>›</span>
+      </>}
       <Link href={'/blog?category='+encodeURIComponent(published.draft.category)}>
-       {BLOG_CATEGORIES[published.draft.category]}</Link><span>›</span>
+        {blogCategoryName(activeCategory,published.locale)}</Link><span>›</span>
       <span aria-current="page">{published.title.slice(0,65)}</span>
    </nav>
    <header className={styles.articleHeader}>
-     <span className={styles.eyebrow}>WHATEATO · KOREAN FOOD JOURNAL</span>
+     <span className={styles.eyebrow}>WHATEATO · FOOD, TRAVEL & BEAUTY</span>
      <h1>{published.title}</h1>
      <p className={styles.dek}>{published.excerpt}</p>
      <div className={styles.meta}><span>WhatEatO Editorial</span><span>·</span>
