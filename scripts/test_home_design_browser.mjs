@@ -78,6 +78,38 @@ try{
   assert.ok(width.actual<=width.viewport+2,
    vp.name+' overflow '+JSON.stringify(width));
   await page.screenshot({path:out+'/'+vp.name+'-ko-home.png',fullPage:true});
+  // Header Contact sits immediately beside Blog and renders mailto on desktop/mobile.
+  const navNames=await page.locator('.navlinks a').allTextContents();
+  assert.deepEqual(navNames.map(v=>v.trim()),['지도','블로그','Contact']);
+  const contact=await context.newPage();
+  await mockCountry(contact,'KR');
+  await contact.goto(root+'/contact?hl=ko',{waitUntil:'networkidle'});
+  await contact.locator('#country').waitFor();
+  assert.equal(await contact.locator('.navlinks a').last().textContent(),'Contact');
+  assert.equal(await contact.locator('.navlinks a').last().getAttribute('href'),'/contact?hl=ko');
+  assert.equal(await contact.locator('main h1').textContent(),'Contact');
+  assert.equal(await contact.locator('main a[href="mailto:pakrsky2@naver.com"]').count(),2);
+  assert.ok((await contact.locator('main').innerText()).includes('광고, 장소 등록&수정 요청 :'));
+  assert.ok((await contact.locator('main').innerText()).includes('pakrsky2@naver.com'));
+  const contactWidth=await contact.evaluate(()=>({
+   viewport:document.documentElement.clientWidth,actual:document.documentElement.scrollWidth
+  }));
+  assert.ok(contactWidth.actual<=contactWidth.viewport+2,
+   vp.name+' contact overflow '+JSON.stringify(contactWidth));
+  await contact.screenshot({path:out+'/'+vp.name+'-ko-contact.png',fullPage:true});
+  if(vp.name==='desktop'){
+   await contact.locator('#country').selectOption('JP');
+   await contact.waitForURL(u=>u.pathname==='/contact'&&u.searchParams.get('hl')==='ja');
+   assert.ok((await contact.locator('main').innerText()).includes('広告、店舗の登録・情報修正'));
+   assert.equal(await contact.locator('main a[href="mailto:pakrsky2@naver.com"]').count(),2);
+   await contact.locator('#country').selectOption('CN');
+   await contact.waitForURL(u=>u.pathname==='/contact'&&u.searchParams.get('hl')==='zh-CN');
+   assert.ok((await contact.locator('main').innerText()).includes('广告合作'));
+   await contact.locator('#country').selectOption('GB');
+   await contact.waitForURL(u=>u.pathname==='/contact'&&u.searchParams.get('hl')==='en');
+   assert.ok((await contact.locator('main').innerText()).includes('advertising'));
+  }
+  await contact.close();
   if(vp.name==='desktop'){
    const chip=page.locator('main .chip').first();
    const style=await chip.evaluate(el=>({
