@@ -178,7 +178,9 @@ try{
   await page.screenshot({path:'blog-browser-qa/'+vp.name+'-index.png',fullPage:true});
   await rootNav.getByRole('link',{name:'Travel',exact:true}).click();
   const sidebar=page.getByRole('complementary');
-  const items=sidebar.getByRole('navigation',{name:'Travel subcategories'}).locator('a');
+  const travelNav=sidebar.getByRole('navigation',{name:'Travel subcategories'});
+  await travelNav.waitFor({state:'visible'});
+  const items=travelNav.locator('a');
   assert.deepEqual(await items.allTextContents(),
     ['All Travel','Transportation','Festivals & Events','Shopping Recommendations','Local Attractions']);
   const sidebarPositions=await items.evaluateAll(links=>
@@ -193,11 +195,15 @@ try{
     'Vertical subcategories must be to the left of story content');
   await page.screenshot({path:'blog-browser-qa/'+vp.name+'-travel-sidebar.png',fullPage:true});
   await sidebar.getByRole('link',{name:'Transportation',exact:true}).click();
+  await page.getByRole('navigation',{name:'Transportation subcategories'}).waitFor({state:'hidden'}).catch(()=>{});
+  await page.getByRole('complementary').locator('a[data-active=true]').waitFor({state:'visible'});
   assert.equal(await page.getByRole('complementary').locator('a[data-active=true]').textContent(),
     'Transportation');
   await page.getByRole('navigation',{name:'Blog main categories'})
     .getByRole('link',{name:'K-Beauty Items'}).click();
-  assert.equal(await page.getByRole('navigation',{name:'K-Beauty Items subcategories'}).locator('a').count(),5);
+  const beautyNav=page.getByRole('navigation',{name:'K-Beauty Items subcategories'});
+  await beautyNav.waitFor({state:'visible'});
+  assert.equal(await beautyNav.locator('a').count(),5);
   await page.screenshot({path:'blog-browser-qa/'+vp.name+'-beauty-sidebar.png',fullPage:true});
 
   await page.goto(base+'/blog/what-to-eat-in-seoul-ci?hl=en',{waitUntil:'domcontentloaded'});
