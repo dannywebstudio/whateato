@@ -6,6 +6,10 @@ const keys=['taste','service','tourist_friendliness','value_for_money','cleanlin
 type Key=typeof keys[number];
 type Scores=Record<Key,number|null>;
 type OwnPhoto={id:string;status:string};
+type SavedReview={
+ rating:number;body:string;moderation_status:string;categories:Scores|null;photos:OwnPhoto[];
+};
+type EditorMode='loading'|'compose'|'summary'|'edit'|'success';
 const init=():Scores=>({taste:null,service:null,tourist_friendliness:null,value_for_money:null,cleanliness:null});
 const copy={
  en:{signin:'Sign in to share your visit',login:'Continue with Google →',write:'Write a visitor review',
@@ -170,6 +174,10 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
  const [ownPhotos,setOwnPhotos]=useState<OwnPhoto[]>([]);
  const [hasOwn,setHasOwn]=useState(false);
  const [status,setStatus]=useState('');
+ const [savedReview,setSavedReview]=useState<SavedReview|null>(null);
+ const [mode,setMode]=useState<EditorMode>('loading');
+ const [submittedRating,setSubmittedRating]=useState<number|null>(null);
+ const [somePhotosFailed,setSomePhotosFailed]=useState(false);
  const [rights,setRights]=useState(false);
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState('');
@@ -179,19 +187,50 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
  },[scores]);
  useEffect(()=>{
   if(!canWrite)return;
-  let alive=true;
+  let active=true;
+  setMode('loading');
+  setBody('');setScores(init());setFiles([]);setOwnPhotos([]);
+  setSavedReview(null);setStatus('');setHasOwn(false);
   void fetch('/api/restaurants/'+encodeURIComponent(restaurantId)+'/reviews?mine=1',
-   {credentials:'same-origin',cache:'no-store'}).then(r=>r.ok?r.json():null).then(data=>{
-    if(!alive||!data?.review)return;
-    const r=data.review;
-    setBody(r.body||'');setHasOwn(true);setStatus(r.moderation_status||'');
-    setOwnPhotos(Array.isArray(r.photos)?r.photos:[]);
-    if(r.categories)setScores({...init(),...r.categories});
-    else setScores({...init(),taste:r.rating});
-  }).catch(()=>{});
-  return ()=>{alive=false};
+   {credentials:'same-origin',cache:'no-store'})
+   .then(async response=>{
+     if(!response.ok)throw Error('review_load_unavailable');
+     return response.json();
+   }).then(data=>{
+     if(!active)return;
+     if(data?.review){
+       const review=data.review as SavedReview;
+       // Keep the persisted review separate; only fill editor on explicit Edit.
+       setSavedReview(review);setHasOwn(true);
+       setStatus(review.moderation_status||'');
+       setMode('summary');
+     }else setMode('compose');
+   }).catch(()=>{if(active){setMode('compose');}});
+  return ()=>{active=false};
  },[canWrite,restaurantId]);
+ const beginEdit=()=>{
+   if(!savedReview)return;
+   setBody(savedReview.body);
+   setScores(savedReview.categories?{...init(),...savedReview.categories}:
+      {...init(),taste:savedReview.rating});
+   setOwnPhotos(savedReview.photos||[]);
+   setStatus(savedReview.moderation_status);
+   setMode('edit');setMessage('');
+ };
+ const cancelEdit=()=>{
+   setScores(init());setBody('');setFiles([]);setOwnPhotos([]);setRights(false);
+   setMode('summary');setMessage('');
+ };
+ const savedScore=()=>{
+   if(!savedReview)return null;
+   if(!savedReview.categories)return Number(savedReview.rating);
+   const points=Object.values(savedReview.categories).filter((v):v is number=>typeof v==='number');
+   return points.length?points.reduce((a,b)=>a+b,0)/points.length:null;
+ };
+ const statusText=()=>status==='published'?t.statusPublished:
+   status==='rejected'?t.statusRejected:t.statusPending;
  if(!canWrite)return <p className="hint">{t.signin} <Link className="simple-link" href="/account">{t.login}</Link></p>;
+
  const onSelect=(e:ChangeEvent<HTMLInputElement>)=>{
   const selected=Array.from(e.target.files||[]);
   e.target.value='';
@@ -210,7 +249,8 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
    });
    if(!r.ok)throw Error();
    setBody('');setScores(init());setHasOwn(false);setOwnPhotos([]);setFiles([]);setStatus('');
-   setMessage(t.deleted);
+   setSavedReview(null);setSubmittedRating(null);setSomePhotosFailed(false);
+   setRights(false);setMode('compose');setMessage(t.deleted);
   }catch{setMessage(t.deleteFailed)}finally{setBusy(false)}
  }
  async function removeOwnPhoto(id:string){
@@ -220,6 +260,7 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
     '/reviews/photos?photo_id='+encodeURIComponent(id),{method:'DELETE',credentials:'same-origin'});
    if(!r.ok)throw Error();
    setOwnPhotos(old=>old.filter(p=>p.id!==id));
+   setSavedReview(old=>old?{...old,photos:old.photos.filter(p=>p.id!==id)}:null);
   }catch{setMessage(t.fail)}finally{setBusy(false)}
  }
  async function submit(event:FormEvent<HTMLFormElement>){
@@ -247,15 +288,82 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
      nextPhotos.push({id:added.photo_id,status:'pending'});
     }catch{failed.push(file)}
    }
-   setOwnPhotos(old=>[...old,...nextPhotos]);setFiles(failed);
-   setMessage(failed.length?t.receivedPartial:t.received);
+   setSavedReview({rating:Math.round(total??scores.taste!),
+     body,moderation_status:'pending',categories:{...scores},
+     photos:[...ownPhotos,...nextPhotos]});
+   setSubmittedRating(total);setSomePhotosFailed(failed.length>0);
+   setOwnPhotos([]);setFiles(failed);setRights(false);
+   setBody('');setScores(init());
+   setMode('success');setMessage('');
   }catch{setMessage(t.fail)}finally{setBusy(false)}
  }
+ if(mode==='loading')return <section className={styles.wrap} aria-live="polite">
+  <p className={styles.muted}>{t.checking}</p>
+ </section>;
+ if((mode==='summary'||mode==='success')&&savedReview){
+   const success=mode==='success';
+   const value=success?submittedRating:savedScore();
+   const live=status==='published';
+   return <section className={styles.wrap+' '+styles.completeWrap}
+     aria-label={success?t.successTitle:t.summaryTitle}>
+     <div className={styles.completeHero}>
+       <div className={styles.successIcon} aria-hidden="true">
+         <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+           <path d="M5 12.5l4.4 4.4L19.5 6.5"/>
+         </svg>
+       </div>
+       <div className={styles.completeContent}>
+         <span className={styles.eyebrow}>{success?t.stageOne:t.summaryTitle}</span>
+         <h3>{success?t.successTitle:t.summaryHeading}</h3>
+         <p>{success?(somePhotosFailed?t.successPartial:t.successBody):t.summaryText}</p>
+       </div>
+     </div>
+     <div className={styles.summaryMetrics}>
+       <div>
+         <span>{t.ratingLabel}</span>
+         <strong>{value===null?'—':value.toFixed(1)} <small>/ 5</small></strong>
+         <div className={styles.summaryStars} aria-hidden="true">★★★★★</div>
+       </div>
+       <div>
+         <span>{t.imageCount}</span>
+         <strong>{savedReview.photos.length} <small>/ 5</small></strong>
+         <span className={styles.reviewState}>{statusText()}</span>
+       </div>
+     </div>
+     <ol className={styles.progressSteps} aria-label={t.statusPending}>
+       {[t.stageOne,t.stageTwo,t.stageThree].map((label,i)=>
+         <li key={i} data-done={i===0||live} data-current={!live&&i===1}>
+           <span className={styles.progressDot}>{i===0||live?'✓':i+1}</span>
+           <span>{label}</span>
+         </li>)}
+     </ol>
+     {mode==='summary'&&<details className={styles.savedDetails}>
+       <summary>{t.openDetails}</summary>
+       <p>{savedReview.body}</p>
+     </details>}
+     <div className={styles.completeActions}>
+       {success&&<button type="button" className={styles.primaryAction}
+         onClick={()=>{setMode('summary');setSomePhotosFailed(false)}}>
+         {t.viewButton} <span aria-hidden="true">→</span>
+       </button>}
+       <button type="button" className={success?styles.secondaryAction:styles.primaryAction}
+         onClick={beginEdit}>{somePhotosFailed?t.uploadAgain:t.editButton}
+         {!success&&<span aria-hidden="true"> →</span>}</button>
+       <button type="button" className={styles.textAction}
+         onClick={()=>void deleteOwn()} disabled={busy}>{t.delete}</button>
+     </div>
+   </section>;
+ }
  return <section className={styles.wrap} aria-label={t.write}>
-  <h3>{hasOwn?t.edit:t.write}</h3>
+  <div className={styles.editorTop}>
+   <h3>{mode==='edit'?t.edit:t.write}</h3>
+   {mode==='edit'&&<button type="button" className={styles.textAction}
+     onClick={cancelEdit} disabled={busy}>{t.cancelButton}</button>}
+  </div>
   {hasOwn&&<p className={styles.muted}>{t.existing} · {status==='published'?t.published:
    status==='rejected'?t.rejected:t.pending}</p>}
-  <form onSubmit={submit}>
+  <form onSubmit={submit} autoComplete="off">
    <div className={styles.ratings}>
     {keys.map(key=><div className={styles.ratingRow} key={key}>
      <div className={styles.ratingTitle}>{t[key]}{key==='taste'&&' *'}</div>
@@ -276,7 +384,7 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
    <div className={styles.total}>{t.average}: <strong>{total===null?'—':total.toFixed(1)} / 5</strong></div>
    <label htmlFor={'review-body-'+restaurantId} className={styles.field}>{t.body}
     <textarea id={'review-body-'+restaurantId} required minLength={30} maxLength={1500}
-      rows={5} value={body} onChange={e=>setBody(e.target.value)} placeholder={t.placeholder}/>
+      rows={5} autoComplete="off" value={body} onChange={e=>setBody(e.target.value)} placeholder={t.placeholder}/>
    </label>
    <label className={styles.field}>{t.photos}
     <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onSelect}/>
@@ -300,8 +408,12 @@ export default function ReviewForm({restaurantId,canWrite,locale='en'}:{
      onChange={e=>setRights(e.target.checked)}/> {t.rights}</label>
    <p className={styles.muted}>{t.note}</p>
    <div className={styles.actions}>
-    <button type="submit" className="chip" disabled={busy||scores.taste===null||
-     Boolean(files.length&&!rights)}>{busy?t.sending:t.send}</button>
+    <button type="submit" className={styles.submitAction} disabled={busy||scores.taste===null||
+     Boolean(files.length&&!rights)}>
+      {busy?<span className={styles.spinner} aria-hidden="true"/>:<span aria-hidden="true">✓</span>}
+      {busy?t.sending:t.submitButton}
+      {!busy&&<span className={styles.buttonArrow} aria-hidden="true">→</span>}
+    </button>
     {hasOwn&&<button type="button" className="chip" disabled={busy} onClick={()=>void deleteOwn()}>{t.delete}</button>}
    </div>
    {message&&<p role="status" className={styles.feedback}>{message}</p>}
