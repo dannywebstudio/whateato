@@ -128,3 +128,22 @@
  .categoryManager{margin:10px 12px 16px;padding:13px}
  .categoryItem[data-nested=true]{margin-left:11px}
 }
+
+/* All four language-specific editorial and SEO versions must be complete. */
+.languageReadiness{margin:18px 23px 0;border:1px solid #cfe5d7;border-radius:12px;
+ background:#f7fcf8;padding:15px 17px;display:grid;gap:11px}
+.readinessTitle{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.readinessTitle strong{font-size:14px;color:#204c35}
+.readinessTitle span{font-size:12px;font-weight:850;color:#16784d}
+.readinessItems{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.readinessItems button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;
+ gap:6px;padding:10px 11px;min-width:0;border:1px solid #dfe8e1;border-radius:9px;
+ background:white;color:#4d5f51;font-size:12px;font-weight:750;cursor:pointer}
+.readinessItems button[data-ready=true]{border-color:#a7d5ba;background:#ebf7ee;color:#0f7048}
+.readinessItems button[aria-pressed=true]{outline:2px solid #20835a;outline-offset:1px}
+.readinessStatus{font-size:10px;color:#7b8a7f}
+.readinessItems button[data-ready=true] .readinessStatus{color:#138256}
+.languageReadiness p{font-size:11px;line-height:1.6;margin:0;color:#62776a}
+.languageTabs button[data-complete=true]{color:#0a7a4a}
+@media(max-width:750px){.readinessItems{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.languageReadiness{margin:14px 11px;padding:12px}}
