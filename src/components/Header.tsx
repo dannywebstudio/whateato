@@ -69,23 +69,29 @@ export default function Header(){
  }
  useEffect(()=>{
   let alive=true;
-  let countryOverride:string|null=null,languageOverride:Language|null=null;
+  let countryOverride:string|null=null;
   try{
-   countryOverride=sessionStorage.getItem('we_country_override');
-   if(!validCountry(countryOverride))countryOverride=null;
-   const saved=sessionStorage.getItem('we_language_override');
-   if(validLanguage(saved))languageOverride=saved;
+   const saved=sessionStorage.getItem('we_country_override');
+   if(validCountry(saved))countryOverride=saved;
   }catch{}
   const fallback=countryOverride||deviceCountry();
   const explicitLocale=initialUrlLanguage();
   const update=(detected:string,finalized=false)=>{
    if(!alive)return;
-   let manualCountry:string|null=null;
-   try{manualCountry=sessionStorage.getItem('we_country_override')}catch{}
-   const chosen=validCountry(manualCountry)?manualCountry:detected;
-   const preferred=languageOverride||explicitLocale||languageForCountry(chosen);
+   let manualCountry:string|null=null,manualLanguage:Language|null=null;
+   try{
+    manualCountry=sessionStorage.getItem('we_country_override');
+    const saved=sessionStorage.getItem('we_language_override');
+    if(validLanguage(saved))manualLanguage=saved;
+   }catch{}
+   const selectedCountry=validCountry(manualCountry)?manualCountry:null;
+   const chosen=selectedCountry||detected;
+   // Manual language > manual country > explicit link language > geolocation.
+   const preferred=manualLanguage||
+     (selectedCountry?languageForCountry(chosen):explicitLocale||languageForCountry(chosen));
    sync(chosen,preferred);
-   if(finalized&&!explicitLocale)navigateLanguage(preferred,true);
+   if(finalized&&(!explicitLocale||selectedCountry||manualLanguage))
+    navigateLanguage(preferred,true);
   };
   // Show reasonable local hints first; trust edge/IP once it responds.
   // Don't navigate twice while geolocation is resolving.
