@@ -161,7 +161,41 @@ try{
   const page=await ctx.newPage();
   await page.goto(base+'/blog?hl=en',{waitUntil:'domcontentloaded'});
   assert.equal(await page.getByText('Where should you eat when visiting Seoul?',{exact:true}).count(),1);
+  assert.equal(await page.locator('main > header').count(),0,'Blog Hero must be absent');
+  const search=page.locator('main form.search-form .searchfield');
+  assert.equal(await search.count(),1,'Blog must reuse Map search-field markup');
+  assert.equal(await search.locator('button').textContent(),'→');
+  const rootNav=page.getByRole('navigation',{name:'Blog main categories'});
+  const names=await rootNav.locator('a').allTextContents();
+  assert.deepEqual(names.slice(0,4),['All Stories','Restaurants','Travel','K-Beauty Items']);
+  const tabY=await rootNav.locator('a').evaluateAll(links=>
+    links.slice(0,4).map(a=>Math.round(a.getBoundingClientRect().top)));
+  assert.ok(tabY.every(y=>y===tabY[0]),'All root tabs must be on a single row');
   await page.screenshot({path:'blog-browser-qa/'+vp.name+'-index.png',fullPage:true});
+  await rootNav.getByRole('link',{name:'Travel',exact:true}).click();
+  const sidebar=page.getByRole('complementary');
+  const items=sidebar.getByRole('navigation',{name:'Travel subcategories'}).locator('a');
+  assert.deepEqual(await items.allTextContents(),
+    ['All Travel','Transportation','Festivals & Events','Shopping Recommendations','Local Attractions']);
+  const sidebarPositions=await items.evaluateAll(links=>
+    links.map(a=>({x:Math.round(a.getBoundingClientRect().left),
+      y:Math.round(a.getBoundingClientRect().top)})));
+  assert.ok(sidebarPositions.every((b,i)=>i===0||
+    (b.x===sidebarPositions[0].x && b.y>sidebarPositions[i-1].y)),
+    'Subcategories must form a vertical left-hand column');
+  const box=await sidebar.boundingBox();
+  const contentBox=await page.getByRole('heading',{name:'Travel',exact:true}).last().boundingBox();
+  assert.ok(box&&contentBox&&box.x+box.width<=contentBox.x+5,
+    'Vertical subcategories must be to the left of story content');
+  await page.screenshot({path:'blog-browser-qa/'+vp.name+'-travel-sidebar.png',fullPage:true});
+  await sidebar.getByRole('link',{name:'Transportation',exact:true}).click();
+  assert.equal(await page.getByRole('complementary').locator('a[data-active=true]').textContent(),
+    'Transportation');
+  await page.getByRole('navigation',{name:'Blog main categories'})
+    .getByRole('link',{name:'K-Beauty Items'}).click();
+  assert.equal(await page.getByRole('navigation',{name:'K-Beauty Items subcategories'}).locator('a').count(),5);
+  await page.screenshot({path:'blog-browser-qa/'+vp.name+'-beauty-sidebar.png',fullPage:true});
+
   await page.goto(base+'/blog/what-to-eat-in-seoul-ci?hl=en',{waitUntil:'domcontentloaded'});
   assert.ok((await page.locator('main h1').textContent()).includes('Where should you eat'));
   assert.equal(await page.locator('main table').count(),1);
