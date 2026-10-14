@@ -48,3 +48,6 @@
 .payloadPreview{margin:8px 0 0;padding:10px;background:#f4f8f5;border-radius:8px;
   max-width:420px;max-height:240px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;
   color:#264434;font:11px/1.6 ui-monospace,monospace}
+
+.reviewPhotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin:12px 0}
+.reviewPhotos img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#f1f4f1;border-radius:8px}
