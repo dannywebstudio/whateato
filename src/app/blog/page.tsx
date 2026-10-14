@@ -25,10 +25,10 @@ export default async function BlogPage({searchParams}:Props){
    return '/blog?'+params;
  };
  const labels={
-  en:{all:'All Stories',search:'Search',placeholder:'Search stories, places or topics...',latest:'Latest Stories',results:'Search results',everything:'All'},
-  ko:{all:'전체',search:'검색',placeholder:'블로그 글, 여행지, 키워드 검색...',latest:'최신 글',results:'검색 결과',everything:'전체'},
-  ja:{all:'すべて',search:'検索',placeholder:'記事・地域・キーワードを検索...',latest:'最新記事',results:'検索結果',everything:'すべて'},
-  'zh-CN':{all:'全部',search:'搜索',placeholder:'搜索文章、地区或关键词...',latest:'最新文章',results:'搜索结果',everything:'全部'}
+  en:{all:'All Stories',search:'Search',placeholder:'Search stories, places or topics...',latest:'Latest Stories',results:'Search results',everything:'All',empty:'Our first stories are being prepared. Check back soon.',notFound:'No matching stories yet. Try another keyword.',previous:'← Previous',next:'More stories →'},
+  ko:{all:'전체',search:'검색',placeholder:'블로그 글, 여행지, 키워드 검색...',latest:'최신 글',results:'검색 결과',everything:'전체',empty:'첫 번째 이야기를 준비하고 있어요. 곧 찾아올게요.',notFound:'검색된 글이 없어요. 다른 키워드로 검색해 보세요.',previous:'← 이전',next:'더 보기 →'},
+  ja:{all:'すべて',search:'検索',placeholder:'記事・地域・キーワードを検索...',latest:'最新記事',results:'検索結果',everything:'すべて',empty:'最初の記事を準備しています。もうしばらくお待ちください。',notFound:'記事が見つかりませんでした。別のキーワードでお試しください。',previous:'← 前へ',next:'もっと見る →'},
+  'zh-CN':{all:'全部',search:'搜索',placeholder:'搜索文章、地区或关键词...',latest:'最新文章',results:'搜索结果',everything:'全部',empty:'我们正在准备第一批文章，敬请期待。',notFound:'没有找到相关文章，请尝试其他关键词。',previous:'← 上一页',next:'查看更多 →'}
  } as const;
  const t=labels[locale];
  const openRoot=groups.find(root=>root.slug===selectedParent);
@@ -92,12 +92,11 @@ export default async function BlogPage({searchParams}:Props){
         </div>
       </Link>)}
     </div>:<div className={styles.empty}>
-       <p>{q?'No matching stories yet. Try another keyword.':
-        'Our first stories are being prepared. Check back soon.'}</p>
+       <p>{q?t.notFound:t.empty}</p>
     </div>}
    <div className={styles.pagination}>
-     {page>1&&<Link href={url(page-1)}>← Previous</Link>}
-     {result.more&&<Link href={url(page+1)}>More stories →</Link>}
+     {page>1&&<Link href={url(page-1)}>{t.previous}</Link>}
+     {result.more&&<Link href={url(page+1)}>{t.next}</Link>}
    </div>
      </section>
    </div>
