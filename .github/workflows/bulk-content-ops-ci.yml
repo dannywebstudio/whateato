@@ -54,6 +54,7 @@ jobs:
       - run: node --check scripts/test_owner_review_delete_http.mjs
       - run: node --check scripts/test_review_form_browser.mjs
       - run: node --check scripts/test_blog_cms_http.mjs
+      - run: node --check scripts/test_home_design_browser.mjs
       - run: node --check scripts/run_bulk_batch.mjs
       - run: node --check scripts/import_bulk_ndjson.mjs
       - run: node scripts/seed_bulk_ops_fixture.mjs
@@ -79,6 +80,15 @@ jobs:
           node scripts/test_owner_review_delete_http.mjs
           node scripts/test_blog_cms_http.mjs
           node scripts/test_review_form_browser.mjs
+          node scripts/test_home_design_browser.mjs
+      - name: Upload redesigned homepage desktop/mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-design-browser-qa
+          path: home-design-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload blog listing and article desktop/mobile visual QA
         if: always()
         uses: actions/upload-artifact@v4
