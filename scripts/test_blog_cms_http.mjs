@@ -195,8 +195,8 @@ try{
     'Vertical subcategories must be to the left of story content');
   await page.screenshot({path:'blog-browser-qa/'+vp.name+'-travel-sidebar.png',fullPage:true});
   await sidebar.getByRole('link',{name:'Transportation',exact:true}).click();
-  await page.getByRole('navigation',{name:'Transportation subcategories'}).waitFor({state:'hidden'}).catch(()=>{});
-  await page.getByRole('complementary').locator('a[data-active=true]').waitFor({state:'visible'});
+  await page.locator('aside a[data-active="true"]').filter({hasText:'Transportation'})
+    .waitFor({state:'visible'});
   assert.equal(await page.getByRole('complementary').locator('a[data-active=true]').textContent(),
     'Transportation');
   await page.getByRole('navigation',{name:'Blog main categories'})
