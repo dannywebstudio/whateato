@@ -31,7 +31,10 @@ export async function listPublishedBlog(input:{q?:string;locale?:string;category
   JOIN whateato_blog_posts p ON p.id=u.post_id
   WHERE u.is_visible=true
    AND ($1='' OR u.snapshot::text ILIKE '%'||$1||'%' ESCAPE '\\')
-   AND ($2='' OR u.snapshot->>'category'=$2)
+   AND ($2='' OR u.snapshot->>'category'=$2 OR EXISTS (
+     SELECT 1 FROM whateato_blog_categories child
+     WHERE child.parent_slug=$2 AND child.slug=u.snapshot->>'category'
+   ))
   ORDER BY u.published_at DESC,p.id DESC
   LIMIT 13 OFFSET $3`,[q.replace(/[\\%_]/g,'\\$&'),category,(page-1)*12]);
  const items=rows.rows.slice(0,12).map(r=>{
@@ -47,7 +50,10 @@ export async function findPublishedBlog(slug:string,language:unknown):Promise<Bl
  if(!validBlogSlug(slug))return null;
  const pool=getPool();if(!pool)return null;
  const result=await pool.query<{id:string;slug:string;snapshot:BlogDraft&{cover_image_id?:string};published_at:string;verified_cover_id:string|null}>(`
- SELECT p.id::text,p.slug,u.snapshot,u.published_at::text
+ SELECT p.id::text,p.slug,u.snapshot,u.published_at::text,
+  (SELECT im.id::text FROM whateato_blog_media im
+    WHERE im.post_id=p.id AND im.id::text=u.snapshot->>'cover_image_id'
+      AND im.rights_status='approved' LIMIT 1) AS verified_cover_id
  FROM whateato_blog_posts p JOIN whateato_blog_publications u ON u.post_id=p.id
  WHERE p.slug=$1 AND u.is_visible=true LIMIT 1`,[slug]);
  if(!result.rows.length)return null;
