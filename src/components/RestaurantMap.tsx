@@ -53,8 +53,8 @@ function localizedCopy(locale:string){
     default:return {disabled:'지도 배경을 불러오지 못했어요. 대신 아래 실제 인허가 좌표 기반 식당 목록을 이용할 수 있어요.',loading:'식당 위치 불러오는 중…',error:'지도 식당 정보를 가져오지 못했어요.',zoom:'서울 중심 지역을 확대하면 식당 위치를 불러옵니다.',count:'현재 지도 내 식당',limit:'최대 200곳을 표시하고 있어요. 더 자세히 보려면 지도를 확대해 주세요.',open:'식당 상세 보기',license:'위치는 인허가 자료 기준이며 현재 영업 여부나 정확한 입구를 보장하지 않습니다.',empty:'현재 지도 영역에서 조건에 맞는 식당이 없어요.'};
   }
 }
-export default function RestaurantMap({q='',filter='',locale='ko'}:{
-  q?:string;filter?:string;locale?:string;
+export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:{
+  q?:string;filter?:string;locale?:string;focusId?:string|null;
 }){
   const ui=localizedCopy(locale);
   const host=useRef<HTMLDivElement>(null);
@@ -62,6 +62,8 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const lastRequest=useRef<AbortController|null>(null);
   const requestId=useRef(0);
   const queryRef=useRef({q,filter,locale});
+  const focusCenterRef=useRef<[number,number]|null>(null);
+  const focusItemsRef=useRef<Place[]>([]);
   const [items,setItems]=useState<Place[]>([]);
   const [state,setState]=useState<'loading'|'zoom'|'ready'|'error'>('loading');
   const [basemapFailed,setBasemapFailed]=useState(false);
@@ -72,8 +74,10 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   const [limited,setLimited]=useState(false);
   const [selected,setSelected]=useState<string|null>(null);
   const [page,setPage]=useState(0);
+  const [focusItems,setFocusItems]=useState<Place[]>([]);
+  const [focusStatus,setFocusStatus]=useState<'loading'|'ready'|'error'>('loading');
   queryRef.current={q,filter,locale};
-  useEffect(()=>{setPage(0);setSelected(null)},[q,filter,locale]);
+  useEffect(()=>{setPage(0);setSelected(null)},[q,filter,locale,focusId]);
   const load=useCallback(async (currentMap:MapLibreMap)=>{
     // Adding a fresh GeoJSON source briefly makes isStyleLoaded() false.
     // Waiting for that flag here silently skips the *initial* marker fetch.
@@ -107,12 +111,16 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         &&Number.isFinite(x.longitude)&&Number.isFinite(x.latitude)
         &&x.latitude>=33&&x.latitude<=39.5&&x.longitude>=124&&x.longitude<=132
       )).slice(0,200);
-      setItems(valid);
+      // The selected focus pin stays visible even if spatial sampling omitted it.
+      const focused=focusItemsRef.current.filter(x=>!valid.some(v=>v.id===x.id))
+        .filter(x=>currentMap.getBounds().contains([x.longitude,x.latitude]));
+      const plotted=[...valid,...focused];
+      setItems(plotted);
       setLimited(Boolean(payload.has_more));
       setState('ready');
       const source=currentMap.getSource(markerSource) as GeoJSONSource|undefined;
       source?.setData({
-        type:'FeatureCollection',features:valid.map(x=>({
+        type:'FeatureCollection',features:plotted.map(x=>({
           type:'Feature',geometry:{type:'Point',coordinates:[x.longitude,x.latitude]},
           properties:{id:x.id,name:x.name,pinColor:cuisineColor(x.category_code),openingState:x.opening_hours?.state||'unknown'}
         }))
@@ -197,6 +205,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
         syncNameVisibility();
         window.clearTimeout(timeout);
         setBasemapFailed(false);
+        if(focusCenterRef.current)m.jumpTo({center:focusCenterRef.current,zoom:15});
         void load(m);
       };
       // At street-level zoom, prefer showing the actual venue name even in
@@ -273,6 +282,44 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
     };
   },[load,mapRetry]);
   useEffect(()=>{if(map.current?.getSource(markerSource))void load(map.current);},[q,filter,locale,load]);
+  // Deep-link focus has its own DB-backed nearest-neighbor directory,
+  // independent of the current viewport's map tile/marker availability.
+  useEffect(()=>{
+    if(!focusId){
+      focusCenterRef.current=null;focusItemsRef.current=[];
+      setFocusItems([]);setFocusStatus('loading');return;
+    }
+    const controller=new AbortController();
+    focusCenterRef.current=null;focusItemsRef.current=[];
+    setFocusItems([]);setFocusStatus('loading');setPage(0);
+    const p=new URLSearchParams({id:focusId,hl:locale});
+    void fetch('/api/v1/map/focus?'+p.toString(),{
+      signal:controller.signal,cache:'no-store',credentials:'same-origin'
+    }).then(async response=>{
+      if(!response.ok)throw Error('focused venue unavailable');
+      return response.json() as Promise<{items:Place[];center:[number,number];focus_id:string}>;
+    }).then(payload=>{
+      if(controller.signal.aborted)return;
+      if(payload.focus_id!==focusId||!Array.isArray(payload.items)||
+         payload.items[0]?.id!==focusId||payload.items.length>4||
+         !Array.isArray(payload.center)||payload.center.length!==2)throw Error('Invalid focus payload');
+      const valid=payload.items.every(x=>Number.isFinite(x.latitude)&&Number.isFinite(x.longitude)&&
+        x.latitude>=33&&x.latitude<=39.5&&x.longitude>=124&&x.longitude<=132);
+      if(!valid)throw Error('Invalid focus coordinates');
+      focusCenterRef.current=payload.center;
+      focusItemsRef.current=payload.items;
+      setFocusItems(payload.items);setSelected(focusId);setFocusStatus('ready');
+      const m=map.current;
+      if(m?.getSource(markerSource)){
+        m.jumpTo({center:payload.center,zoom:15});
+        void load(m);
+      }
+    }).catch(()=>{
+      if(controller.signal.aborted)return;
+      setFocusStatus('error');setFocusItems([]);focusItemsRef.current=[];
+    });
+    return ()=>controller.abort();
+  },[focusId,locale,load]);
   // Keep the map pin visually in sync with both list selections and pin clicks.
   useEffect(()=>{
     const m=map.current;
@@ -283,6 +330,7 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
   // The list never depends on the map's 'load' event or WebGL support.
   useEffect(()=>{
     const controller=new AbortController();
+    if(focusId){setDirectory([]);setDirectoryReady(false);return()=>controller.abort();}
     const params=new URLSearchParams({
       bbox:'37.47,126.78,37.68,127.14',limit:'40',hl:locale
     });
@@ -308,12 +356,12 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
       }
     });
     return ()=>controller.abort();
-  },[q,filter,locale]);
-  const visibleItems=state==='ready'&&!basemapFailed?items:directory;
+  },[q,filter,locale,focusId]);
+  const visibleItems=focusId?focusItems:state==='ready'&&!basemapFailed?items:directory;
   const pageSize=4;
   const totalPages=Math.max(1,Math.ceil(visibleItems.length/pageSize));
   const safePage=Math.min(page,totalPages-1);
-  const resultsReady=state==='ready'||directoryReady;
+  const resultsReady=focusId?focusStatus!=='loading':state==='ready'||directoryReady;
   useEffect(()=>setPage(0),[q,filter,locale]);
   const selectOnMap=(place:Place)=>{
     setSelected(place.id);
@@ -352,7 +400,8 @@ export default function RestaurantMap({q='',filter='',locale='ko'}:{
           <button type="button" aria-label="Next restaurant page" disabled={safePage>=totalPages-1} onClick={()=>setPage(p=>Math.min(totalPages-1,p+1))}>›</button>
         </div>
       </div>
-      {resultsReady&&visibleItems.length===0&&<p className="hint">{directoryError?ui.error:ui.empty}</p>}
+      {focusId&&focusStatus==='loading'&&<p className="hint" role="status">{ui.loading}</p>}
+      {resultsReady&&visibleItems.length===0&&<p className="hint">{focusId&&focusStatus==='error'?ui.error:directoryError?ui.error:ui.empty}</p>}
       <div className="map-explore-cards">
         {visibleItems.slice(safePage*pageSize,(safePage+1)*pageSize).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} category={x.category_code} status={x.opening_hours?.state||"unknown"} hours={x.opening_hours?.today_hours} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={x.editorial_score} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}
       </div>

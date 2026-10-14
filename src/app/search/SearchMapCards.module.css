@@ -1,0 +1,94 @@
+/* Search results intentionally reuse the Map card's actual CSS and component.
+   Only the surrounding grid and natural multi-row sizing differ from the Map's
+   4-restaurant / 790px viewport. This stylesheet does not affect /map. */
+.grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-template-rows:none;
+ gap:14px;
+ align-content:start;
+ flex:none;
+ margin:26px 0;
+}
+.grid :global(.we-card.we-card-map){
+ width:100%;
+ height:auto;
+ min-height:174px;
+ max-height:none;
+ grid-template-columns:120px minmax(0,1fr);
+}
+.grid :global(.we-card-map .we-card-visual){min-height:0;height:100%}
+.grid :global(.we-card-map .we-card-body){
+ display:flex;
+ flex-direction:column;
+ min-width:0;
+ min-height:0;
+ overflow:hidden;
+ padding:13px 14px;
+ gap:5px;
+}
+.grid :global(.we-card-map .we-card-head){min-width:0;min-height:0}
+.grid :global(.we-card-map .we-card-head h3){
+ min-width:0;
+ font-size:17px;
+ overflow-wrap:anywhere;
+}
+.grid :global(.we-card-map .we-card-desc){
+ display:-webkit-box;
+ font-size:11px;
+ line-height:1.35;
+ max-height:2.7em;
+ white-space:normal;
+ -webkit-box-orient:vertical;
+ -webkit-line-clamp:2;
+ overflow:hidden;
+}
+.grid :global(.we-card-map .we-card-information){
+ display:grid;
+ grid-template-rows:none;
+ gap:3px;
+ min-height:0;
+ overflow:visible;
+}
+.grid :global(.we-card-map .we-card-information p){
+ font-size:11px;
+ line-height:1.4;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.grid :global(.we-card-map .we-card-bottom){
+ display:flex;
+ margin-top:auto;
+ padding-top:7px;
+ min-height:31px;
+ flex-wrap:nowrap;
+ align-items:center;
+ gap:4px;
+}
+.grid :global(.we-card-map .we-card-rating){display:inline;font-size:10px}
+.grid :global(.we-card-map .we-card-actions){flex-shrink:0;white-space:nowrap}
+.grid :global(.we-card-map .we-card-menu-row){max-width:100%}
+.grid :global(.we-card-map .we-card-menu-row>p){max-width:55%}
+@media(max-width:1050px){
+ .grid{grid-template-columns:minmax(0,1fr)}
+ .grid :global(.we-card.we-card-map){min-height:160px}
+}
+@media(max-width:620px){
+ .grid{gap:11px}
+ .grid :global(.we-card.we-card-map){grid-template-columns:106px minmax(0,1fr);min-height:158px}
+ .grid :global(.we-card-map .we-card-body){padding:10px 11px;gap:5px}
+ .grid :global(.we-card-map .we-card-head h3){font-size:15px}
+ .grid :global(.we-card-map .we-card-information p){font-size:10px}
+ .grid :global(.we-card-map .we-card-actions){gap:4px}
+ .grid :global(.we-card-map .we-map-button),
+ .grid :global(.we-card-map .we-card-visit){font-size:9px;padding:5px 6px}
+}
+
+/* Numbered, bounded search navigation; no global Map mutations. */
+.pagination{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:28px auto 16px}
+.pagination a{display:inline-flex;align-items:center;justify-content:center;min-width:35px;min-height:35px;border:1px solid #d8e6dc;border-radius:9px;color:#256749;padding:6px 10px;font-size:13px;font-weight:700}
+.pagination a:hover{background:#eef8f1;border-color:#8fcaaa}
+.pagination a.active{background:#137750;color:white;border-color:#137750}
+.count{color:#596e60;font-size:13px;width:100%;text-align:center;margin-bottom:5px}
+@media(max-width:620px){.pagination{gap:5px}.pagination a{min-width:31px;padding:5px 8px}}

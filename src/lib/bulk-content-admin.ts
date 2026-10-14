@@ -7,12 +7,12 @@ export const bulkPrivateHeaders={
   'Cache-Control':'private, no-store','Vary':'Authorization',
   'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'
 } as const;
-export type BulkKind='localization'|'localization_unpublish'|'menu'|'menu_unpublish'|'tag'|'hours'|'visibility_hide'|'visibility_restore';
+export type BulkKind='localization'|'localization_unpublish'|'menu'|'menu_unpublish'|'tag'|'hours'|'visibility_hide'|'visibility_restore'|'address'|'restaurant_publish';
 export type BulkInput={
   source_key:string; restaurant_id:string; kind:BulkKind; payload:Record<string,unknown>;
 };
 type Validation={ok:true;value:BulkInput}|{ok:false;error:string};
-const kinds=new Set<BulkKind>(['localization','localization_unpublish','menu','menu_unpublish','tag','hours','visibility_hide','visibility_restore']);
+const kinds=new Set<BulkKind>(['localization','localization_unpublish','menu','menu_unpublish','tag','hours','visibility_hide','visibility_restore','address','restaurant_publish']);
 const locales=new Set(['en','ja','zh-CN','ko']);
 const isObj=(v:unknown):v is Record<string,unknown>=>Boolean(v)&&typeof v==='object'&&!Array.isArray(v);
 const exact=(o:Record<string,unknown>,keys:string[])=>Object.keys(o).every(k=>keys.includes(k));
@@ -103,6 +103,23 @@ export function validateBulkItem(raw:unknown):Validation{
       });
     }
   }
+  if(kind==='address'){
+    const numberOrNull=(n:unknown,min:number,max:number)=>
+      n===null||(typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max);
+    ok=exact(p,['road_address_ko','lot_address_ko','region_sido','region_sigungu',
+      'region_dong','latitude','longitude','evidence_url'])&&
+      str(p.road_address_ko,250,5)&&
+      (p.lot_address_ko===null||str(p.lot_address_ko,250))&&
+      str(p.region_sido,80)&&str(p.region_sigungu,90)&&
+      (p.region_dong===null||str(p.region_dong,90))&&
+      sourceUrl(p.evidence_url)&&
+      numberOrNull(p.latitude,33,39.5)&&numberOrNull(p.longitude,124,132)&&
+      ((p.latitude===null&&p.longitude===null)||
+        (typeof p.latitude==='number'&&typeof p.longitude==='number'));
+  }
+  if(kind==='restaurant_publish')
+    ok=exact(p,['evidence_url','confirm_live'])&&
+      sourceUrl(p.evidence_url)&&p.confirm_live===true;
   if(kind==='visibility_hide')
     ok=exact(p,['evidence_ref','evidence_summary','confirm_hide'])&&
       sourceUrl(p.evidence_ref)&&str(p.evidence_summary,500,20)&&p.confirm_hide===true;

@@ -55,7 +55,14 @@ export default function SearchBoxSynced({
   const labelIndex=normalized==='ko'?1:normalized==='ja'?3:normalized==='zh-CN'?4:2;
   const placeholder=normalized==='ko'?'지역, 음식점, 메뉴를 검색하세요':normalized==='ja'?'店名、地域、料理を検索...':normalized==='zh-CN'?'搜索餐厅、地区或菜品...':'Search restaurants, food, or places...';
   return <form className="search-form" onSubmit={submit} role="search">
-    <div className="searchfield"><span aria-hidden="true">⌕</span><input aria-label="Restaurant search" maxLength={200} value={q} onChange={e=>setQ(e.target.value)} placeholder={placeholder} /><button aria-label="Search" type="submit">→</button></div>
-    <div className="chips">{filters.map(row=><button key={row[0]} type="button" aria-pressed={selected.includes(row[0])} className={'chip '+(selected.includes(row[0])?'active':'')} onClick={()=>setSelected(s=>s.includes(row[0])?s.filter(x=>x!==row[0]):[...s,row[0]])}>{row[labelIndex]}</button>)}</div>
+    <div className="searchfield">
+      <svg className="search-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+       <circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.5 4.5"/>
+      </svg>
+      <input aria-label="Restaurant search" maxLength={200} value={q} onChange={e=>setQ(e.target.value)} placeholder={placeholder}/>
+      <button aria-label="Search" type="submit"><span aria-hidden="true">→</span></button>
+     </div>
+    <div className="chips" aria-label="Restaurant filters">{filters.map(row=><button key={row[0]} type="button" aria-pressed={selected.includes(row[0])} className={'chip '+(selected.includes(row[0])?'active':'')} onClick={()=>setSelected(s=>s.includes(row[0])?s.filter(x=>x!==row[0]):[...s,row[0]])}>{row[labelIndex]}</button>)}</div>
   </form>;
 }

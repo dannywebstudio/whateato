@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import Header from '@/components/Header';
+import {SiteFooter} from '@/components/LocalizedChromeText';
 import './globals.css';
 const ready=process.env.NEXT_PUBLIC_LAUNCH_READY==='true';
 export const metadata:Metadata={
@@ -9,5 +10,5 @@ export const metadata:Metadata={
   robots:{index:ready,follow:ready}
 };
 export default function RootLayout({children}:{children:React.ReactNode}){
-  return <html lang="en"><body><Header/>{children}<footer className="footer">© WhatEatO · Restaurant details require verification · No visitor accounts</footer></body></html>;
+  return <html lang="en"><body><Header/>{children}<SiteFooter/></body></html>;
 }

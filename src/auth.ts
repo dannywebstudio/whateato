@@ -23,6 +23,22 @@ export const {handlers,auth,signIn,signOut}=NextAuth({
         'INSERT INTO whateato_review_accounts(google_subject) VALUES($1) ON CONFLICT(google_subject) DO NOTHING',
         [profile.sub]
       );
+      // Optional one-time owner bootstrap on the isolated CMS preview.
+      // Only an email explicitly configured server-side AND verified by Google
+      // can be bootstrapped. Never persist the email or auto-promote reviewers.
+      // A pre-existing owner prevents a second automatic grant.
+      const bootstrap=process.env.WHATEATO_CMS_BOOTSTRAP_GOOGLE_EMAIL?.trim().toLowerCase()||'';
+      const verified=typeof profile.email==='string'?profile.email.trim().toLowerCase():'';
+      if(process.env.WHATEATO_OWNER_CMS_ENABLED==='true'&&
+         process.env.WHATEATO_CMS_BOOTSTRAP_ENABLED==='true'&&
+         bootstrap.length>5&&bootstrap===verified){
+        await pool.query(`
+          INSERT INTO whateato_admin_accounts(account_id,role)
+          SELECT a.id,'owner' FROM whateato_review_accounts a
+          WHERE a.google_subject=$1 AND NOT EXISTS(
+            SELECT 1 FROM whateato_admin_accounts WHERE role='owner' AND enabled=true)
+          ON CONFLICT(account_id) DO NOTHING`,[profile.sub]);
+      }
       return true;
     },
     async jwt({token,account,profile}){

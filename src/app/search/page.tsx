@@ -1,9 +1,12 @@
 import RestaurantExperienceCard from '@/components/RestaurantExperienceCard';
+// Reuse the exact Map card stylesheet; only Search page grid sizing differs.
+import '../map/map.css';
+import cardGridStyles from './SearchMapCards.module.css';
 import Link from 'next/link';
 import type {Metadata} from 'next';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import SearchBoxSynced from '@/components/SearchBoxSynced';
-import VerifiedRestaurantPhoto from '@/components/VerifiedRestaurantPhoto';
+import RelatedSearchPosts from '@/components/RelatedSearchPosts';
 import {searchRestaurantCatalog,type RestaurantSearchResponse} from '@/lib/restaurant-catalog';
 import {normalizeLocale,normalizeTags,normalizeText} from '@/lib/platform-v1';
 
@@ -44,10 +47,16 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
     catch{found=null}
   }
   const t=labels[locale];
-  const toMap=new URLSearchParams();
-  if(q)toMap.set('q',q);
-  if(filterString)toMap.set('f',filterString);
-  toMap.set('hl',locale);
+  const currentPage=Math.floor(offset/20)+1;
+  const totalPages=found?Math.max(1,Math.ceil(found.total_count/found.limit)):1;
+  const firstPage=Math.max(1,Math.min(currentPage-2,totalPages-4));
+  const lastPage=Math.min(totalPages,firstPage+4);
+  const pager={
+   ko:{previous:'← 이전',next:'다음 →',page:'페이지',total:'전체'},
+   en:{previous:'← Previous',next:'Next →',page:'Page',total:'Total'},
+   ja:{previous:'← 前へ',next:'次へ →',page:'ページ',total:'全'},
+   'zh-CN':{previous:'← 上一页',next:'下一页 →',page:'页',total:'共'}
+  }[locale];
   return <main className="content search-results-page">
     {searched&&found&&offset===0&&q?<AnalyticsBeacon eventType="search_submitted" pageType="search" searchTerm={q} resultCount={found.items.length===0?0:undefined}/>:null}
     <header className="page-intro"><span className="eyebrow">DISCOVER · WHATEATO</span><h1>{t.heading}</h1><p className="hint">{locale==="ko"?"오늘 어디서 먹을지, 한눈에 비교해 보세요.":"Find your next favorite place."}</p></header>
@@ -55,19 +64,28 @@ export default async function SearchPage({searchParams}:{searchParams:Promise<Pa
     <p className="hint">{!searched?t.initial:found?t.ready:t.unavailable}</p>
     {found&&<>
       <p className="hint">{locale==='ko'?'영업 상태는 등록된 영업시간 기준이며, 식당 사정에 따라 실제와 다를 수 있습니다.':locale==='en'?'Hours-based status may differ from actual operations.':locale==='ja'?'営業状況は登録された営業時間に基づき、実際と異なる場合があります。':'营业状态按登记营业时间计算，实际情况可能有所不同。'}</p>
-      <div className="restaurant-card-grid">{found.items.map(r=>{
+      <div className={"map-explore-cards "+cardGridStyles.grid} data-card-layout="map">{found.items.map(r=>{
         const detailParams=new URLSearchParams({hl:locale});
         if(q)detailParams.set('q',q);
         if(filterString)detailParams.set('f',filterString);
         if(region)detailParams.set('region',region);
         if(offset)detailParams.set('offset',String(offset));
         const href='/restaurant/'+r.id+'?'+detailParams.toString();
-        return <RestaurantExperienceCard key={r.id} name={r.name} category={r.category_code} address={r.address||r.address_ko} description={r.short_description} menu={r.main_menu} href={href} locale={locale} status={r.opening_hours?.state||'unknown'} hours={r.opening_hours?.today_hours} rating={r.ratings.external?.rating??r.ratings.whateato?.rating??null} tags={r.tags.map(t=>t.label)} imageUrl={r.featured_image_metadata?.url||null}/>
+        const mapHref='/map?'+new URLSearchParams({focus:r.id,hl:locale}).toString();
+        return <RestaurantExperienceCard key={r.id} variant="map" mapHref={mapHref} name={r.name} category={r.category_code} address={r.address||r.address_ko} description={r.short_description} menu={r.main_menu} href={href} locale={locale} status={r.opening_hours?.state||'unknown'} hours={r.opening_hours?.today_hours} rating={r.ratings.external?.rating??r.ratings.whateato?.rating??null} tags={r.tags.map(t=>t.label)} imageUrl={r.featured_image_metadata?.url||null}/>
       })}</div>
       {found.items.length===0&&<p className="empty">{t.empty}</p>}
-      {found.has_more&&offset<10000&&
-        <Link className="simple-link" href={linkToSearch(q,filterString,locale,region,offset+found.limit)}>{t.next}</Link>}
+      <nav aria-label="Search result pages" className={cardGridStyles.pagination} data-search-pagination>
+        <span className={cardGridStyles.count}>{pager.total} {found.total_count.toLocaleString()} · {pager.page} {currentPage} / {totalPages}</span>
+        {currentPage>1&&<Link href={linkToSearch(q,filterString,locale,region,Math.max(0,offset-found.limit))}>{pager.previous}</Link>}
+        {Array.from({length:lastPage-firstPage+1},(_,i)=>firstPage+i).map(n=>
+          <Link key={n} href={linkToSearch(q,filterString,locale,region,(n-1)*found.limit)}
+            aria-current={n===currentPage?'page':undefined}
+            className={n===currentPage?cardGridStyles.active:''}>{n}</Link>)}
+        {found.has_more&&offset<10000&&
+          <Link href={linkToSearch(q,filterString,locale,region,offset+found.limit)}>{pager.next}</Link>}
+      </nav>
     </>}
-    <Link className="simple-link" href={'/map?'+toMap.toString()}>{t.map}</Link>
+    <RelatedSearchPosts term={q} locale={locale}/>
   </main>;
 }
