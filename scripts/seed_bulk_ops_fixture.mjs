@@ -23,7 +23,8 @@ try{
   longitude double precision,
   location geography(Point,4326),
   business_status text NOT NULL DEFAULT 'active',
-  publication_status text NOT NULL DEFAULT 'published'
+  publication_status text NOT NULL DEFAULT 'published',
+  updated_at timestamptz NOT NULL DEFAULT now()
  )`);
  await client.query(`CREATE TABLE restaurant_address_localizations_v1(
    restaurant_id uuid NOT NULL REFERENCES restaurants(id),locale text NOT NULL,
