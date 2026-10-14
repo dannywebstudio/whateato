@@ -66,8 +66,9 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
      if(rows.some(r=>r.length!==rows[0].length))return null;
      block.rows=rows;total+=rows.flat().join('').length;
    }else if(kind==='image'){
-     if(!isUuid(original.image_id)||!text(original.caption,250))return null;
-     block.image_id=original.image_id;
+     if(!(original.image_id===''||isUuid(original.image_id))||
+        !text(original.caption,250))return null;
+     block.image_id=original.image_id as string;
      block.caption=original.caption as string;
    }
    blocks.push(block);
@@ -90,5 +91,7 @@ export function publishableBlog(draft:BlogDraft):string|null{
  if(english.excerpt.length<50)return 'english_summary_min_50';
  if(articleText(english).trim().length<200)return 'english_article_min_200';
  if(!english.blocks.some(b=>b.type==='heading'))return 'article_heading_required';
+ if(Object.values(draft.translations).some(t=>t?.blocks.some(b=>b.type==='image'&&!b.image_id)))
+   return 'select_images_before_publishing';
  return null;
 }
