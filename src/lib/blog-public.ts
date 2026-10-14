@@ -10,8 +10,10 @@ export function blogLocale(raw:unknown):BlogLocale{
  return BLOG_LOCALES.includes(raw as BlogLocale)?raw as BlogLocale:'en';
 }
 function translationOf(draft:BlogDraft,requested:BlogLocale){
- return {locale:draft.translations[requested]?requested:'en',
-  content:draft.translations[requested]||draft.translations.en};
+ const candidate=draft.translations[requested];
+ const useRequested=!!candidate?.title?.trim();
+ return {locale:useRequested?requested:'en',
+  content:useRequested?candidate:draft.translations.en};
 }
 export async function listPublishedBlog(input:{q?:string;locale?:string;category?:string;page?:number}){
  const q=(input.q||'').trim().slice(0,90);
