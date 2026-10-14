@@ -77,25 +77,26 @@ export default function Header(){
    if(validLanguage(saved))languageOverride=saved;
   }catch{}
   const fallback=countryOverride||deviceCountry();
-  const update=(detected:string)=>{
+  const explicitLocale=initialUrlLanguage();
+  const update=(detected:string,finalized=false)=>{
    if(!alive)return;
    let manualCountry:string|null=null;
-   try{
-    manualCountry=sessionStorage.getItem('we_country_override');
-   }catch{}
+   try{manualCountry=sessionStorage.getItem('we_country_override')}catch{}
    const chosen=validCountry(manualCountry)?manualCountry:detected;
-   const preferred=languageOverride||initialUrlLanguage()||languageForCountry(chosen);
+   const preferred=languageOverride||explicitLocale||languageForCountry(chosen);
    sync(chosen,preferred);
-   if(!initialUrlLanguage())navigateLanguage(preferred);
+   if(finalized&&!explicitLocale)navigateLanguage(preferred,true);
   };
-  // Resolve immediately from manual tab preference or device hints so the
-  // header is not stale while first-visit IP geolocation is in flight.
+  // Show reasonable local hints first; trust edge/IP once it responds.
+  // Don't navigate twice while geolocation is resolving.
   update(fallback);
-  if(!countryOverride){
+  if(countryOverride){
+   update(fallback,true);
+  }else{
    let sessionRegion:string|null=null;
    try{sessionRegion=sessionStorage.getItem('we_detected_country')}catch{}
    if(validCountry(sessionRegion)){
-    update(sessionRegion);
+    update(sessionRegion,true);
    }else{
     void fetch('/api/visitor-country',{credentials:'same-origin',cache:'no-store'})
      .then(async response=>response.ok?response.json():null)
@@ -104,9 +105,9 @@ export default function Header(){
       const detected=(data as {country?:unknown}|null)?.country;
       if(validCountry(detected)){
        try{sessionStorage.setItem('we_detected_country',detected)}catch{}
-       update(detected);
       }
-     }).catch(()=>{});
+      update(validCountry(detected)?detected:fallback,true);
+     }).catch(()=>update(fallback,true));
    }
   }
   return()=>{alive=false};
