@@ -1,4 +1,5 @@
 import {getPool} from '@/lib/db';
+import {restaurantPublicName} from '@/lib/restaurant-public-name';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {escapeLike,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
 import {CatalogDatabaseUnavailable,type CatalogTag} from '@/lib/restaurant-catalog';
@@ -186,7 +187,7 @@ export async function getGeoCatalog(input:QueryParams & {
   const selected=res.rows.slice(0,limit);
   const opening=await getOpeningHours(db,selected.map(r=>r.id));
   const items=selected.map(r=>({
-    ...r,opening_hours:opening[r.id]||null,...(nearby?{distance_km:Number(r.distance_km)}:{}),
+    ...r,name:restaurantPublicName(r.name),opening_hours:opening[r.id]||null,...(nearby?{distance_km:Number(r.distance_km)}:{}),
   }));
   return {
     mode:input.mode,locale,bounds,filters,q,items,limit,
