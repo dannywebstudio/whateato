@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
 import type {SiteLanguage} from '@/lib/visitor-country';
+import styles from './LocalizedChromeText.module.css';
 
 function useChromeLocale():SiteLanguage{
  const [locale,setLocale]=useState<SiteLanguage>('en');
@@ -17,8 +18,8 @@ function useChromeLocale():SiteLanguage{
 }
 const taglines:Record<SiteLanguage,string>={
  en:'Find your next favorite place to eat in Korea.',
- ko:'한국에서 다음으로 좋아할 맛집을 찾아보세요.',
- ja:'韓国で次のお気に入りのお店を見つけよう。',
+ ko:'한국에서 마음에 드는 맛집을 찾아보세요.',
+ ja:'韓国でお気に入りのグルメスポットを見つけよう。',
  'zh-CN':'发现你在韩国的下一家心仪餐厅。'
 };
 const footers:Record<SiteLanguage,string>={
@@ -29,7 +30,7 @@ const footers:Record<SiteLanguage,string>={
 };
 export function HomeTagline(){
  const locale=useChromeLocale();
- return <p>{taglines[locale]}</p>;
+ return <p className={styles.tagline}>{taglines[locale]}</p>;
 }
 export function SiteFooter(){
  const locale=useChromeLocale();
