@@ -98,3 +98,10 @@
  .blockHeader{align-items:flex-start}
  .mediaGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+.photoDrop{border:2px dashed #b7d3bf;border-radius:13px;background:#f5faf6;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:7px;padding:23px 13px;text-align:center;min-height:130px}
+.photoDrop>span:first-child{font-size:27px}
+.photoDrop strong{font-size:13px;color:#36754e}
+.photoDrop>span:last-child{font-size:11px;color:#7b8c7c;overflow-wrap:anywhere}
