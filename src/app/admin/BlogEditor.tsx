@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState,type ChangeEvent,type DragEvent} from 'react';
-import {BLOG_LOCALES,BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS,blogLocaleReadiness,publishableBlog,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
+import {BLOG_LOCALES,BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS,blogLocaleReadiness,publishableBlog,parseBlogDraft,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
 import BlogCategoryManager from './BlogCategoryManager';
 import {BlogBody} from '@/components/BlogBody';
 import styles from './blog-editor.module.css';
@@ -48,6 +48,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
  const [preview,setPreview]=useState(false);
  const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');
  const [dirty,setDirty]=useState(false);
+ const [assistantPackage,setAssistantPackage]=useState('');
  const [dragged,setDragged]=useState<string|null>(null);
  const [file,setFile]=useState<File|null>(null);const [imageRole,setImageRole]=useState<'cover'|'inline'>('cover');
  const [alt,setAlt]=useState('');const [source,setSource]=useState('');const [rightsRef,setRightsRef]=useState('');
@@ -133,6 +134,27 @@ export default function BlogEditor({owner}:{owner:boolean}){
    setMessage(name==='submit'?'4개 언어 검수 요청 완료':name==='publish'?
     '한국어·영어·일본어·중국어 4개 언어가 함께 발행됐어.':'블로그 공개가 중단됐어.');
   }catch(e){error(e)}finally{setBusy(false)}
+ };
+ const importPreparedArticle=()=>{
+  if(assistantPackage.length<10||assistantPackage.length>180000){
+   setMessage('JSON 원고 패키지는 10~180,000자여야 해.');return;
+  }
+  if(dirty&&!window.confirm('현재 작성 중인 저장되지 않은 내용을 원고 패키지로 덮어쓸까?'))return;
+  try{
+   const candidate:unknown=JSON.parse(assistantPackage);
+   const parsed=parseBlogDraft(candidate);
+   if(!parsed){setMessage('원고 구조 오류: category, tags, related_restaurant_ids, translations(en/ko/ja/zh-CN)와 본문 블록 형식을 확인해.');return}
+   if(!categories.some(cat=>cat.slug===parsed.category&&cat.is_active)){
+    setMessage('현재 사용할 수 없는 카테고리야. 카테고리 관리에서 활성화된 분류를 선택해.');return;
+   }
+   setDraft(parsed);setTagsText(parsed.tags.join(', '));
+   setLocale('en');setPreview(false);setDirty(true);
+   setMessage(publishableBlog(parsed)?'원고를 가져왔어. 누락된 언어와 SEO 정보를 마무리한 뒤 초안 저장해.':
+      '한국어·영어·일본어·중국어 원고를 한 번에 가져왔어. 내용 확인 후 초안 저장해.');
+   setAssistantPackage('');
+  }catch{
+   setMessage('JSON 원고 패키지 구문 오류야. JSON 형식을 확인해.');
+  }
  };
  const searchRestaurant=async()=>{
   try{const r=await api('/api/v1/owner/catalog?q='+encodeURIComponent(restaurantQuery));
@@ -221,6 +243,18 @@ export default function BlogEditor({owner}:{owner:boolean}){
          onClick={()=>void action('unpublish')}>공개 중단</button>}
       </div>
      </div>
+     <details className={styles.assistantImport}>
+      <summary>ChatGPT 작성 원고 4개 언어 한번에 가져오기</summary>
+      <p>내가 작성한 JSON 원고 패키지 한 개를 붙여넣으면 네 언어의 제목·본문·SEO가 동시에 편집기에 채워져.
+      자동 발행하지 않고, 초안 저장 → 검수 → Owner 승인 단계를 그대로 거쳐.</p>
+      <textarea rows={6} maxLength={180000} value={assistantPackage}
+       placeholder={'{"category":"restaurants","tags":[],"related_restaurant_ids":[],"translations":{"en":{...},"ko":{...},"ja":{...},"zh-CN":{...}}}'}
+       onChange={e=>setAssistantPackage(e.target.value)}/>
+      <button type="button" className={styles.smallButton}
+       onClick={importPreparedArticle} disabled={busy||!assistantPackage.trim()}>
+       4개 언어 원고 가져오기
+      </button>
+     </details>
      <div className={styles.languageReadiness} aria-label="언어별 발행 준비 상태">
       <div className={styles.readinessTitle}>
        <strong>4개 언어 동시 발행 준비</strong>
