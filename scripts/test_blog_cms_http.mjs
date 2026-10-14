@@ -106,12 +106,58 @@ const blocks=[
  {id:'places',type:'list',items:['Research each restaurant','Check the real opening hours','Enjoy responsibly']},
  {id:'comparison',type:'table',rows:[['Situation','Recommendation'],['Solo meal','Look for local cafes']]}
 ];
+const english={
+ title:'Where should you eat when visiting Seoul?',
+ excerpt:'A thoughtful guide to discovering Korean food and local restaurants in the neighborhoods of Seoul.',
+ seo_title:'Where to Eat in Seoul — WhatEatO',
+ seo_description:'A practical dining guide for Seoul travelers.',
+ blocks};
+const otherTranslations={
+ ko:{title:'서울에서 어떤 음식을 먹어볼까?',
+  excerpt:'서울 여행에서 지역별 식당과 교통 정보를 함께 살펴보고, 처음 방문하는 사람도 자신에게 맞는 음식을 찾을 수 있도록 준비한 안내서야.',
+  seo_title:'서울 여행 식당과 교통 가이드 | WhatEatO',
+  seo_description:'서울 여행 중 지역별 식당과 대중교통 이용 방법을 함께 알아보는 한국어 안내서.',
+  blocks:[
+   {id:'ko-heading',type:'heading',level:2,text:'서울 여행 중 교통과 식당 살펴보기'},
+   {id:'ko-text',type:'paragraph',text:'서울을 여행할 때는 목적지까지의 이동 경로와 식당의 정확한 주소를 함께 살펴보는 것이 좋아. 현지 식당을 선택할 때에는 공식적으로 공개된 영업시간과 최근 확인된 메뉴 정보를 참고하고, 방문 전에 휴무 정보를 직접 다시 확인하면 도움이 돼. '.repeat(3)}
+  ]},
+ ja:{title:'ソウルで何を食べたらいい？',
+  excerpt:'ソウル旅行で役立つ食事と交通の基本情報を紹介します。初めて訪れる人も地域ごとのお店を落ち着いて探せるように構成したガイドです。',
+  seo_title:'ソウルの食事と交通ガイド | WhatEatO',
+  seo_description:'ソウルを旅行する人のために、地域ごとのレストラン情報と交通の確認方法をまとめたガイドです。',
+  blocks:[
+   {id:'ja-heading',type:'heading',level:2,text:'ソウルのレストランと移動方法'},
+   {id:'ja-text',type:'paragraph',text:'ソウルを訪れる際は、レストランの所在地だけでなく、地下鉄の出口やバスの乗り換え場所も事前に調べておくと便利です。営業時間は変更される場合があるため、訪問前に公式情報を確認してください。'.repeat(3)}
+  ]},
+ 'zh-CN':{title:'在首尔旅行应该吃什么？',
+  excerpt:'这是一篇面向第一次来到首尔的旅行者的饮食与交通指南，帮助读者了解如何寻找当地餐厅并确认路线和营业时间。',
+  seo_title:'首尔餐厅与交通旅行指南 | WhatEatO',
+  seo_description:'介绍首尔不同街区的餐厅查询方法、公共交通注意事项以及旅行期间核对营业时间的建议。',
+  blocks:[
+   {id:'zh-heading',type:'heading',level:2,text:'首尔餐厅和交通信息指南'},
+   {id:'zh-text',type:'paragraph',text:'在首尔寻找餐厅时，建议先确认目的地的准确地址，再查看地铁站出口与公交车换乘信息。由于营业时间可能随季节或者节假日变化，出发前应该查看餐厅发布的最新公告，并给交通换乘留下足够的时间。'.repeat(3)}
+  ]}
+};
 const draft={category:'transportation',tags:['korean-food','seoul'],
  related_restaurant_ids:['11111111-1111-4111-8111-111111111111'],
- translations:{en:{title:'Where should you eat when visiting Seoul?',
-   excerpt:'A thoughtful guide to discovering Korean food and local restaurants in the neighborhoods of Seoul.',
-   seo_title:'Where to Eat in Seoul — WhatEatO',seo_description:'A practical dining guide for Seoul travelers.',
-   blocks}}};
+ translations:{en:english,...otherTranslations}};
+const englishOnly={...draft,translations:{en:english}};
+const tempSaved=await request('/api/v1/owner/blog/'+temporary.body.id,{
+ method:'PUT',body:{expected_revision:1,draft:englishOnly}});
+assert.equal(tempSaved.status,200,JSON.stringify(tempSaved.body));
+const blockedSubmission=await request('/api/v1/owner/blog/'+temporary.body.id+'/actions',{
+ method:'POST',body:{action:'submit',expected_revision:2}});
+assert.equal(blockedSubmission.status,409,'One-language draft cannot be submitted for publication');
+assert.equal(blockedSubmission.body.error,'ko_translation_missing');
+const withEmptySEO={...draft,translations:{...draft.translations,
+ 'zh-CN':{...draft.translations['zh-CN'],seo_description:''}}};
+const newTemp=await request('/api/v1/owner/blog/'+temporary.body.id,{
+ method:'PUT',body:{expected_revision:2,draft:withEmptySEO}});
+assert.equal(newTemp.status,200);
+const blockedSeo=await request('/api/v1/owner/blog/'+temporary.body.id+'/actions',{
+ method:'POST',body:{action:'submit',expected_revision:3}});
+assert.equal(blockedSeo.status,409,'Missing Chinese SEO metadata blocks every locale');
+assert.equal(blockedSeo.body.error,'zh_CN_seo_description_too_short');
 assert.equal((await request(prefix,{method:'PUT',headers:moderator,
  body:{draft,expected_revision:1}})).status,403);
 assert.equal((await request(prefix,{method:'PUT',
@@ -138,6 +184,28 @@ const html=await page.text();
 assert.ok(html.includes('Where should you eat when visiting Seoul?'));
 assert.ok(html.includes('Research each restaurant'));
 assert.ok(html.includes('WhatEatO'));
+const versions=[
+ ['ko','서울에서 어떤 음식을 먹어볼까?','서울 여행 중 교통과 식당 살펴보기'],
+ ['ja','ソウルで何を食べたらいい？','ソウルのレストランと移動方法'],
+ ['zh-CN','在首尔旅行应该吃什么？','首尔餐厅和交通信息指南']
+];
+for(const [lang,title,heading] of versions){
+ const page=await fetch(base+'/blog/what-to-eat-in-seoul-ci?hl='+lang);
+ assert.equal(page.status,200,'missing public localized version '+lang);
+ const body=await page.text();
+ assert.ok(body.includes(title)&&body.includes(heading),'localized body missing '+lang);
+ assert.ok(!body.includes('Best authentic dining experiences in Seoul'),
+  'localized page must not fallback to English '+lang);
+}
+const publishingDB=new pg.Client({connectionString:process.env.DATABASE_URL});
+await publishingDB.connect();
+try{
+ const x=await publishingDB.query('SELECT snapshot,revision,published_at FROM whateato_blog_publications WHERE post_id=$1',[id]);
+ assert.equal(x.rowCount,1,'one atomic publication snapshot');
+ assert.deepEqual(Object.keys(x.rows[0].snapshot.translations).sort(),['en','ja','ko','zh-CN'].sort());
+ assert.equal(x.rows[0].revision,2);
+}finally{await publishingDB.end()}
+
 const results=await fetch(base+'/blog?q=neighborhoods');
 assert.equal(results.status,200);
 assert.ok((await results.text()).includes('Where should you eat when visiting Seoul?'));
