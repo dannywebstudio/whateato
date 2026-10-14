@@ -355,7 +355,7 @@ export default function AdminConsole({role}:{role:Role}){
          </label>)}
          <p className={styles.note}>좌표가 없어도 초안 등록은 가능해. 공개하려면 정확한 좌표가 필요해.</p>
          <button className={styles.button} disabled={busy} onClick={()=>void createRestaurant()}>비공개 식당 초안 만들기</button>
-       </div>
+       </div>}
      </section>
      <section className={styles.panel}>
        <h2>식당 콘텐츠 작성</h2>
