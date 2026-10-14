@@ -73,3 +73,24 @@
  .articleBody h2{font-size:25px}.articleBody h3{font-size:20px}
  .cover{margin-bottom:24px}.cover img{border-radius:11px}
 }
+
+/* DB-driven category hierarchy, scoped to /blog only. */
+.categoryTree{display:flex;flex-wrap:wrap;align-items:stretch;gap:12px;margin:24px 0}
+.categoryTree>.categoryLink{display:flex;align-items:center;justify-content:center}
+.categoryGroup{flex:1 1 235px;min-width:0;display:flex;flex-direction:column;gap:11px;
+  background:#fff;border:1px solid #dce9e0;border-radius:14px;padding:15px 16px}
+.categoryRoot{font-weight:850;color:#274f38;font-size:16px;padding-bottom:9px;
+  border-bottom:1px solid #e8efe9}
+.categoryRoot[data-active=true]{color:#117d50;border-bottom-color:#5da67c}
+.subcategories{display:flex;flex-wrap:wrap;gap:7px}
+.subcategory{font-size:12px;color:#526b58;border:1px solid #dfe9e1;
+  border-radius:99px;background:#f8fbf8;padding:8px 11px}
+.subcategory:hover,.subcategory[data-active=true]{color:#fff;background:#148054;
+  border-color:#148054}
+@media(max-width:600px){
+ .categoryTree{display:grid;grid-template-columns:1fr;gap:9px}
+ .categoryGroup{padding:13px 14px}
+ .categoryTree>.categoryLink{justify-self:start}
+ .categoryRoot{font-size:15px}
+ .subcategory{font-size:11px}
+}
