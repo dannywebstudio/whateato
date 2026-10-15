@@ -129,7 +129,8 @@ try{
                  '44444444-4444-4444-8444-444444444444');
     INSERT INTO restaurant_opening_hours(restaurant_id,publication_state,source_url,verified_at)
     SELECT id,'published','https://example.org/ci-synthetic-hours',now()
-    FROM restaurants WHERE publication_status='published' AND business_status='active';
+    FROM restaurants WHERE publication_status='published' AND business_status='active'
+      AND id <> '11111111-1111-4111-8111-111111111111';
     INSERT INTO restaurant_opening_intervals(restaurant_id,weekday,start_minute,end_minute)
     SELECT h.restaurant_id,w,600,1200
     FROM restaurant_opening_hours h CROSS JOIN generate_series(0,6) w;
