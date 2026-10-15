@@ -15,6 +15,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - run: node scripts/verify_render_blueprint.mjs
+      - run: node scripts/test_public_seo_policy.mjs
       - run: npm run typecheck
       - run: node scripts/verify_ab_preview_gate.mjs
       - run: node --check scripts/verify_phase15_staging.mjs
