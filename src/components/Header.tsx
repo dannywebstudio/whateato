@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {useEffect,useState} from 'react';
-import {usePathname,useRouter,useSearchParams} from 'next/navigation';
+import {usePathname,useRouter} from 'next/navigation';
 type Locale='ko'|'en'|'ja'|'zh-CN';
 const countries:[string,string][]=[['KR','🇰🇷 대한민국'],['JP','🇯🇵 日本'],['CN','🇨🇳 中国'],['US','🇺🇸 United States'],['GB','🇬🇧 United Kingdom'],['CA','🇨🇦 Canada'],['AU','🇦🇺 Australia'],['OTHER','🌐 Other']];
 const langs:[string,string][]=[['auto','Auto'],['ko','한국어'],['en','English'],['ja','日本語'],['zh-CN','简体中文']];
@@ -11,14 +11,13 @@ export default function Header(){
   const [country,setCountry]=useState('OTHER');
   const [lang,setLang]=useState('auto');
   const pathname=usePathname();
-  const params=useSearchParams();
   const router=useRouter();
   function apply(countryCode:string,languageCode:string){
     const resolved=languageCode==='auto'?countryLocale(countryCode):normalize(languageCode);
     try{localStorage.setItem('we_country',countryCode);localStorage.setItem('we_language',languageCode);localStorage.setItem('we_resolved_language',resolved);}catch{}
     document.documentElement.lang=resolved;
     window.dispatchEvent(new CustomEvent('we_preferences',{detail:{country:countryCode,language:resolved}}));
-    const qs=new URLSearchParams(params.toString());
+    const qs=new URLSearchParams(window.location.search);
     qs.set('hl',resolved);
     router.replace(pathname+'?'+qs.toString(),{scroll:false});
     router.refresh();
@@ -36,7 +35,7 @@ export default function Header(){
       localStorage.setItem('we_resolved_language',resolved);
       document.documentElement.lang=resolved;
       window.dispatchEvent(new CustomEvent('we_preferences',{detail:{country:c,language:resolved}}));
-      if(pathname==='/'||!params.has('hl')){
+      if(pathname==='/'||!new URLSearchParams(window.location.search).has('hl')){
         const qs=new URLSearchParams(params.toString());qs.set('hl',resolved);
         router.replace(pathname+'?'+qs.toString(),{scroll:false});
       }
