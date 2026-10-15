@@ -93,4 +93,16 @@ console.log('PASS blog: indexable listing and canonical');
 const missingBlog=await get('/blog/this-page-is-not-published-whateto-20261015');
 assert.equal(missingBlog.status,404,'unpublished blog post must be inaccessible');
 console.log('PASS unpublished blog: 404');
+// Read-only deployment fingerprint. A POST-only owner/public route returns
+// 405 to GET after the new owner-approval release, versus 404 on older builds.
+const approvalFingerprint=await get('/api/v1/owner/catalog/'+allow[0][0]+'/public');
+console.log('DEPLOYMENT FINGERPRINT: owner approval endpoint GET HTTP '+approvalFingerprint.status+
+  ' (405 = new owner-approval release; 404 = old release)');
+const readiness=await get('/api/ready');
+try{
+ const flags=JSON.parse(readiness.body);
+ console.log('PUBLIC READINESS: status='+readiness.status+
+   ', owner_cms_schema='+String(flags.owner_cms_schema)+
+   ', bulk_admin_schema='+String(flags.bulk_admin_schema));
+}catch{console.log('PUBLIC READINESS: non-JSON response '+readiness.status)}
 console.log('PASS: All canonical public SEO tests');
