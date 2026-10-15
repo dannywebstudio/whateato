@@ -77,6 +77,13 @@ try{
     FROM restaurants
   `);
   await client.query(`CREATE TABLE IF NOT EXISTS restaurant_enrichment_sample_1000 (restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id), sample_rank integer NOT NULL)`);
+  await client.query(`
+    CREATE OR REPLACE VIEW restaurant_content_readiness_v1 AS
+    SELECT id, 0::int AS published_languages, 0::int AS verified_menus,
+      0::int AS approved_images, 0::int AS verified_tags,
+      'content_review'::text AS next_action
+    FROM restaurants
+  `);
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
   // present and unchanged. Pending flags may NEVER suppress public listings.
   await client.query(`
