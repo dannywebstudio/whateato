@@ -141,7 +141,7 @@ export default function Header(){
      {{ko:'블로그',en:'Blog',ja:'ブログ','zh-CN':'博客'}[lang]}
     </Link>
     <Link href={'/contact?hl='+encodeURIComponent(lang)}>Contact</Link>
-    <HeaderAccountLink/>
+    <HeaderAccountLink lang={lang}/>
    </div>
   </div>
   <div className="preferences">
