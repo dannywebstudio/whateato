@@ -248,7 +248,11 @@ try{
     VALUES
       ('11111111-1111-4111-8111-111111111111',true,'baseline','https://example.test/cafe'),
       ('22222222-2222-4222-8222-222222222222',true,'baseline','https://example.test/restaurant'),
-      ('77777777-7777-4777-8777-777777777777',true,'baseline','https://example.test/permit-cafe')
+      ('77777777-7777-4777-8777-777777777777',true,'baseline','https://example.test/permit-cafe'),
+      ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',true,'baseline','https://example.test/map-1'),
+      ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',true,'baseline','https://example.test/map-2'),
+      ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',true,'baseline','https://example.test/map-3'),
+      ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',true,'baseline','https://example.test/map-4')
   `);
   console.log('Synthetic Phase 2 fixture ready (localhost only; 6 rows; quality hold+lot fallback)');
 }finally{await client.end()}
