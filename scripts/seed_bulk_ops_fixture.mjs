@@ -55,6 +55,12 @@ try{
   CREATE TABLE google_place_manual_identity_approvals_v1 (
     restaurant_id uuid, google_place_id text, verified_at timestamptz);
   CREATE TABLE restaurant_source_match_checkpoints_v1 (restaurant_id uuid, google_place_id text);
+  -- Public catalog queries reference quota schema even when the feature flag is disabled.
+  -- The ephemeral CMS test database needs a matching read-only fixture relation.
+  CREATE TABLE google_places_photo_quota_v1 (
+    month_key text NOT NULL, sku text NOT NULL, used integer NOT NULL DEFAULT 0,
+    limit_count integer NOT NULL DEFAULT 0, PRIMARY KEY (month_key,sku)
+  );
  `);
  // Keep production startup visibility checks active even in ephemeral local CI.
  await client.query(`
