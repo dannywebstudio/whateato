@@ -155,7 +155,7 @@ assert.match(reviewSummaryText,/Approved reviews\s*3[^]*?★\s*4(?:\.0)?\s*\/\s*
 
 assert.match(detailHtml.body,/<img[^>]*src="\/api\/v1\/images\/55555555-5555-4555-8555-555555555555"/,
   'approved media is rendered in detail page');
-assert.match(detailHtml.body,/Sign in with Google/,'English review login prompt');
+assert.match(detailHtml.body,/Continue with Google/,'English review login prompt');
 const japaneseDetail=await get('/restaurant/'+rid+'?hl=ja');
 assert.equal(japaneseDetail.status,200);
 assert.match(japaneseDetail.body,/Googleでログイン/,'Japanese review login prompt');
