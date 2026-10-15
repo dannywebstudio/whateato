@@ -88,6 +88,10 @@ try{
         COALESCE(road_address_ko,lot_address_ko) AS display_address,
         now() AS verified_at
       FROM restaurants;
+    CREATE TABLE google_places_photo_quota_v1 (
+      id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      restaurant_id uuid, quota_day date, used_count integer DEFAULT 0
+    );
     CREATE TABLE restaurant_enrichment_sample_1000 (
       restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),
       sample_rank integer NOT NULL
