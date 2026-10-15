@@ -111,6 +111,78 @@ assert.equal(notReady.status,409,
   'owner cannot approve a restaurant missing independently verified hours and content');
 assert.equal(notReady.data.error,'public_approval_preflight_failed');
 assert.ok(notReady.data.blockers?.includes('verified_opening_hours'));
+
+// Full synthetic lifecycle: invisible -> owner approve -> search/detail/map -> revoke.
+// Production and Neon databases are never contacted in this test.
+const syntheticId='77777777-7777-4777-8777-777777777777';
+const publicSearch='/api/v1/restaurants?q=Test%20Location&hl=ko&limit=30';
+const publicDetail='/api/v1/restaurants/'+syntheticId+'?hl=ko';
+const publicMap='/api/v1/map/markers?bbox=37.57,126.98,37.59,127.01&hl=ko';
+const before=await req(publicSearch);
+assert.equal(before.status,200);
+assert.ok(!(before.data.items||[]).some(x=>x.id===syntheticId),
+ 'published but unapproved restaurant cannot leak in search');
+assert.equal((await req(publicDetail)).status,404,
+ 'unapproved restaurant detail must return 404');
+
+const local=new pg.Client({connectionString:process.env.DATABASE_URL});
+await local.connect();
+try {
+ await local.query('BEGIN');
+ await local.query("UPDATE restaurants SET road_address_ko='서울특별시 종로구 테스트로 30', region_sido='서울특별시', region_sigungu='종로구', region_dong='테스트동', latitude=37.5784, longitude=126.9855, location=ST_SetSRID(ST_MakePoint(126.9855,37.5784),4326)::geography, publication_status='published', business_status='active' WHERE id=$1",[syntheticId]);
+ await local.query("UPDATE restaurant_localizations SET short_description='A fully verified synthetic venue for owner publication integration testing.', verified_at=now(), publication_state='published' WHERE restaurant_id=$1 AND locale='en'",[syntheticId]);
+ await local.query("INSERT INTO restaurant_localizations (restaurant_id,locale,display_name,short_description,publication_state,source_notes,verified_at) VALUES($1,'ko','테스트 등록 식당','사용자에게 공개될 수 있는지 검증하는 격리된 테스트 전용 식당 설명입니다.','published','https://example.org/synthetic-evidence',now())",[syntheticId]);
+ await local.query("INSERT INTO restaurant_opening_hours (restaurant_id,timezone,publication_state,source_url,verified_at) VALUES($1,'Asia/Seoul','published','https://example.org/verified-hours',now())",[syntheticId]);
+ await local.query("INSERT INTO restaurant_opening_intervals (restaurant_id,weekday,start_minute,end_minute) VALUES($1,1,660,1260)",[syntheticId]);
+ await local.query("INSERT INTO restaurant_tag_assignments (restaurant_id,tag_code,verification_state,evidence_ref,verified_at) VALUES($1,'cafe','verified','https://example.org/verified-cafe',now())",[syntheticId]);
+ const menu=await local.query("INSERT INTO restaurant_menus (restaurant_id,price_krw,position,publication_state,evidence_ref,price_verified_at) VALUES($1,6500,0,'published','https://example.org/verified-menu',now()) RETURNING id",[syntheticId]);
+ await local.query("INSERT INTO restaurant_menu_localizations(menu_id,locale,name) VALUES($1,'ko','테스트 커피'),($1,'en','Synthetic Coffee')",[menu.rows[0].id]);
+ await local.query('COMMIT');
+} catch(error){await local.query('ROLLBACK').catch(()=>{});throw error}
+finally{await local.end()}
+
+const accepted=await req(publicationRoute,'POST',ownerCookie,publicAction);
+assert.equal(accepted.status,200,JSON.stringify(accepted.data));
+assert.equal(accepted.data.public_approved,true);
+const liveSearch=await req(publicSearch);
+assert.equal(liveSearch.status,200);
+assert.ok((liveSearch.data.items||[]).some(x=>x.id===syntheticId),
+ 'approved restaurant must immediately appear in public search');
+const liveDetail=await req(publicDetail);
+assert.equal(liveDetail.status,200,JSON.stringify(liveDetail.data));
+assert.equal(liveDetail.data.restaurant?.id,syntheticId);
+const liveMap=await req(publicMap);
+assert.equal(liveMap.status,200,JSON.stringify(liveMap.data));
+assert.ok((liveMap.data.items||[]).some(x=>x.id===syntheticId),
+ 'approved restaurant must appear on map');
+
+const revoked=await req(publicationRoute,'POST',ownerCookie,{
+ action:'revoke',confirm_restaurant_id:syntheticId
+});
+assert.equal(revoked.status,200,JSON.stringify(revoked.data));
+assert.equal(revoked.data.public_approved,false);
+assert.ok(!(await req(publicSearch)).data.items.some(x=>x.id===syntheticId),
+ 'revoked restaurant disappears from search');
+assert.equal((await req(publicDetail)).status,404,
+ 'revoked restaurant detail must return 404');
+assert.ok(!(await req(publicMap)).data.items.some(x=>x.id===syntheticId),
+ 'revoked restaurant disappears from map');
+assert.equal((await req(publicationRoute,'POST',ownerCookie,{
+ action:'revoke',confirm_restaurant_id:syntheticId
+})).status,409,'double revoke blocked');
+
+const verify=new pg.Client({connectionString:process.env.DATABASE_URL});
+await verify.connect();
+try{
+ const audit=await verify.query("SELECT action FROM whateato_public_restaurant_approval_audit_v1 WHERE restaurant_id=$1 ORDER BY id",[syntheticId]);
+ assert.deepEqual(audit.rows.map(x=>x.action),['approve','revoke'],
+  'owner approve and revoke both audited');
+ const membership=await verify.query("SELECT is_visible,approval_source FROM whateato_restaurant_public_approvals_v1 WHERE restaurant_id=$1",[syntheticId]);
+ assert.equal(membership.rows[0]?.is_visible,false);
+ assert.equal(membership.rows[0]?.approval_source,'owner');
+}finally{await verify.end()}
+console.log('PASS: isolated owner publication -> search/detail/map -> revoke, permissions and audit');
+
 const ownerPage=await req('/admin','GET',ownerCookie);
 assert.equal(ownerPage.status,200);
 assert.match(ownerPage.raw,/Restaurant CMS/);

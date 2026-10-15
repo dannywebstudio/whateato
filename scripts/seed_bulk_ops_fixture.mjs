@@ -36,7 +36,7 @@ try{
  ('77777777-7777-4777-8777-777777777777','Test Location','Synthetic Three')`);
  for(const f of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql',
    '007_review_moderation_audit.sql','008_restaurant_quality_review.sql',
-   '010_verified_opening_hours.sql','014_bulk_content_operations.sql','015_owner_cms_roles_media.sql','016_cms_restaurant_address_media.sql','017_public_visitor_review_media.sql','018_owner_review_delete_audit.sql','019_blog_cms_editorial.sql','020_blog_category_tree.sql'])
+   '010_verified_opening_hours.sql','012_approved_external_ratings.sql','014_bulk_content_operations.sql','015_owner_cms_roles_media.sql','016_cms_restaurant_address_media.sql','017_public_visitor_review_media.sql','018_owner_review_delete_audit.sql','019_blog_cms_editorial.sql','020_blog_category_tree.sql'])
   await client.query(readFileSync('db/migrations/'+f,'utf8'));
  // Isolated CI-only release gating tables. Never runs against Neon.
  await client.query(`
@@ -55,6 +55,12 @@ try{
   CREATE TABLE google_place_manual_identity_approvals_v1 (
     restaurant_id uuid, google_place_id text, verified_at timestamptz);
   CREATE TABLE restaurant_source_match_checkpoints_v1 (restaurant_id uuid, google_place_id text);
+  -- Public catalog queries reference quota schema even when the feature flag is disabled.
+  -- The ephemeral CMS test database needs a matching read-only fixture relation.
+  CREATE TABLE google_places_photo_quota_v1 (
+    month_key text NOT NULL, sku text NOT NULL, used integer NOT NULL DEFAULT 0,
+    limit_count integer NOT NULL DEFAULT 0, PRIMARY KEY (month_key,sku)
+  );
  `);
  // Keep production startup visibility checks active even in ephemeral local CI.
  await client.query(`
