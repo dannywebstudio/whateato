@@ -111,6 +111,16 @@ try{
     SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
     INSERT INTO whateato_restaurant_triage_v1(restaurant_id)
     SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
+    -- Include closed and hidden synthetic records in the 300-row cohort,
+    -- while retaining the public status exclusion in the catalog gate.
+    INSERT INTO whateato_release_cohort_300_v1(restaurant_id)
+    SELECT id FROM restaurants
+    WHERE id IN ('33333333-3333-4333-8333-333333333333',
+                 '44444444-4444-4444-8444-444444444444');
+    INSERT INTO whateato_restaurant_triage_v1(restaurant_id)
+    SELECT id FROM restaurants
+    WHERE id IN ('33333333-3333-4333-8333-333333333333',
+                 '44444444-4444-4444-8444-444444444444');
     INSERT INTO restaurant_opening_hours(restaurant_id,publication_state,source_url,verified_at)
     SELECT id,'published','https://example.org/ci-synthetic-hours',now()
     FROM restaurants WHERE publication_status='published' AND business_status='active';
