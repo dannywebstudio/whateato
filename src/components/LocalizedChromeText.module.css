@@ -10,3 +10,13 @@
   margin-right: auto;
   text-wrap: balance;
 }
+
+/* Legal navigation lives inside the already-approved global footer. */
+.footerInner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;max-width:100%;min-width:0}
+.legalLinks{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;column-gap:11px;row-gap:7px;font-size:12px;line-height:1.6}
+.legalLinks a{color:#3b5948;text-decoration:none;font-weight:600;text-underline-offset:3px}
+.legalLinks a:hover{text-decoration:underline;color:#12805a}
+.legalLinks a:focus-visible{outline:2px solid #188a64;outline-offset:4px;border-radius:2px}
+.legalLinks span{color:#b0bcb4}
+.footerNote{line-height:1.7;text-align:center;color:#7c8881}
+@media(max-width:620px){.footerInner{gap:8px}.legalLinks{font-size:11px;column-gap:8px}.footerNote{font-size:11px}}
