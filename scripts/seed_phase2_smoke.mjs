@@ -102,6 +102,22 @@ try{
       restaurant_id uuid, google_place_id text
     );
   `);
+  // Match real startup preflight: exactly 300 selected, with synthetic hidden padding.
+  await client.query(`
+    INSERT INTO restaurants(id,name_ko,business_status,publication_status)
+    SELECT md5('ci-cohort-'||n::text)::uuid,'CI hidden cohort '||n,'active','hidden'
+    FROM generate_series(1,290) n;
+    INSERT INTO whateato_release_cohort_300_v1(restaurant_id)
+    SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
+    INSERT INTO whateato_restaurant_triage_v1(restaurant_id)
+    SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
+    INSERT INTO restaurant_opening_hours(restaurant_id,publication_state,source_url,verified_at)
+    SELECT id,'published','https://example.org/ci-synthetic-hours',now()
+    FROM restaurants WHERE publication_status='published' AND business_status='active';
+    INSERT INTO restaurant_opening_intervals(restaurant_id,weekday,start_minute,end_minute)
+    SELECT h.restaurant_id,w,600,1200
+    FROM restaurant_opening_hours h CROSS JOIN generate_series(0,6) w;
+  `);
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
   // present and unchanged. Pending flags may NEVER suppress public listings.
   await client.query(`
