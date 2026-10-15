@@ -85,7 +85,8 @@ try{
       SELECT restaurant_id FROM whateato_release_cohort_300_v1;
     CREATE OR REPLACE VIEW restaurant_address_localizations_v1 AS
       SELECT id AS restaurant_id, 'ko'::text AS locale,
-        COALESCE(road_address_ko,lot_address_ko) AS display_address
+        COALESCE(road_address_ko,lot_address_ko) AS display_address,
+        now() AS verified_at
       FROM restaurants;
     CREATE TABLE restaurant_enrichment_sample_1000 (
       restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),
