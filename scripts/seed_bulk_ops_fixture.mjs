@@ -80,5 +80,12 @@ try{
   VALUES ('11111111-1111-4111-8111-111111111111',
    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',5,
    'Synthetic approved CI review written only for a local test database.', 'published', now())`);
+ // The bulk CMS test must NEVER bypass the same owner-approved visibility gate.
+ await client.query(readFileSync('db/migrations/021_owner_approved_public_restaurants.sql','utf8'));
+ await client.query(`
+   INSERT INTO whateato_restaurant_public_approvals_v1
+     (restaurant_id,is_visible,approval_source,evidence_url)
+   VALUES('11111111-1111-4111-8111-111111111111',true,'baseline','https://example.org/ci-synthetic-hours')
+ `);
  console.log('PASS: isolated bulk fixtures, six genuine migrations, no external DB writes');
 }finally{await client.end()}
