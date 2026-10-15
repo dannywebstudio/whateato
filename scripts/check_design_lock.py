@@ -32,11 +32,13 @@ FROZEN_FILES = (
 # Pages preview intermixes markup & runtime logic. Only the appearance-defining
 # render functions are frozen: data loading/filtering/interaction may evolve.
 # Exact, owner-selected latest UI revision. Baseline remains immutable.
+# Owner explicitly approved the 2026-10-16 Header Login/My Page control next to Contact.
+# Freeze the exact revised Header blob; all other design files stay locked.
 LATEST_UI_BLOBS = {
     "src/app/globals.css": "c2d831ab2a977f7374062986130de55a7fa452e0",
     "src/app/page.tsx": "999cd8b1bd5423714030820b91dbfb68c2298a67",
     "src/app/layout.tsx": "c5cbe21dd178679f7313a252d7e2fd4fa4ad1ac7",
-    "src/components/Header.tsx": "2d4c620346c8fbebc646580a4dae480fb647e5f3",
+    "src/components/Header.tsx": "d16cc14eed224c754b66b2fdc8a6dec2b797d48a",
     "src/components/SearchBox.tsx": "12c000453e99c5fe8552c05c9e62e536c50629f2"
 }
 
