@@ -1,4 +1,3 @@
-import {SEO_RESTAURANT_IDS} from '@/lib/public-seo';
 import {getPool} from '@/lib/db';
 import {validBlogSlug,parseBlogDraft,type BlogDraft,type BlogLocale,BLOG_LOCALES} from '@/lib/blog-model';
 import {isUuid} from '@/lib/platform-v1';
@@ -77,8 +76,10 @@ export async function relatedBlogRestaurants(draft:BlogDraft,locale:BlogLocale){
     AND l.publication_state='published'
   LEFT JOIN restaurant_localizations en ON en.restaurant_id=r.id AND en.locale='en'
     AND en.publication_state='published'
-  WHERE r.id=ANY($1::uuid[]) AND r.id=ANY($3::uuid[]) AND r.business_status='active'
-    AND r.publication_status='published'`,[ids,locale,[...SEO_RESTAURANT_IDS]]);
+  WHERE r.id=ANY($1::uuid[]) AND r.business_status='active'
+    AND EXISTS(SELECT 1 FROM whateato_restaurant_public_approvals_v1 a
+      WHERE a.restaurant_id=r.id AND a.is_visible=true)
+    AND r.publication_status='published'`,[ids,locale]);
  return ids.map(id=>r.rows.find(p=>p.id===id)).filter((v):v is typeof r.rows[number]=>!!v);
 }
 export function blogReadiness(draft:BlogDraft,postId:string){
