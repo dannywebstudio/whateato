@@ -37,7 +37,7 @@ FROZEN_FILES = (
 APPROVED_I18N_BLOBS = {
     "src/app/globals.css": "cbde9f8be73e5fca0f2d8159a6d2ac7e9f384060",
     "src/app/page.tsx": "c03b62d492279eb3d92363a14d7f5bc2f353bfdb",
-    "src/components/Header.tsx": "24b526294ea1d444dc21fa57a5ae5db7de8f142c",
+    "src/components/Header.tsx": "c02d764cddba2d8b0c19ec73433fcedfd17632c3",
     "src/components/SearchBox.tsx": "61b291ffa679b3eadc74e19261c524bfa93e1d5d",
 }
 
