@@ -50,7 +50,7 @@ function ReviewCard({review,locale,onUpdated,onDeleted}:{
   const hasScores=scores!==null;
   const averageRating=hasScores?dimensions.map(k=>scores[k]).filter((n):n is number=>typeof n==='number'):null;
   if(body.trim().length<30||body.trim().length>1500||
-    (hasScores?!(Number.isInteger(scores.taste)&&scores.taste>=1&&scores.taste<=5):
+    (hasScores?!(typeof scores.taste==='number'&&Number.isInteger(scores.taste)&&scores.taste>=1&&scores.taste<=5):
      !(Number.isInteger(rating)&&rating>=1&&rating<=5))||
     (averageRating!==null&&averageRating.some(n=>!Number.isInteger(n)||n<1||n>5))){
    setMessage(t.invalid);setFailed(true);return;
@@ -61,7 +61,7 @@ function ReviewCard({review,locale,onUpdated,onDeleted}:{
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({rating,body:body.trim(),...(scores?{categories:scores}:{})})});
    if(!response.ok)throw Error(response.status===401?'expired':'failed');
-   onUpdated({...review,body:body.trim(),rating,scores:undefined, categories:scores,
+   onUpdated({...review,body:body.trim(),rating,categories:scores,
      moderation_status:'pending',updated_at:new Date().toISOString()});
    setEditing(false);setMessage(t.saved);router.refresh();
   }catch(e){setFailed(true);setMessage(e instanceof Error&&e.message==='expired'?t.expired:t.failure)}
