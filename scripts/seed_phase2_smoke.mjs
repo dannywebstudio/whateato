@@ -84,6 +84,15 @@ try{
       'content_review'::text AS next_action
     FROM restaurants
   `);
+  // Empty CI-only compatibility relations: optional Google photo path stays disabled.
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS google_place_manual_identity_approvals_v1
+      (restaurant_id uuid, google_place_id text, verified_at timestamptz);
+    CREATE TABLE IF NOT EXISTS restaurant_source_match_checkpoints_v1
+      (restaurant_id uuid, google_place_id text);
+    CREATE TABLE IF NOT EXISTS google_places_photo_quota_v1
+      (month_key text, sku text, used integer, limit_count integer);
+  `);
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
   // present and unchanged. Pending flags may NEVER suppress public listings.
   await client.query(`
