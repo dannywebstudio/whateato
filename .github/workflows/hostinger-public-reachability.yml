@@ -1,0 +1,46 @@
+name: WhatEatO Hostinger external reachability
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths: ['.github/workflows/hostinger-public-reachability.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Resolve public DNS and probe HTTPS (read-only, no credentials)
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo '=== Public DNS resolution ==='
+          getent ahostsv4 whateato.com || true
+          getent ahostsv4 www.whateato.com || true
+          echo '=== HTTP status, redirect, remote IP, TLS ==='
+          failed=0
+          for suffix in '/' '/api/ready' '/robots.txt' '/sitemap.xml' '/blog'; do
+            url="https://whateato.com${suffix}"
+            printf '%s: ' "$url"
+            info=$(curl --silent --show-error --location --max-time 25 --connect-timeout 10 --output /tmp/whateato-response --write-out 'http=%{http_code} final=%{url_effective} ip=%{remote_ip} tls=%{ssl_verify_result} bytes=%{size_download}' "$url") || {
+              echo "REQUEST_FAILED ${info:-}"
+              if [ "$suffix" = '/' ]; then failed=1; fi
+              continue
+            }
+            echo "$info"
+            if [ "$suffix" = '/' ]; then
+              status=$(printf '%s' "$info" | sed -nE 's/.*http=([0-9]{3}).*/\1/p')
+              if [ "$status" != '200' ]; then failed=1; fi
+              printf 'Homepage metadata: '
+              grep -o -m 1 '<title>[^<]*</title>' /tmp/whateato-response | head -c 200 || true
+              echo
+            fi
+          done
+          echo '=== Canonical www alias ==='
+          curl --silent --show-error --location --max-time 25 --connect-timeout 10 --output /dev/null --write-out 'www http=%{http_code} final=%{url_effective} ip=%{remote_ip} tls=%{ssl_verify_result}\n' https://www.whateato.com/ || true
+          if [ "$failed" -ne 0 ]; then
+            echo 'FAIL: publicly reachable HTTPS homepage check did not return 200.'
+            exit 1
+          fi
+          echo 'PASS: remote GitHub runner reached the public HTTPS homepage.'
