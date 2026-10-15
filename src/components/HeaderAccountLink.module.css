@@ -3,3 +3,7 @@
 .accountLink:focus-visible{outline:2px solid #188a64;outline-offset:3px}
 .placeholder{display:inline-block;width:72px;height:30px;border-radius:999px;background:#f3f7f4;border:1px solid #e8eee9}
 @media(max-width:620px){.accountLink{padding:6px 10px;font-size:12px}.placeholder{width:62px;height:28px}}
+
+/* Balance the additional approved Header button without touching locked global CSS. */
+:global(.navlinks){align-items:center}
+@media(max-width:620px){:global(.header-left){flex-wrap:wrap;row-gap:10px}}
