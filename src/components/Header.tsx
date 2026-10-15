@@ -36,7 +36,7 @@ export default function Header(){
       document.documentElement.lang=resolved;
       window.dispatchEvent(new CustomEvent('we_preferences',{detail:{country:c,language:resolved}}));
       if(pathname==='/'||!new URLSearchParams(window.location.search).has('hl')){
-        const qs=new URLSearchParams(params.toString());qs.set('hl',resolved);
+        const qs=new URLSearchParams(window.location.search);qs.set('hl',resolved);
         router.replace(pathname+'?'+qs.toString(),{scroll:false});
       }
     }catch{}
