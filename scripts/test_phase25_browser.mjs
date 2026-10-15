@@ -97,7 +97,7 @@ try{
     await check(page,device.name+' filtered search');
     await page.screenshot({path:out+'/'+device.name+'-search.png',fullPage:true});
 
-    await page.locator('.map-explore-cards .we-card').first().click();
+    await page.locator('.map-explore-cards .we-card h3 a').first().click();
     await page.waitForURL(url=>url.pathname.startsWith('/restaurant/'));
     await check(page,device.name+' restaurant');
     assert.ok((await page.locator('main h1').textContent())?.includes('테스트카페'));
