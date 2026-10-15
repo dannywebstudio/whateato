@@ -9,7 +9,7 @@ type Place={id:string;name_ko:string;region_sigungu:string|null;road_address_ko:
 type Detail={
  restaurant:Place&{lot_address_ko:string|null;category_code:string|null;
   region_sido:string|null;region_dong:string|null;latitude:number|null;longitude:number|null;
-  cms_origin:boolean;cms_source_url:string|null;business_status:string};
+  cms_origin:boolean;cms_source_url:string|null;business_status:string;public_approved:boolean};
  locales:{locale:string;display_name:string;short_description:string|null;full_description:string|null;source_notes:string|null}[];
  menus:{id:string;menu_key:string;position:number;price_krw:number|null;locale:string|null;name:string|null;description:string|null;publication_state:string}[];
  tags:{tag_code:string;verification_state:string;evidence_ref:string|null}[];
@@ -47,6 +47,7 @@ export default function AdminConsole({role}:{role:Role}){
  const [q,setQ]=useState('');const [matches,setMatches]=useState<Place[]>([]);
  const [cursor,setCursor]=useState<string|null>(null);
  const [selected,setSelected]=useState<Detail|null>(null);
+ const [publicEvidence,setPublicEvidence]=useState('');
  const [locale,setLocale]=useState<typeof locales[number]>('en');
  const [displayName,setDisplayName]=useState('');const [intro,setIntro]=useState('');
  const [full,setFull]=useState('');const [source,setSource]=useState('');
@@ -89,6 +90,7 @@ export default function AdminConsole({role}:{role:Role}){
    setBusy(true);try{
     const data:Detail=await json('/api/v1/owner/catalog/'+id);
     setSelected(data);setImageResult('');setPublishNew(false);
+    setPublicEvidence(data.restaurant.cms_source_url||'');
     setAddress({road_address_ko:data.restaurant.road_address_ko||'',
       lot_address_ko:data.restaurant.lot_address_ko||'',
       region_sido:data.restaurant.region_sido||'',region_sigungu:data.restaurant.region_sigungu||'',
@@ -246,6 +248,26 @@ export default function AdminConsole({role}:{role:Role}){
    try{await makeBatch(buildItems(),batchTitle.trim()||'Restaurant edit '+selected?.restaurant.name_ko);setTab('batches')}
    catch(e){inform(e)}finally{setBusy(false)}
  };
+ const changePublicApproval=async(action:'approve'|'revoke')=>{
+   if(!owner||!selected||busy)return;
+   const label=selected.restaurant.name_ko;
+   const message=action==='approve'
+     ?'식당 '+label+'의 정보·좌표·영업시간·메뉴·태그를 검증하고 검색·지도·Sitemap에 공개할까?'
+     :'식당 '+label+'을 검색·지도·Sitemap에서 즉시 비공개 처리할까?';
+   if(!window.confirm(message))return;
+   setBusy(true);setNotice('');
+   try{
+     const id=selected.restaurant.id;
+     const result=await post('/api/v1/owner/catalog/'+id+'/public',{
+       action,confirm_restaurant_id:id,evidence_url:action==='approve'?publicEvidence.trim():undefined
+     });
+     setSelected(prev=>prev&&prev.restaurant.id===id
+       ?{...prev,restaurant:{...prev.restaurant,public_approved:result.public_approved}}:prev);
+     setNotice(result.public_approved
+       ?'Owner 공개 승인 완료. 검색·지도·Sitemap이 자동으로 반영돼.'
+       :'비공개 승인 완료. 검색·지도·Sitemap에서 제외돼.');
+   }catch(e){inform(e)}finally{setBusy(false)}
+ };
  const stageVisibility=async(kind:'visibility_hide'|'visibility_restore')=>{
    if(!selected)return;
    if(!window.confirm(kind==='visibility_hide'?'이 식당을 검색·지도에서 비공개 처리할 초안을 만들까?':'관리자 비공개 표시를 해제할 초안을 만들까?'))return;
@@ -391,6 +413,23 @@ export default function AdminConsole({role}:{role:Role}){
          <div className={styles.row}><div><strong>{selected.restaurant.name_ko}</strong>
            <div className={styles.code}>{selected.restaurant.id}</div></div>
            <span className={styles.badge}>{selected.restaurant.publication_status}</span></div>
+         {owner&&<section className={styles.panel} aria-label="검색 및 Sitemap 공개 승인">
+           <h3>검색·지도·Sitemap 공개 승인 (Owner 전용)</h3>
+           <p className={styles.note}>공개는 별도의 Owner 최종 승인 이후에만 가능해. 식당 콘텐츠 저장·배치 게시만으로 자동 공개되지 않아.</p>
+           <p><strong>현재 공개 상태: {selected.restaurant.public_approved?'공개 승인됨':'비공개'}</strong></p>
+           <label className={styles.field}>직접 확인한 공개 승인 근거 (HTTPS URL)
+             <input type="url" maxLength={700} value={publicEvidence}
+               onChange={e=>setPublicEvidence(e.target.value)} placeholder="https://..."/>
+           </label>
+           <div className={styles.actions}>
+             {!selected.restaurant.public_approved
+               ?<button className={styles.button} disabled={busy||selected.restaurant.publication_status!=='published'}
+                   onClick={()=>void changePublicApproval('approve')}>검증 완료 · 공개 승인</button>
+               :<button className={styles.button+' '+styles.danger} disabled={busy}
+                   onClick={()=>void changePublicApproval('revoke')}>공개 취소 · Sitemap 제외</button>}
+           </div>
+           <p className={styles.note}>공개 승인 전에 4개 언어 중 한국어·영어 소개, 메뉴·태그, 위치, 출처가 있는 영업시간, 품질 보류 여부를 서버가 재검증해. 기존 DB 식당은 자동 승인되지 않아.</p>
+         </section>}
          <h3>주소 수정</h3>
          <p className={styles.note}>주소는 검수·승인 후 적용돼. 위치를 바꾼다면 위도·경도도 수정해. 좌표가 없으면 기존 지도 핀을 삭제해.</p>
          <div className={styles.grid}>
