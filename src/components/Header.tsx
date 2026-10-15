@@ -60,7 +60,7 @@ export default function Header(){
  }
  function navigateLanguage(language:Language,force=false){
   const path=window.location.pathname;
-  if(path==='/'||!/^\/(search|map|blog(?:\/|$)|contact(?:\/|$)|restaurant\/)/.test(path))return;
+  if(path==='/'||!/^\/(search|map|blog(?:\/|$)|contact(?:\/|$)|privacy(?:\/|$)|terms(?:\/|$)|login(?:\/|$)|my-page(?:\/|$)|account(?:\/|$)|restaurant\/)/.test(path))return;
   const params=new URLSearchParams(window.location.search);
   // Explicit language URLs from search engines and shared links are respected
   // on initial auto detection. Only manual choice can replace such a URL.
