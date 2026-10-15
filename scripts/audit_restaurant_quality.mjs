@@ -66,7 +66,7 @@ try{
   };
   assert.equal(quality.catalog.outside_korea,0,'unexpected Korean coordinate range violations');
   if(local){
-    assert.equal(quality.catalog.records,10,'fixture now includes 4 isolated spatial coverage test records');
+    assert.equal(quality.catalog.records,300,'ephemeral preflight cohort requires 300 synthetic records');
     assert.equal(quality.quality_reviews.confirmed_hold,1);
     assert.equal(quality.quality_reviews.pending,1);
     assert.equal(quality.catalog.missing_road_address,1);
