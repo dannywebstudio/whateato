@@ -38,6 +38,40 @@ try{
    '007_review_moderation_audit.sql','008_restaurant_quality_review.sql',
    '010_verified_opening_hours.sql','014_bulk_content_operations.sql','015_owner_cms_roles_media.sql','016_cms_restaurant_address_media.sql','017_public_visitor_review_media.sql','018_owner_review_delete_audit.sql','019_blog_cms_editorial.sql','020_blog_category_tree.sql'])
   await client.query(readFileSync('db/migrations/'+f,'utf8'));
+ // Isolated CI-only release gating tables. Never runs against Neon.
+ await client.query(`
+  CREATE TABLE whateato_release_cohort_300_v1 (
+    restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),review_state text NOT NULL DEFAULT 'approved');
+  CREATE TABLE whateato_restaurant_triage_v1 (
+    restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),grade text NOT NULL DEFAULT 'B',
+    visibility text NOT NULL DEFAULT 'full');
+  INSERT INTO whateato_release_cohort_300_v1(restaurant_id) SELECT id FROM restaurants;
+  INSERT INTO whateato_restaurant_triage_v1(restaurant_id) SELECT id FROM restaurants;
+  CREATE TABLE restaurant_enrichment_sample_1000 (
+    restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),sample_rank integer NOT NULL);
+  CREATE OR REPLACE VIEW restaurant_content_readiness_v1 AS
+    SELECT id,0::int AS published_languages,0::int AS verified_menus,0::int AS approved_images,
+      0::int AS verified_tags,'content_review'::text AS next_action FROM restaurants;
+  CREATE TABLE google_place_manual_identity_approvals_v1 (
+    restaurant_id uuid, google_place_id text, verified_at timestamptz);
+  CREATE TABLE restaurant_source_match_checkpoints_v1 (restaurant_id uuid, google_place_id text);
+ `);
+ // Keep production startup visibility checks active even in ephemeral local CI.
+ await client.query(`
+  INSERT INTO restaurants(id,name_ko,publication_status,business_status)
+  SELECT md5('bulk-ci-cohort-'||n::text)::uuid,'CI hidden cohort '||n,'hidden','active'
+  FROM generate_series(1,297) n;
+  INSERT INTO whateato_release_cohort_300_v1(restaurant_id)
+  SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
+  INSERT INTO whateato_restaurant_triage_v1(restaurant_id)
+  SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
+  INSERT INTO restaurant_opening_hours(restaurant_id,publication_state,source_url,verified_at)
+  SELECT id,'published','https://example.org/ci-synthetic-hours',now()
+  FROM restaurants WHERE name_ko='Test Cafe';
+  INSERT INTO restaurant_opening_intervals(restaurant_id,weekday,start_minute,end_minute)
+  SELECT h.restaurant_id,w,600,1200
+  FROM restaurant_opening_hours h CROSS JOIN generate_series(0,6) w;
+ `);
  await client.query(`
   INSERT INTO whateato_review_accounts(id,google_subject)
   VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1','bulk-ci-google-account-1')`);

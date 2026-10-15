@@ -30,7 +30,7 @@ const matched=await get('/api/v1/restaurants?q='+encodeURIComponent('테스트')
 assert.equal(matched.status,200);
 assert.equal(matched.body.items.length,1);
 assert.equal(matched.body.items[0].name,'Sunny Table');
-assert.equal(matched.body.items[0].opening_hours,null,'unverified hours must never show open now');
+assert.ok(matched.body.items[0].opening_hours?.verified_at,'published cafe needs independently verified hours');
 assert.equal(matched.body.items[0].editorial_score,4.5);
 assert.equal(matched.body.items[0].main_menu,'Coffee');
 assert.equal(matched.body.items[0].tags[0].label,'Café');
@@ -142,7 +142,7 @@ assert.ok(!searchHtml.body.includes('Draft Bistro'),'draft translation not visib
 const detailHtml=await get('/restaurant/'+rid+'?hl=en');
 assert.equal(detailHtml.status,200);
 assert.match(detailHtml.body,/Evidence-backed full intro for CI./);
-assert.ok(detailHtml.body.includes('map.kakao.com/link/to/'),'actual permit coordinates link to Kakao directions');
+assert.ok(detailHtml.body.includes('www.google.com/maps/dir/'),'actual permit coordinates link to Google Maps directions');
 assert.match(detailHtml.body,/target="_blank" rel="noopener noreferrer"/,'directions use safe new-window link');
 assert.match(detailHtml.body,/Coffee/);
 assert.match(detailHtml.body,/Synthetic approved CI review number one/);
@@ -155,7 +155,7 @@ assert.match(reviewSummaryText,/Approved reviews\s*3[^]*?★\s*4(?:\.0)?\s*\/\s*
 
 assert.match(detailHtml.body,/<img[^>]*src="\/api\/v1\/images\/55555555-5555-4555-8555-555555555555"/,
   'approved media is rendered in detail page');
-assert.match(detailHtml.body,/Sign in with Google/,'English review login prompt');
+assert.match(detailHtml.body,/Continue with Google/,'English review login prompt');
 const japaneseDetail=await get('/restaurant/'+rid+'?hl=ja');
 assert.equal(japaneseDetail.status,200);
 assert.match(japaneseDetail.body,/Googleでログイン/,'Japanese review login prompt');

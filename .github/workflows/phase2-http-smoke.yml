@@ -70,6 +70,11 @@ jobs:
             if curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then break; fi
             sleep 2
           done
+          if ! curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then
+            echo 'Next server did not become ready; startup logs:'
+            cat /tmp/whateato-phase2-next.log
+            exit 1
+          fi
           node scripts/test_phase2_http.mjs
           node scripts/report_catalog_coverage.mjs
           node scripts/report_geo_recovery.mjs
