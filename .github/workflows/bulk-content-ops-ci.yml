@@ -71,6 +71,11 @@ jobs:
             if curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then break; fi
             sleep 2
           done
+          if ! curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then
+            echo 'Next server did not become ready; startup logs:'
+            cat /tmp/whateato-bulk-ci.log
+            exit 1
+          fi
           node scripts/test_bulk_content_http.mjs
           node scripts/test_admin_ui_guard.mjs
           node scripts/test_review_hide_http.mjs
