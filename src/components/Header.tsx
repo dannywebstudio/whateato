@@ -31,7 +31,9 @@ export default function Header(){
       const c=savedCountry||detected;
       const l=langs.some(([code])=>code===savedLang)?savedLang:'auto';
       setCountry(c);setLang(l);
-      const resolved=l==='auto'?countryLocale(c):normalize(l);
+      const requested=new URLSearchParams(window.location.search).get('hl');
+      const urlLocale=requested==='ko'||requested==='ja'||requested==='zh-CN'||requested==='en'?requested:null;
+      const resolved=l==='auto'&&urlLocale?urlLocale:(l==='auto'?countryLocale(c):normalize(l));
       localStorage.setItem('we_resolved_language',resolved);
       document.documentElement.lang=resolved;
       window.dispatchEvent(new CustomEvent('we_preferences',{detail:{country:c,language:resolved}}));
