@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
+import Link from 'next/link';
 import type {SiteLanguage} from '@/lib/visitor-country';
 import styles from './LocalizedChromeText.module.css';
 
@@ -32,7 +33,26 @@ export function HomeTagline(){
  const locale=useChromeLocale();
  return <p className={styles.tagline}>{taglines[locale]}</p>;
 }
+const legalLabels:Record<SiteLanguage,{privacy:string;terms:string;contact:string}>={
+ en:{privacy:'Privacy Policy',terms:'Terms of Service',contact:'Contact'},
+ ko:{privacy:'개인정보처리방침',terms:'이용약관',contact:'문의하기'},
+ ja:{privacy:'プライバシーポリシー',terms:'利用規約',contact:'お問い合わせ'},
+ 'zh-CN':{privacy:'隐私政策',terms:'服务条款',contact:'联系我们'}
+};
 export function SiteFooter(){
  const locale=useChromeLocale();
- return <footer className="footer">© WhatEatO · {footers[locale]}</footer>;
+ const labels=legalLabels[locale];
+ const query='?hl='+encodeURIComponent(locale);
+ return <footer className="footer">
+  <div className={styles.footerInner}>
+   <nav className={styles.legalLinks} aria-label="Legal and contact information">
+    <Link href={'/privacy'+query}>{labels.privacy}</Link>
+    <span aria-hidden="true">|</span>
+    <Link href={'/terms'+query}>{labels.terms}</Link>
+    <span aria-hidden="true">|</span>
+    <Link href={'/contact'+query}>{labels.contact}</Link>
+   </nav>
+   <span className={styles.footerNote}>© WhatEatO · {footers[locale]}</span>
+  </div>
+ </footer>;
 }
