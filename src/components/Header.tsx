@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import {useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
+import HeaderAccountLink from './HeaderAccountLink';
 
 const languages=[['ko','한국어'],['en','English'],['ja','日本語'],['zh-CN','简体中文']] as const;
 type Language=typeof languages[number][0];
@@ -140,6 +141,7 @@ export default function Header(){
      {{ko:'블로그',en:'Blog',ja:'ブログ','zh-CN':'博客'}[lang]}
     </Link>
     <Link href={'/contact?hl='+encodeURIComponent(lang)}>Contact</Link>
+    <HeaderAccountLink/>
    </div>
   </div>
   <div className="preferences">
