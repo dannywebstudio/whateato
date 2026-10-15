@@ -104,8 +104,8 @@ try{
   `);
   // Match real startup preflight: exactly 300 selected, with synthetic hidden padding.
   await client.query(`
-    INSERT INTO restaurants(id,name_ko,business_status,publication_status)
-    SELECT md5('ci-cohort-'||n::text)::uuid,'CI hidden cohort '||n,'active','hidden'
+    INSERT INTO restaurants(id,name_ko,road_address_ko,business_status,publication_status)
+    SELECT md5('ci-cohort-'||n::text)::uuid,'CI hidden cohort '||n,'CI synthetic road '||n,'active','hidden'
     FROM generate_series(1,290) n;
     INSERT INTO whateato_release_cohort_300_v1(restaurant_id)
     SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
