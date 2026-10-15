@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {seoPublicEnabled} from '@/lib/public-seo';
 import type {Metadata} from 'next';
 import {listPublishedBlog} from '@/lib/blog-public';
 import {getBlogCategories,blogCategoryGroups,blogCategoryName} from '@/lib/blog-categories';
@@ -6,7 +7,9 @@ import styles from './blog.module.css';
 import BlogStoryCard from '@/components/BlogStoryCard';
 export const runtime='nodejs';export const dynamic='force-dynamic';
 export const metadata:Metadata={title:'Food, Travel & K-Beauty Stories',
- description:'Discover Korean restaurants, travel tips, shopping picks and K-Beauty guides.'};
+ description:'Discover Korean restaurants, travel tips, shopping picks and K-Beauty guides.',
+ robots:{index:seoPublicEnabled(),follow:seoPublicEnabled()},
+ alternates:{canonical:'/blog'}};
 type Props={searchParams:Promise<{q?:string;category?:string;page?:string;hl?:string}>};
 export default async function BlogPage({searchParams}:Props){
  const query=await searchParams;
