@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {seoPublicEnabled} from '@/lib/public-seo';
 import {notFound} from 'next/navigation';
 import type {Metadata} from 'next';
 import {findPublishedBlog,relatedBlogRestaurants} from '@/lib/blog-public';
@@ -13,7 +14,7 @@ export async function generateMetadata({params,searchParams}:Ctx):Promise<Metada
  const published=await findPublishedBlog(slug,hl);
  if(!published)return {title:'Story not found',robots:{index:false,follow:false}};
  const t=published.draft.translations[published.locale]||published.draft.translations.en!;
- const ready=process.env.NEXT_PUBLIC_LAUNCH_READY==='true';
+ const ready=seoPublicEnabled();
  return {
   title:t.seo_title||published.title,
   description:t.seo_description||published.excerpt,

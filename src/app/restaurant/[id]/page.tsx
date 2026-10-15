@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {seoPublicEnabled,isSeoRestaurant} from '@/lib/public-seo';
 import type {Metadata} from 'next';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import {auth,authReady} from '@/auth';
@@ -32,7 +33,7 @@ const labels={
 export async function generateMetadata({params,searchParams}:Params):Promise<Metadata>{
   const {id}=await params;
   const blocked:Metadata={robots:{index:false,follow:false}};
-  if(!isUuid(id)||process.env.NEXT_PUBLIC_LAUNCH_READY!=='true')return blocked;
+  if(!isUuid(id)||!seoPublicEnabled()||!isSeoRestaurant(id))return blocked;
   const query=await searchParams;
   try{
     const detail=await getRestaurantCatalogDetail(id,normalizeLocale(query.hl));

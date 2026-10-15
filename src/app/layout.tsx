@@ -2,7 +2,9 @@ import type {Metadata} from 'next';
 import Header from '@/components/Header';
 import {SiteFooter} from '@/components/LocalizedChromeText';
 import './globals.css';
-const ready=process.env.NEXT_PUBLIC_LAUNCH_READY==='true';
+// All routes are noindex by default; only explicit homepage, approved restaurant
+// and published blog metadata may opt into indexing.
+const ready=false;
 export const metadata:Metadata={
   metadataBase:new URL(process.env.NEXT_PUBLIC_SITE_URL||'http://localhost:3000'),
   title:{default:'WhatEatO — Find Restaurants in Korea',template:'%s | WhatEatO'},
