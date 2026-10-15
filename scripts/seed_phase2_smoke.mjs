@@ -129,6 +129,11 @@ try{
     SELECT h.restaurant_id,w,600,1200
     FROM restaurant_opening_hours h CROSS JOIN generate_series(0,6) w;
   `);
+  // Local-only schema parity: CMS photo role used by current public catalog.
+  await client.query(`
+    ALTER TABLE restaurant_images
+      ADD COLUMN IF NOT EXISTS cms_photo_role text NOT NULL DEFAULT 'gallery';
+  `);
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
   // present and unchanged. Pending flags may NEVER suppress public listings.
   await client.query(`
