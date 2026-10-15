@@ -76,6 +76,7 @@ try{
       COALESCE(road_address_ko,lot_address_ko) AS display_address
     FROM restaurants
   `);
+  await client.query(`CREATE TABLE IF NOT EXISTS restaurant_enrichment_sample_1000 (restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id), sample_rank integer NOT NULL)`);
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
   // present and unchanged. Pending flags may NEVER suppress public listings.
   await client.query(`
