@@ -90,7 +90,8 @@ try{
       FROM restaurants;
     CREATE TABLE google_places_photo_quota_v1 (
       id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-      restaurant_id uuid, quota_day date, used_count integer DEFAULT 0
+      restaurant_id uuid, quota_day date, used_count integer DEFAULT 0,
+      month_key text, sku text, used integer DEFAULT 0, limit_count integer DEFAULT 0
     );
     CREATE TABLE restaurant_enrichment_sample_1000 (
       restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),
