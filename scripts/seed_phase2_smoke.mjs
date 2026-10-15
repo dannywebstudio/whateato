@@ -144,14 +144,6 @@ try{
     SELECT h.restaurant_id,w,600,1200
     FROM restaurant_opening_hours h CROSS JOIN generate_series(0,6) w;
   `);
-  // Preserve review-score compatibility in the isolated phase2 HTTP fixture.
-  await client.query(`
-    CREATE TABLE whateato_review_category_scores (
-      review_id uuid PRIMARY KEY REFERENCES whateato_user_reviews(id),
-      taste smallint NOT NULL, service smallint, tourist_friendliness smallint,
-      value_for_money smallint, cleanliness smallint
-    );
-  `);
   // Local-only schema parity: CMS photo role used by current public catalog.
   await client.query(`
     ALTER TABLE restaurant_images
