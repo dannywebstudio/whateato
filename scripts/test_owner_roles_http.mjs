@@ -93,6 +93,24 @@ assert.equal(applied.data.state,'completed');
 const result=await req('/api/v1/owner/bulk/batches/'+id,'GET',ownerCookie);
 assert.equal(result.status,200);
 assert.equal(result.data.batch.applied,1);
+// Owner-only public publication is an additional, explicit approval step.
+const publicationRoute='/api/v1/owner/catalog/77777777-7777-4777-8777-777777777777/public';
+const publicAction={action:'approve',confirm_restaurant_id:'77777777-7777-4777-8777-777777777777',
+  evidence_url:'https://example.org/independent-restaurant-validation'};
+assert.equal((await req(publicationRoute,'POST',reviewerCookie,publicAction)).status,403,
+  'an ordinary visitor cannot make catalog entries public');
+assert.equal((await req(publicationRoute,'POST',editorCookie,publicAction)).status,403,
+  'content editors cannot publish restaurants to search and sitemap');
+assert.equal((await req(publicationRoute,'POST',ownerCookie,publicAction,'https://evil.invalid')).status,403,
+  'owner-only approval still enforces CSRF origin verification');
+assert.equal((await req(publicationRoute,'POST',ownerCookie,
+  {...publicAction,confirm_restaurant_id:'11111111-1111-4111-8111-111111111111'})).status,400,
+  'approval requires exact restaurant ID confirmation');
+const notReady=await req(publicationRoute,'POST',ownerCookie,publicAction);
+assert.equal(notReady.status,409,
+  'owner cannot approve a restaurant missing independently verified hours and content');
+assert.equal(notReady.data.error,'public_approval_preflight_failed');
+assert.ok(notReady.data.blockers?.includes('verified_opening_hours'));
 const ownerPage=await req('/admin','GET',ownerCookie);
 assert.equal(ownerPage.status,200);
 assert.match(ownerPage.raw,/Restaurant CMS/);
