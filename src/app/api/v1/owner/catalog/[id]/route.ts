@@ -15,6 +15,7 @@ export async function GET(_req:NextRequest,{params}:Ctx){
     pool.query(`SELECT id::text,name_ko,road_address_ko,lot_address_ko,region_sigungu,
       category_code,business_status,publication_status,region_sido,region_dong,
       latitude,longitude,
+      COALESCE((SELECT a.is_visible FROM whateato_restaurant_public_approvals_v1 a WHERE a.restaurant_id=restaurants.id),false) AS public_approved,
       EXISTS(SELECT 1 FROM whateato_cms_restaurant_origins o WHERE o.restaurant_id=restaurants.id) AS cms_origin,
       (SELECT o.source_url FROM whateato_cms_restaurant_origins o
         WHERE o.restaurant_id=restaurants.id) AS cms_source_url
