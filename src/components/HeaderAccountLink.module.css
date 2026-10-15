@@ -5,5 +5,5 @@
 @media(max-width:620px){.accountLink{padding:6px 10px;font-size:12px}.placeholder{width:62px;height:28px}}
 
 /* Balance the additional approved Header button without touching locked global CSS. */
-:global(.navlinks){align-items:center}
-@media(max-width:620px){:global(.header-left){flex-wrap:wrap;row-gap:10px}}
+:global(.navlinks):has(.accountLink){align-items:center}
+@media(max-width:620px){:global(.header-left):has(.accountLink){flex-wrap:wrap;row-gap:10px}}
