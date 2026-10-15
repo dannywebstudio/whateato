@@ -239,5 +239,20 @@ try{
     ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
       5,'Synthetic pending CI review for approve testing three; not a real opinion.','pending')
   `);
+  // New owner-controlled public approvals. Keep only the two actually visible
+  // synthetic restaurants; every other synthetic row remains private.
+  await client.query(readFileSync('db/migrations/021_owner_approved_public_restaurants.sql','utf8'));
+  await client.query(`
+    INSERT INTO whateato_restaurant_public_approvals_v1
+      (restaurant_id,is_visible,approval_source,evidence_url)
+    VALUES
+      ('11111111-1111-4111-8111-111111111111',true,'baseline','https://example.test/cafe'),
+      ('22222222-2222-4222-8222-222222222222',true,'baseline','https://example.test/restaurant'),
+      ('77777777-7777-4777-8777-777777777777',true,'baseline','https://example.test/permit-cafe'),
+      ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',true,'baseline','https://example.test/map-1'),
+      ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',true,'baseline','https://example.test/map-2'),
+      ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',true,'baseline','https://example.test/map-3'),
+      ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',true,'baseline','https://example.test/map-4')
+  `);
   console.log('Synthetic Phase 2 fixture ready (localhost only; 6 rows; quality hold+lot fallback)');
 }finally{await client.end()}

@@ -1,20 +1,15 @@
-import {seoPublicEnabled,SEO_RESTAURANT_IDS} from '@/lib/public-seo';
-// Enforced server-side visibility: ONLY curated 300 cohort A/B restaurants.
-// Unselected businesses, C flags and holds must never be publicly queried.
-// No opt-out flag. Verified published weekly opening intervals with a source are mandatory.
-// Restaurants with unknown hours remain in database but are hidden from public listings.
+// A restaurant is public ONLY after an explicit owner approval record.
+// An existing 'published' flag, release cohort membership or data import alone is insufficient.
 export function triageABPublicWhere():string {
  return `
-   ${seoPublicEnabled()?`AND r.id IN (${SEO_RESTAURANT_IDS.map(id=>`'${id}'::uuid`).join(',')})`:''}
    AND EXISTS (
-     SELECT 1
-     FROM whateato_release_cohort_300_v1 selected
-     JOIN whateato_restaurant_triage_v1 triage
-       ON triage.restaurant_id=selected.restaurant_id
-     WHERE selected.restaurant_id=r.id
-       AND selected.review_state NOT IN ('hold')
-       AND triage.grade IN ('A','B')
-       AND triage.visibility IN ('full','basic_map','basic_search_only')
+     SELECT 1 FROM whateato_restaurant_public_approvals_v1 approval
+     WHERE approval.restaurant_id=r.id AND approval.is_visible=true
+   )
+   AND NOT EXISTS (
+     SELECT 1 FROM whateato_restaurant_triage_v1 triage
+     WHERE triage.restaurant_id=r.id
+       AND (triage.grade='C' OR triage.visibility NOT IN ('full','basic_map','basic_search_only'))
    )
    AND EXISTS (
      SELECT 1 FROM restaurant_opening_hours hours
