@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [feature/i18n-analytics-backend-v1]
-    paths: ['.github/workflows/hostinger-public-reachability.yml']
+    paths: ['.github/workflows/hostinger-public-reachability.yml', 'scripts/verify_public_seo_live.mjs']
 permissions:
   contents: read
 jobs:
@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Resolve public DNS and probe HTTPS (read-only, no credentials)
         shell: bash
         run: |
@@ -49,3 +53,5 @@ jobs:
             exit 1
           fi
           echo 'PASS: remote GitHub runner reached the public HTTPS homepage.'
+      - name: Inspect live indexability, 3-restaurant visibility and blog publication (GET only)
+        run: node scripts/verify_public_seo_live.mjs
