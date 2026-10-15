@@ -105,4 +105,21 @@ try{
    ', owner_cms_schema='+String(flags.owner_cms_schema)+
    ', bulk_admin_schema='+String(flags.bulk_admin_schema));
 }catch{console.log('PUBLIC READINESS: non-JSON response '+readiness.status)}
+// Private-auth readiness probes. GET-only, never print tokens, secret values,
+// account data, sessions, or private admin content.
+const admin=await get('/admin');
+const loginShown=admin.body.includes('관리자 Google 로그인');
+const loginUnconfigured=admin.body.includes('Google OAuth가 아직 연결되지 않았어');
+console.log('AUTH READINESS: admin_http='+admin.status+
+  ' google_login_button='+loginShown+' oauth_missing_notice='+loginUnconfigured);
+const providers=await get('/api/auth/providers');
+let googleProvider=false;
+try{googleProvider=Boolean(JSON.parse(providers.body)?.google?.id==='google')}
+catch{}
+console.log('AUTH PROVIDERS: http='+providers.status+' google_configured='+googleProvider);
+const csrf=await get('/api/auth/csrf');
+let csrfIssued=false;
+try{csrfIssued=typeof JSON.parse(csrf.body)?.csrfToken==='string'}catch{}
+console.log('AUTH CSRF: http='+csrf.status+' token_issued='+csrfIssued+
+  ' (token never logged)');
 console.log('PASS: All canonical public SEO tests');
