@@ -1,0 +1,14 @@
+/* New legal pages follow the existing Contact content width, colors and typography. */
+.page{max-width:980px;min-height:calc(100vh - 140px);margin:0 auto;padding:70px 24px 95px}
+.inner{max-width:760px;margin:0 auto}
+.eyebrow{color:#12805a;font-size:11px;font-weight:800;letter-spacing:.14em}
+.title{font-size:clamp(34px,4.8vw,50px);letter-spacing:-.05em;line-height:1.22;margin:14px 0 14px;color:#14251d}
+.intro{font-size:15px;line-height:1.85;color:#53675b;margin:0 0 10px}
+.date{font-size:12px;color:#7c8881;margin:0 0 32px}
+.section{padding:23px 0;border-top:1px solid #e6ede8}
+.section h2{font-size:19px;letter-spacing:-.025em;line-height:1.45;color:#182b20;margin:0 0 11px}
+.section p{font-size:14px;color:#45574d;line-height:1.85;margin:0 0 9px;overflow-wrap:anywhere;word-break:keep-all}
+.section p:last-child{margin-bottom:0}
+.contact{display:inline-block;margin-top:12px;font-weight:650;font-size:14px;color:#12805a;text-decoration:underline;text-underline-offset:3px}
+.contact:focus-visible{outline:2px solid #12805a;outline-offset:4px}
+@media(max-width:620px){.page{padding:52px 20px 65px;min-height:calc(100vh - 155px)}.section{padding:20px 0}.section h2{font-size:17px}.section p{font-size:13px}}
