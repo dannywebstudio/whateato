@@ -3,6 +3,7 @@ import {realpath,stat,readFile} from 'node:fs/promises';
 import {isAbsolute,relative,resolve,sep} from 'node:path';
 import {getPool} from '@/lib/db';
 import {isUuid} from '@/lib/platform-v1';
+import {objectStorageReady,readPhoto} from '@/lib/cms-object-storage';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -20,7 +21,7 @@ export async function GET(_request:Request,{params}:Context){
   const {id}=await params;
   if(!isUuid(id))return NextResponse.json({error:'invalid_image_id'},{status:400,headers:baseHeaders});
   const root=process.env.WHATEATO_MEDIA_ROOT;
-  if(!root||!isAbsolute(root))return NextResponse.json({error:'media_storage_not_configured'},
+  if(!objectStorageReady()&&(!root||!isAbsolute(root)))return NextResponse.json({error:'media_storage_not_configured'},
     {status:503,headers:baseHeaders});
   const pool=getPool();
   if(!pool)return NextResponse.json({error:'database_not_configured'},{status:503,headers:baseHeaders});
@@ -43,6 +44,18 @@ export async function GET(_request:Request,{params}:Context){
     const ext=key.split('.').at(-1)?.toLowerCase()||'';
     const type=allowedTypes[ext];
     if(!type)return NextResponse.json({error:'image_not_found'},{status:404,headers:baseHeaders});
+    if(key.startsWith('media/cms/')){
+      // Approved bytes only, delivered from a private S3-compatible object store.
+      if(!objectStorageReady())return NextResponse.json({error:'media_storage_not_configured'},
+        {status:503,headers:baseHeaders});
+      const bytes=await readPhoto(key);
+      return new NextResponse(new Uint8Array(bytes),{status:200,headers:{
+        ...baseHeaders,'Content-Type':'image/webp','Content-Length':String(bytes.length),
+        'Content-Security-Policy':"default-src 'none'; sandbox"
+      }});
+    }
+    if(!root||!isAbsolute(root))return NextResponse.json({error:'media_storage_not_configured'},
+       {status:503,headers:baseHeaders});
     const safeRoot=await realpath(root);
     const file=resolve(safeRoot,key);
     const safeFile=await realpath(file);

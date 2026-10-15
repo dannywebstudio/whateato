@@ -7,7 +7,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './map.css';
 
 export const dynamic='force-dynamic';
-type Params={q?:string;f?:string;hl?:string};
+type Params={q?:string;f?:string;hl?:string;focus?:string};
 export const metadata={
   title:'Explore Restaurants on Map',
   robots:{index:false,follow:false},
@@ -20,6 +20,7 @@ export default async function MapPage({searchParams}:{
   const q=normalizeText(raw.q,100);
   const locale=normalizeLocale(raw.hl);
   const filter=normalizeTags(raw.f||'').join(',');
+  const focusId=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(raw.focus||'')?raw.focus!:null;
   const labels={
     ko:{title:'지도로 맛집 찾기',back:'← 검색 결과로 돌아가기'},
     en:{title:'Explore on Map',back:'← Back to Search'},
@@ -30,7 +31,7 @@ export default async function MapPage({searchParams}:{
   return <main className="content" style={{maxWidth:1320}}>
     <h1>{t.title}</h1>
     <SearchBoxSynced target="map" initial={q} initialFilters={filter?filter.split(','):[]} initialLocale={locale}/>
-    <RestaurantMap q={q} filter={filter} locale={locale}/>
+    <RestaurantMap q={focusId?'':q} filter={focusId?'':filter} locale={locale} focusId={focusId}/>
     <RelatedMapPosts term={q} locale={locale}/>
     <Link className="simple-link" href={'/search?'+new URLSearchParams({
       ...(q?{q}:{}),...(filter?{f:filter}:{}),hl:locale

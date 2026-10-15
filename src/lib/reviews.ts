@@ -1,6 +1,9 @@
 import {getPool} from '@/lib/db';
+import {reviewScoreSql} from '@/lib/review-categories';
 
-export type PublicReview={id:string;rating:number;body:string;created_at:string};
+export type PublicReview={id:string;rating:number;body:string;created_at:string;
+ categories:{taste:number;service:number|null;tourist_friendliness:number|null;value_for_money:number|null;cleanliness:number|null}|null;
+ photos:{id:string;url:string}[]};
 import {isUuid} from '@/lib/platform-v1';
 export function validUuid(id:string){return isUuid(id)}
 export function validateReview(rating:unknown,body:unknown):string|null{
@@ -25,10 +28,21 @@ export async function getPublicReviews(restaurantId:string){
   if(!validUuid(restaurantId))return [];
   const pool=getPool();
   if(!pool)return [];
-  const result=await pool.query<PublicReview>(
-    "SELECT id,rating,body,created_at::text FROM whateato_user_reviews WHERE restaurant_id=$1 AND moderation_status='published' ORDER BY created_at DESC LIMIT 20",
-    [restaurantId]
-  );
+  const result=await pool.query<PublicReview>(`
+    SELECT r.id::text,round((${reviewScoreSql})::numeric,1)::float8 AS rating,
+      r.body,r.created_at::text,
+      CASE WHEN s.review_id IS NULL THEN NULL ELSE jsonb_build_object(
+        'taste',s.taste,'service',s.service,'tourist_friendliness',s.tourist_friendliness,
+        'value_for_money',s.value_for_money,'cleanliness',s.cleanliness) END AS categories,
+      coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id',p.id::text,'url','/api/review-photos/'||p.id::text) ORDER BY p.position)
+        FROM whateato_review_photo_assets p WHERE p.review_id=r.id
+          AND p.scan_state='passed' AND p.rights_state='approved'
+          AND p.moderation_state='approved'),'[]'::jsonb) AS photos
+    FROM whateato_user_reviews r
+    LEFT JOIN whateato_review_category_scores s ON s.review_id=r.id
+    WHERE r.restaurant_id=$1 AND r.moderation_status='published'
+    ORDER BY r.created_at DESC LIMIT 20`,[restaurantId]);
   return result.rows;
 }
 export async function getLicensedReviewInsights(restaurantId:string){
@@ -62,12 +76,15 @@ export async function getOwnReviewSummary(restaurantId:string){
   const pool=getPool();
   if(!pool)return null;
   const result=await pool.query<{review_count:string;average_rating:string}>(
-    "SELECT count(*)::text AS review_count,round(avg(rating)::numeric,1)::text AS average_rating "+
-    "FROM whateato_user_reviews WHERE restaurant_id=$1 AND moderation_status='published'",
+    `SELECT count(*)::text AS review_count,
+      round(avg(${reviewScoreSql})::numeric,1)::text AS average_rating
+      FROM whateato_user_reviews r
+      LEFT JOIN whateato_review_category_scores s ON s.review_id=r.id
+      WHERE r.restaurant_id=$1 AND r.moderation_status='published'`,
     [restaurantId]
   );
   const count=Number(result.rows[0]?.review_count||0);
-  if(count<3)return null;
+  if(count===0)return null;
   return {
     reviewCount:count,averageRating:Number(result.rows[0].average_rating),
     disclaimer:'WhatEatO에서 승인된 이용자 리뷰에 기반한 평균이며 객관적인 식당 품질 판정이 아닙니다.'

@@ -68,30 +68,86 @@ try{
   for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql','008_restaurant_quality_review.sql','009_quality_candidates_non_destructive.sql','010_verified_opening_hours.sql','012_approved_external_ratings.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
-  // Compatibility view for current catalog queries, in local synthetic CI only.
-  // Production obtains this view from its versioned database migrations.
+  // Mirror additive CMS/blog schema in localhost HTTP test (never Neon).
+  for(const migration of [
+    '014_bulk_content_operations.sql',
+    '015_owner_cms_roles_media.sql',
+    '016_cms_restaurant_address_media.sql',
+    '017_public_visitor_review_media.sql',
+    '018_owner_review_delete_audit.sql',
+    '019_blog_cms_editorial.sql',
+    '020_blog_category_tree.sql'
+  ]) await client.query(readFileSync('db/migrations/'+migration,'utf8'));
+  // Only in ephemeral local CI: enforce release A/B gate with approved sample records.
   await client.query(`
+    CREATE TABLE whateato_release_cohort_300_v1 (
+      restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),
+      review_state text NOT NULL DEFAULT 'approved'
+    );
+    CREATE TABLE whateato_restaurant_triage_v1 (
+      restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),
+      grade text NOT NULL DEFAULT 'B',
+      visibility text NOT NULL DEFAULT 'full'
+    );
+    INSERT INTO whateato_release_cohort_300_v1(restaurant_id)
+      SELECT id FROM restaurants WHERE business_status='active' AND publication_status='published';
+    INSERT INTO whateato_restaurant_triage_v1(restaurant_id)
+      SELECT restaurant_id FROM whateato_release_cohort_300_v1;
     CREATE OR REPLACE VIEW restaurant_address_localizations_v1 AS
-    SELECT id AS restaurant_id, 'ko'::text AS locale,
-      COALESCE(road_address_ko,lot_address_ko) AS display_address
-    FROM restaurants
-  `);
-  await client.query(`CREATE TABLE IF NOT EXISTS restaurant_enrichment_sample_1000 (restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id), sample_rank integer NOT NULL)`);
-  await client.query(`
+      SELECT id AS restaurant_id, 'ko'::text AS locale,
+        COALESCE(road_address_ko,lot_address_ko) AS display_address,
+        now() AS verified_at
+      FROM restaurants;
+    CREATE TABLE google_places_photo_quota_v1 (
+      id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      restaurant_id uuid, quota_day date, used_count integer DEFAULT 0,
+      month_key text, sku text, used integer DEFAULT 0, limit_count integer DEFAULT 0
+    );
+    CREATE TABLE restaurant_enrichment_sample_1000 (
+      restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id),
+      sample_rank integer NOT NULL
+    );
     CREATE OR REPLACE VIEW restaurant_content_readiness_v1 AS
-    SELECT id, 0::int AS published_languages, 0::int AS verified_menus,
-      0::int AS approved_images, 0::int AS verified_tags,
-      'content_review'::text AS next_action
-    FROM restaurants
+      SELECT id,0::int AS published_languages,0::int AS verified_menus,
+        0::int AS approved_images,0::int AS verified_tags,
+        'content_review'::text AS next_action FROM restaurants;
+    CREATE TABLE google_place_manual_identity_approvals_v1 (
+      restaurant_id uuid, google_place_id text, verified_at timestamptz
+    );
+    CREATE TABLE restaurant_source_match_checkpoints_v1 (
+      restaurant_id uuid, google_place_id text
+    );
   `);
-  // Empty CI-only compatibility relations: optional Google photo path stays disabled.
+  // Match real startup preflight: exactly 300 selected, with synthetic hidden padding.
   await client.query(`
-    CREATE TABLE IF NOT EXISTS google_place_manual_identity_approvals_v1
-      (restaurant_id uuid, google_place_id text, verified_at timestamptz);
-    CREATE TABLE IF NOT EXISTS restaurant_source_match_checkpoints_v1
-      (restaurant_id uuid, google_place_id text);
-    CREATE TABLE IF NOT EXISTS google_places_photo_quota_v1
-      (month_key text, sku text, used integer, limit_count integer);
+    INSERT INTO restaurants(id,name_ko,road_address_ko,business_status,publication_status)
+    SELECT md5('ci-cohort-'||n::text)::uuid,'CI hidden cohort '||n,'CI synthetic road '||n,'active','hidden'
+    FROM generate_series(1,290) n;
+    INSERT INTO whateato_release_cohort_300_v1(restaurant_id)
+    SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
+    INSERT INTO whateato_restaurant_triage_v1(restaurant_id)
+    SELECT id FROM restaurants WHERE name_ko LIKE 'CI hidden cohort %';
+    -- Include closed and hidden synthetic records in the 300-row cohort,
+    -- while retaining the public status exclusion in the catalog gate.
+    INSERT INTO whateato_release_cohort_300_v1(restaurant_id)
+    SELECT id FROM restaurants
+    WHERE id IN ('33333333-3333-4333-8333-333333333333',
+                 '44444444-4444-4444-8444-444444444444');
+    INSERT INTO whateato_restaurant_triage_v1(restaurant_id)
+    SELECT id FROM restaurants
+    WHERE id IN ('33333333-3333-4333-8333-333333333333',
+                 '44444444-4444-4444-8444-444444444444');
+    INSERT INTO restaurant_opening_hours(restaurant_id,publication_state,source_url,verified_at)
+    SELECT id,'published','https://example.org/ci-synthetic-hours',now()
+    FROM restaurants WHERE publication_status='published' AND business_status='active';
+    INSERT INTO restaurant_opening_intervals(restaurant_id,weekday,start_minute,end_minute)
+    SELECT h.restaurant_id,w,600,1200
+    FROM restaurant_opening_hours h CROSS JOIN generate_series(0,6) w;
+  `);
+  // Local-only schema parity: CMS photo role used by current public catalog.
+  await client.query(`
+    ALTER TABLE restaurant_images
+      ADD COLUMN IF NOT EXISTS cms_photo_role text NOT NULL DEFAULT 'gallery';
   `);
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
   // present and unchanged. Pending flags may NEVER suppress public listings.

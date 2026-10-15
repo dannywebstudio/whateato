@@ -1,0 +1,115 @@
+name: WhatEatO Bulk CMS PostgreSQL Integration
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bulk-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_ci_only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:local_ci_only@127.0.0.1:5432/postgres
+      WHATEATO_CI_LOCAL_FIXTURE: ONLY_LOCAL_EPHEMERAL
+      WHATEATO_BULK_ADMIN_ENABLED: 'true'
+      WHATEATO_BULK_ADMIN_TOKEN: 'ci-only-bulk-admin-token-000000000000'
+      WHATEATO_REVIEW_MODERATION_ENABLED: 'true'
+      WHATEATO_REVIEW_ADMIN_TOKEN: 'ci-only-review-moderation-token-00000000'
+      WHATEATO_OWNER_CMS_ENABLED: 'true'
+      WHATEATO_CMS_BOOTSTRAP_ENABLED: 'false'
+      AUTH_SECRET: 'ci-only-auth-jwe-key-with-forty-eight-plus-characters'
+      AUTH_GOOGLE_ID: 'ci-local-google-client-id'
+      AUTH_GOOGLE_SECRET: 'ci-local-google-client-secret'
+      AUTH_TRUST_HOST: 'true'
+      AUTH_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_LAUNCH_READY: 'false'
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: node --check scripts/seed_bulk_ops_fixture.mjs
+      - run: node --check scripts/test_bulk_content_http.mjs
+      - run: node --check scripts/test_admin_ui_guard.mjs
+      - run: node --check scripts/test_owner_roles_http.mjs
+      - run: node --check scripts/test_cms_venue_address_http.mjs
+      - run: node --check scripts/test_review_hide_http.mjs
+      - run: node --check scripts/test_visitor_review_categories_http.mjs
+      - run: node --check scripts/test_owner_review_delete_http.mjs
+      - run: node --check scripts/test_review_form_browser.mjs
+      - run: node --check scripts/test_blog_cms_http.mjs
+      - run: node --check scripts/test_home_design_browser.mjs
+      - run: node --check scripts/run_bulk_batch.mjs
+      - run: node --check scripts/import_bulk_ndjson.mjs
+      - run: node scripts/seed_bulk_ops_fixture.mjs
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Install isolated Chromium for review form visual QA
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Start local app and run isolated Postgres HTTP tests
+        run: |
+          npm run start -- --hostname 127.0.0.1 --port 3000 > /tmp/whateato-bulk-ci.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then break; fi
+            sleep 2
+          done
+          if ! curl --fail --silent http://127.0.0.1:3000/api/ready >/dev/null; then
+            echo 'Next server did not become ready; startup logs:'
+            cat /tmp/whateato-bulk-ci.log
+            exit 1
+          fi
+          node scripts/test_bulk_content_http.mjs
+          node scripts/test_admin_ui_guard.mjs
+          node scripts/test_review_hide_http.mjs
+          node scripts/test_owner_roles_http.mjs
+          node scripts/test_cms_venue_address_http.mjs
+          node scripts/test_visitor_review_categories_http.mjs
+          node scripts/test_owner_review_delete_http.mjs
+          node scripts/test_blog_cms_http.mjs
+          node scripts/test_review_form_browser.mjs
+          node scripts/test_home_design_browser.mjs
+      - name: Upload redesigned homepage desktop/mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-design-browser-qa
+          path: home-design-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload blog listing and article desktop/mobile visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-browser-qa
+          path: blog-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload review form desktop and phone QA snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-form-browser-qa
+          path: review-form-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Print local errors on failure
+        if: failure()
+        run: cat /tmp/whateato-bulk-ci.log || true

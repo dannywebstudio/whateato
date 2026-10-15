@@ -1,4 +1,5 @@
 import {getPool} from '@/lib/db';
+import {triageABPublicWhere,triageDisplayCategorySql} from '@/lib/triage-ab-gate';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {loadRatingDisplays,type RatingDisplay} from '@/lib/ratings-display';
 import {escapeLike,isUuid,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
@@ -17,7 +18,7 @@ export type RestaurantSearchInput={
 };
 export type RestaurantSearchResponse={
   locale:Locale;q:string;region:string;filters:string[];
-  items:RestaurantSearchItem[];limit:number;offset:number;has_more:boolean;
+  items:RestaurantSearchItem[];limit:number;offset:number;has_more:boolean;total_count:number;
   ratings_note:string;
 };
 export type RestaurantDetailInfo={
@@ -53,10 +54,10 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
   const pool=getPool();
   if(!pool)throw new CatalogDatabaseUnavailable();
   const sql=`
-    SELECT r.id::text AS id,
+    SELECT COUNT(*) OVER()::integer AS total_count,r.id::text AS id,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
-      COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,r.category_code,r.region_sido,r.region_sigungu,
+      COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,${triageDisplayCategorySql()} AS category_code,r.region_sido,r.region_sigungu,
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name)
          FROM restaurant_menus m
@@ -72,7 +73,8 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
            AND im.rights_status='approved'
            AND NULLIF(BTRIM(im.usage_rights_reference),'') IS NOT NULL
            AND im.rights_verified_at IS NOT NULL
-         ORDER BY im.position,im.id LIMIT 1) AS featured_image_metadata,
+         ORDER BY CASE WHEN im.cms_photo_role='cover' THEN 0 ELSE 1 END,im.position,im.id
+          LIMIT 1) AS featured_image_metadata,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       COALESCE((SELECT json_agg(json_build_object('code',a.tag_code,'label',COALESCE(tl.label,ko_tl.label,a.tag_code)) ORDER BY a.tag_code)
@@ -83,11 +85,12 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
           AND NULLIF(BTRIM(a.evidence_ref),'') IS NOT NULL
           AND a.verified_at IS NOT NULL),'[]'::json) AS tags
     FROM restaurants r
-    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$1
+    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$1 AND al.verified_at IS NOT NULL
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$1 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
+      ${triageABPublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
@@ -154,12 +157,12 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     END,
       r.name_ko ASC,r.id ASC
     LIMIT ($7::integer + 1) OFFSET $8`;
-  const res=await pool.query<RestaurantSearchItem>(sql,
+  const res=await pool.query<RestaurantSearchItem & {total_count:number}>(sql,
     [locale,q,'%'+escapeLike(q)+'%',region,'%'+escapeLike(region)+'%',filters,limit,offset]);
   const items=res.rows.slice(0,limit);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,items.map(x=>x.id)),loadRatingDisplays(pool,items.map(x=>x.id))]);
   return {locale,q,region,filters,items:items.map(x=>({...x,opening_hours:opening[x.id]||null,ratings:ratings[x.id]||{external:null,whateato:null}})),limit,offset,
-    has_more:res.rows.length>limit,
+    has_more:res.rows.length>limit,total_count:res.rows[0]?.total_count??0,
     ratings_note:'editorial_score is an independently approved WhatEatO score; null means unverified'};
 }
 
@@ -174,17 +177,18 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       COALESCE(l.short_description,k.short_description) AS short_description,
       COALESCE(l.full_description,k.full_description) AS full_description,
       COALESCE(al.display_address,r.road_address_ko,r.lot_address_ko) AS address,r.road_address_ko,r.lot_address_ko,r.region_sido,r.region_sigungu,
-      r.category_code,r.latitude,r.longitude,
+      ${triageDisplayCategorySql()} AS category_code,r.latitude,r.longitude,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.methodology_version ELSE NULL END AS editorial_methodology
     FROM restaurants r
-    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$2
+    LEFT JOIN restaurant_address_localizations_v1 al ON al.restaurant_id=r.id AND al.locale=$2 AND al.verified_at IS NOT NULL
     LEFT JOIN restaurant_localizations l ON l.restaurant_id=r.id AND l.locale=$2 AND l.publication_state='published'
     LEFT JOIN restaurant_localizations k ON k.restaurant_id=r.id AND k.locale='ko' AND k.publication_state='published'
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.id=$1 AND r.publication_status='published' AND r.business_status='active'
+      ${triageABPublicWhere()}
       AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
         SELECT 1 FROM restaurant_enrichment_sample_1000 preview
         JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
@@ -221,6 +225,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
       SELECT id::text,alt_ko,('/api/v1/images/'||id::text) AS url FROM restaurant_images
       WHERE restaurant_id=$1 AND publication_state='published' AND rights_status='approved'
         AND NULLIF(BTRIM(usage_rights_reference),'') IS NOT NULL AND rights_verified_at IS NOT NULL
+        AND cms_photo_role='gallery'
       ORDER BY position,id LIMIT 25`,[id])
   ]);
   const [opening,ratings]=await Promise.all([getOpeningHours(pool,[id]),loadRatingDisplays(pool,[id])]);

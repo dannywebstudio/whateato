@@ -19,6 +19,11 @@ export default function Privacy(){
       <span>로그인 후 계정 화면에서 회원 탈퇴를 선택하면 WhatEatO 계정 식별자와 직접 작성한 리뷰를 함께 삭제합니다. Google 계정 자체는 삭제되지 않습니다.</span>
     </div>
     <div className="result">
+      <strong>접속 국가 자동 설정</strong>
+      <span>방문 화면의 국가와 언어를 자동 설정하기 위해 CDN/호스팅에서 제공하는 국가 코드를 우선 사용합니다. 해당 정보가 없을 때에는 접속 IP 주소로 국가를 조회하는 외부 서비스(ipwho.is)에 IP가 일시적으로 전달될 수 있습니다. 이 조회 기능은 운영 환경변수로 끌 수 있습니다.</span>
+      <span>국가 판별과 관련된 IP 원문은 WhatEatO 데이터베이스에 저장하지 않습니다. 서버는 조회 요청을 줄이기 위해 단기 해시 캐시만 유지하며, 위치를 확인할 수 없을 때에는 브라우저 언어·시간대 정보를 참고합니다. 국가나 언어를 사용자가 직접 선택하면 브라우저에 그 선택을 저장합니다.</span>
+    </div>
+    <div className="result">
       <strong>외부 지도 자료</strong>
       <span>기본 지도는 OpenFreeMap에서 제공하며, 브라우저가 해당 지도 서버에 직접 요청합니다. 지도 렌더링이 지원되지 않거나 실패하면 OpenStreetMap의 공식 내장 지도로 전환되어 브라우저가 openstreetmap.org에 접속할 수 있습니다. 외부 지도 서비스의 개인정보 처리방침과 이용약관을 참고하세요. WhatEatO 식당 마커·목록은 자체 인허가 데이터에 기반합니다.</span>
     </div>
