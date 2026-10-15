@@ -1,9 +1,11 @@
+import {seoPublicEnabled,SEO_RESTAURANT_IDS} from '@/lib/public-seo';
 // Enforced server-side visibility: ONLY curated 300 cohort A/B restaurants.
 // Unselected businesses, C flags and holds must never be publicly queried.
 // No opt-out flag. Verified published weekly opening intervals with a source are mandatory.
 // Restaurants with unknown hours remain in database but are hidden from public listings.
 export function triageABPublicWhere():string {
  return `
+   ${seoPublicEnabled()?`AND r.id IN (${SEO_RESTAURANT_IDS.map(id=>`'${id}'::uuid`).join(',')})`:''}
    AND EXISTS (
      SELECT 1
      FROM whateato_release_cohort_300_v1 selected
