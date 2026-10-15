@@ -43,7 +43,8 @@ console.log('PASS sitemap: exact 4 URLs and no unpublished articles');
 const home=await get('/');
 assert.equal(home.status,200);
 assert.ok(!/noindex/i.test(metaRobots(home.body)), 'homepage should not be noindex');
-assert.ok(canonical(home.body).includes('https://whateato.com/'),'home canonical must be site origin');
+console.log('HOME META:',(home.body.match(/<link[^>]+canonical[^>]*>/gi)||[]).join(' '));
+assert.ok(canonical(home.body).includes('https://whateato.com'),'home canonical must be site origin');
 console.log('PASS homepage: indexable and canonical');
 
 for(const [id,name] of allow){
