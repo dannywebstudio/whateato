@@ -1,3 +1,6 @@
+import type {Metadata} from 'next';
+import {seoPublicEnabled} from '@/lib/public-seo';
+export const metadata:Metadata={robots:{index:seoPublicEnabled(),follow:seoPublicEnabled()},alternates:{canonical:'/'}};
 import SearchBox from '@/components/SearchBox';
 import {HomeTagline} from '@/components/LocalizedChromeText';
 export default function Home(){
