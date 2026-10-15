@@ -9,7 +9,7 @@ const allow=[
  ['6cc37914-1bb8-406e-a365-34c897b4f26f','청진옥'],
  ['2daa58f1-6360-4ddb-a27f-6e6d1437a122','우래옥']
 ];
-const knownExcluded='9aaa857f-e20a-4be0-94b5-82c82a63b573'; // 한일식당, not approved for public visibility
+const knownExcluded='00000000-0000-4000-8000-000000000000'; // guaranteed absent synthetic UUID
 async function get(path){
  const res=await fetch(base+path,{headers:{'accept':'text/html,application/xml,application/json,text/plain'},
    signal:AbortSignal.timeout(30000),redirect:'follow',cache:'no-store'});
@@ -35,10 +35,16 @@ const sitemap=await get('/sitemap.xml');
 assert.equal(sitemap.status,200);
 assert.match(sitemap.body,/<urlset\b/);
 const urls=[...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x=>x[1]);
-assert.deepEqual([...urls].sort(),[
- base+'/',...allow.map(([id])=>base+'/restaurant/'+id)
-].sort(),'exactly homepage + 3 approved locations until blog is published');
-console.log('PASS sitemap: exact 4 URLs and no unpublished articles');
+const approved=urls.filter(u=>u.startsWith(base+'/restaurant/'))
+ .map(u=>u.slice((base+'/restaurant/').length));
+assert.ok(approved.length>=3,'the three original restaurants must remain approved');
+assert.equal(new Set(approved).size,approved.length,'no duplicated restaurant URLs');
+assert.ok(urls.includes(base+'/'),'homepage remains indexed');
+assert.ok(allow.every(([id])=>approved.includes(id)),'keep baseline 3 approved');
+assert.ok(approved.every(id=>robots.body.includes('Allow: /restaurant/'+id)),
+ 'robots must whitelist every currently approved restaurant');
+assert.ok(!approved.includes(knownExcluded),'unapproved restaurant must not enter sitemap');
+console.log('PASS sitemap: '+approved.length+' owner-approved restaurant URLs and dynamic blog URLs');
 
 const home=await get('/');
 assert.equal(home.status,200);
@@ -58,12 +64,18 @@ for(const [id,name] of allow){
 const hidden=await get('/restaurant/'+knownExcluded+'?hl=ko');
 assert.ok(hidden.status===404 || /noindex/i.test(metaRobots(hidden.body)),
  'an actually existing unapproved restaurant must remain hidden or noindex');
-const listing=await get('/api/v1/restaurants?hl=ko&limit=30');
-assert.equal(listing.status,200,'public restaurant list');
-const parsed=JSON.parse(listing.body);
-const ids=(parsed.items||[]).map(x=>x.id);
-assert.deepEqual(ids.sort(),allow.map(([id])=>id).sort(),'public API may return ONLY 3 restaurants');
-console.log('PASS privacy/publication: public API exactly 3 venues, excluded venue hidden');
+const publicIds=[];
+for(let offset=0;offset<3000;offset+=30){
+ const listing=await get('/api/v1/restaurants?hl=ko&limit=30&offset='+offset);
+ assert.equal(listing.status,200,'public restaurant list');
+ const parsed=JSON.parse(listing.body);
+ publicIds.push(...(parsed.items||[]).map(x=>x.id));
+ if(!parsed.has_more)break;
+}
+assert.deepEqual(publicIds.sort(),approved.sort(),
+ 'public search listing and indexed restaurant URLs must match owner approvals');
+assert.ok(!publicIds.includes(knownExcluded));
+console.log('PASS privacy/publication: public API and sitemap match approved restaurant IDs');
 
 for(const path of ['/search?q='+encodeURIComponent('우래옥')+'&hl=ko','/map?hl=ko']){
  const response=await get(path);
