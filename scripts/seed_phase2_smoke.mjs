@@ -68,6 +68,16 @@ try{
   for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql','008_restaurant_quality_review.sql','009_quality_candidates_non_destructive.sql','010_verified_opening_hours.sql','012_approved_external_ratings.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
+  // Mirror additive CMS/blog schema in localhost HTTP test (never Neon).
+  for(const migration of [
+    '014_bulk_content_operations.sql',
+    '015_owner_cms_roles_media.sql',
+    '016_cms_restaurant_address_media.sql',
+    '017_public_visitor_review_media.sql',
+    '018_owner_review_delete_audit.sql',
+    '019_blog_cms_editorial.sql',
+    '020_blog_category_tree.sql'
+  ]) await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   // Only in ephemeral local CI: enforce release A/B gate with approved sample records.
   await client.query(`
     CREATE TABLE whateato_release_cohort_300_v1 (
