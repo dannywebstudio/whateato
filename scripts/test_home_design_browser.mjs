@@ -88,20 +88,20 @@ try{
   assert.ok(width.actual<=width.viewport+2,
    vp.name+' overflow '+JSON.stringify(width));
   await page.screenshot({path:out+'/'+vp.name+'-ko-home.png',fullPage:true});
-  // Header Contact sits immediately beside Blog and renders mailto on desktop/mobile.
+  // Owner-approved Header order: Map, Blog, Contact, Login; Contact keeps its original destination.
   const navNames=await page.locator('.navlinks a').allTextContents();
-  assert.deepEqual(navNames.map(v=>v.trim()),['지도','블로그','Contact']);
+  assert.deepEqual(navNames.map(v=>v.trim()),['지도','블로그','Contact','Login']);
   const positions=await page.locator('.navlinks a').evaluateAll(nodes=>
    nodes.map(el=>{const r=el.getBoundingClientRect();return {center:r.top+r.height/2,height:r.height}}));
   assert.ok(positions.every(p=>Math.abs(p.center-positions[1].center)<=1),
    vp.name+' nav links not vertically aligned: '+JSON.stringify(positions));
-  assert.ok(positions.every(p=>p.height===positions[1].height));
+  assert.ok(positions.slice(0,3).every(p=>p.height===positions[1].height));
   const contact=await context.newPage();
   await mockCountry(contact,'KR');
   await contact.goto(root+'/contact?hl=ko',{waitUntil:'networkidle'});
   await contact.locator('#country').waitFor();
-  assert.equal(await contact.locator('.navlinks a').last().textContent(),'Contact');
-  assert.equal(await contact.locator('.navlinks a').last().getAttribute('href'),'/contact?hl=ko');
+  assert.equal(await contact.locator('.navlinks a[href^="/contact"]').textContent(),'Contact');
+  assert.equal(await contact.locator('.navlinks a[href^="/contact"]').getAttribute('href'),'/contact?hl=ko');
   assert.equal(await contact.locator('main h1').textContent(),'Contact');
   assert.equal(await contact.getByText('이메일 보내기').count(),0);
   assert.equal(await contact.locator('main button').count(),0);

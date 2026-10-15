@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import {useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
+import HeaderAccountLink from './HeaderAccountLink';
 
 const languages=[['ko','한국어'],['en','English'],['ja','日本語'],['zh-CN','简体中文']] as const;
 type Language=typeof languages[number][0];
@@ -59,7 +60,7 @@ export default function Header(){
  }
  function navigateLanguage(language:Language,force=false){
   const path=window.location.pathname;
-  if(path==='/'||!/^\/(search|map|blog(?:\/|$)|contact(?:\/|$)|restaurant\/)/.test(path))return;
+  if(path==='/'||!/^\/(search|map|blog(?:\/|$)|contact(?:\/|$)|privacy(?:\/|$)|terms(?:\/|$)|login(?:\/|$)|my-page(?:\/|$)|account(?:\/|$)|restaurant\/)/.test(path))return;
   const params=new URLSearchParams(window.location.search);
   // Explicit language URLs from search engines and shared links are respected
   // on initial auto detection. Only manual choice can replace such a URL.
@@ -140,6 +141,7 @@ export default function Header(){
      {{ko:'블로그',en:'Blog',ja:'ブログ','zh-CN':'博客'}[lang]}
     </Link>
     <Link href={'/contact?hl='+encodeURIComponent(lang)}>Contact</Link>
+    <HeaderAccountLink lang={lang}/>
    </div>
   </div>
   <div className="preferences">

@@ -183,6 +183,63 @@ try{
 }finally{await verify.end()}
 console.log('PASS: isolated owner publication -> search/detail/map -> revoke, permissions and audit');
 
+// Only localhost ephemeral CI: exercise My Page ownership, edit moderation and no-approval delete.
+const myReviewer='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee5';
+const myVenue='22222222-2222-4222-8222-222222222222';
+const myText='My review was collected for local integration testing and describes only a synthetic visit.';
+const updatedText='I revised this synthetic restaurant review. This change must wait for moderator approval.';
+const myDb=new pg.Client({connectionString:process.env.DATABASE_URL});
+await myDb.connect();
+try{
+ await myDb.query("INSERT INTO whateato_review_accounts(id,google_subject) VALUES($1,'synthetic-my-page-only-google-id')",[myReviewer]);
+}finally{await myDb.end()}
+const myCookie=await signedCookie(myReviewer);
+const anonymousMy=await req('/my-page?hl=en');
+assert.ok([302,303,307,308].includes(anonymousMy.status),'anonymous My Page must redirect to Google login');
+assert.ok(!anonymousMy.raw.includes('My review was collected for local integration testing'),'login redirect must not leak private reviews');
+assert.equal((await req('/my-page?hl=en','GET',myCookie)).status,200,'authenticated reviewer can access private My Page');
+const firstReview=await req('/api/restaurants/'+myVenue+'/reviews','POST',myCookie,{
+ rating:4,body:myText
+});
+assert.equal(firstReview.status,202,JSON.stringify(firstReview.data));
+let visibleInMy=await req('/my-page?hl=en','GET',myCookie);
+assert.equal(visibleInMy.status,200);
+assert.ok(visibleInMy.raw.includes(myText),'author must see own pending review');
+const otherCookie=reviewerCookie;
+assert.ok(!(await req('/my-page?hl=en','GET',otherCookie)).raw.includes(myText),
+ 'another signed-in user must not see private review');
+const preEdit=new pg.Client({connectionString:process.env.DATABASE_URL});
+await preEdit.connect();
+try{
+ await preEdit.query("UPDATE whateato_user_reviews SET moderation_status='published',reviewed_at=now() WHERE restaurant_id=$1 AND account_id=$2",[myVenue,myReviewer]);
+}finally{await preEdit.end()}
+const edit=await req('/api/restaurants/'+myVenue+'/reviews','POST',myCookie,{
+ rating:5,body:updatedText
+});
+assert.equal(edit.status,202,JSON.stringify(edit.data));
+const moderated=new pg.Client({connectionString:process.env.DATABASE_URL});
+await moderated.connect();
+try{
+ const row=await moderated.query("SELECT rating,body,moderation_status,reviewed_at FROM whateato_user_reviews WHERE restaurant_id=$1 AND account_id=$2",[myVenue,myReviewer]);
+ assert.equal(row.rows[0]?.moderation_status,'pending');
+ assert.equal(row.rows[0]?.reviewed_at,null);
+ assert.equal(row.rows[0]?.body,updatedText);
+ assert.equal(row.rows[0]?.rating,5);
+}finally{await moderated.end()}
+assert.ok(!(await req('/api/restaurants/'+myVenue+'/reviews')).raw.includes(updatedText),
+ 'edited review cannot become public before moderator approval');
+assert.ok((await req('/my-page?hl=en','GET',myCookie)).raw.includes(updatedText),
+ 'author can still view pending edits');
+const anotherDelete=await req('/api/restaurants/'+myVenue+'/reviews','DELETE',otherCookie);
+assert.equal(anotherDelete.status,200);
+assert.ok((await req('/my-page?hl=en','GET',myCookie)).raw.includes(updatedText),
+ 'another user DELETE may not erase owners review');
+const myDelete=await req('/api/restaurants/'+myVenue+'/reviews','DELETE',myCookie);
+assert.equal(myDelete.status,200);
+assert.equal(myDelete.data.deleted,true);
+assert.ok(!(await req('/my-page?hl=en','GET',myCookie)).raw.includes(updatedText),
+ 'author delete immediately removes card');
+console.log('PASS: private My Page, Google-style auth, author-only review, edit pending moderation, immediate delete');
 const ownerPage=await req('/admin','GET',ownerCookie);
 assert.equal(ownerPage.status,200);
 assert.match(ownerPage.raw,/Restaurant CMS/);

@@ -1,0 +1,9 @@
+.accountLink{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;padding:6px 12px;border-radius:999px;border:1px solid #d7e8dd;background:#f5faf7;color:#13734f!important;font-weight:750;font-size:13px;line-height:1.3;transition:background .18s,border-color .18s}
+.accountLink:hover{background:#e5f5eb;border-color:#93c4a6}
+.accountLink:focus-visible{outline:2px solid #188a64;outline-offset:3px}
+.placeholder{display:inline-block;width:72px;height:30px;border-radius:999px;background:#f3f7f4;border:1px solid #e8eee9}
+@media(max-width:620px){.accountLink{padding:6px 10px;font-size:12px}.placeholder{width:62px;height:28px}}
+
+/* Balance the additional approved Header button without touching locked global CSS. */
+:global(.navlinks):has(.accountLink){align-items:center}
+@media(max-width:620px){:global(.header-left):has(.accountLink){flex-wrap:wrap;row-gap:10px}}
