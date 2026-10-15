@@ -68,6 +68,31 @@ try{
   for(const migration of ['003_reviews_auth_minimal.sql','004_i18n_analytics.sql','005_geo_search_indexes.sql','006_complete_restaurant_tag_translations.sql','007_review_moderation_audit.sql','008_restaurant_quality_review.sql','009_quality_candidates_non_destructive.sql','010_verified_opening_hours.sql','012_approved_external_ratings.sql']){
     await client.query(readFileSync('db/migrations/'+migration,'utf8'));
   }
+  // Compatibility view for current catalog queries, in local synthetic CI only.
+  // Production obtains this view from its versioned database migrations.
+  await client.query(`
+    CREATE OR REPLACE VIEW restaurant_address_localizations_v1 AS
+    SELECT id AS restaurant_id, 'ko'::text AS locale,
+      COALESCE(road_address_ko,lot_address_ko) AS display_address
+    FROM restaurants
+  `);
+  await client.query(`CREATE TABLE IF NOT EXISTS restaurant_enrichment_sample_1000 (restaurant_id uuid PRIMARY KEY REFERENCES restaurants(id), sample_rank integer NOT NULL)`);
+  await client.query(`
+    CREATE OR REPLACE VIEW restaurant_content_readiness_v1 AS
+    SELECT id, 0::int AS published_languages, 0::int AS verified_menus,
+      0::int AS approved_images, 0::int AS verified_tags,
+      'content_review'::text AS next_action
+    FROM restaurants
+  `);
+  // Empty CI-only compatibility relations: optional Google photo path stays disabled.
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS google_place_manual_identity_approvals_v1
+      (restaurant_id uuid, google_place_id text, verified_at timestamptz);
+    CREATE TABLE IF NOT EXISTS restaurant_source_match_checkpoints_v1
+      (restaurant_id uuid, google_place_id text);
+    CREATE TABLE IF NOT EXISTS google_places_photo_quota_v1
+      (month_key text, sku text, used integer, limit_count integer);
+  `);
   // Explicitly human-confirmed synthetic hold; original restaurant row remains
   // present and unchanged. Pending flags may NEVER suppress public listings.
   await client.query(`

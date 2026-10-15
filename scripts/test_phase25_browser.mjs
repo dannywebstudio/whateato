@@ -55,7 +55,7 @@ try{
       return map?.getAttribute('data-map-status')==='ready' ||
         !!document.querySelector('[aria-label="Basemap unavailable"] iframe[src^="https://www.openstreetmap.org/"]');
     },null,{timeout:22000});
-    await page.locator('.results .result a[href^="/restaurant/"]').first().waitFor({timeout:12000});
+    await page.locator('.map-explore-cards .we-card a[href^="/restaurant/"]').first().waitFor({timeout:12000});
     const fallback=await page.locator('[aria-label="Basemap unavailable"] iframe').count();
     if(!fallback){
       const canvas=page.locator('.maplibregl-canvas');
@@ -82,22 +82,22 @@ try{
     const search='/search?q='+encodeURIComponent('테스트')+'&hl=ko';
     await page.goto(base+search,{waitUntil:'networkidle'});
     await check(page,device.name+' search');
-    assert.equal(await page.locator('.results a.result').count(),2,'two published restaurants render');
+    assert.equal(await page.locator('.restaurant-card-grid .we-card').count(),2,'two published restaurants render');
     const cafe=page.locator('.chips button.chip').filter({hasText:'카페'});
     await cafe.click();
     assert.equal(await cafe.getAttribute('aria-pressed'),'true');
     await page.locator('.searchfield button').click();
     await page.waitForURL(url=>url.pathname==='/search'&&url.searchParams.get('f')==='cafe');
-    await page.locator('a.result').first().waitFor({state:'visible'});
-    assert.equal(await page.locator('.results a.result').count(),1,'verified cafe filter');
+    await page.locator('.restaurant-card-grid .we-card h3 a').first().waitFor({state:'visible'});
+    assert.equal(await page.locator('.restaurant-card-grid .we-card').count(),1,'verified cafe filter');
     assert.equal(await page.locator('.chips button.chip[aria-pressed="true"]').count(),1,'filter state restored');
-    const licensedSearchPhoto=page.locator('.results a.result img[src^="/api/v1/images/"]');
+    const licensedSearchPhoto=page.locator('.restaurant-card-grid .we-card img[src^="/api/v1/images/"]');
     assert.equal(await licensedSearchPhoto.count(),1,'approved result photo rendered');
     await licensedSearchPhoto.first().waitFor({state:'visible'});
     await check(page,device.name+' filtered search');
     await page.screenshot({path:out+'/'+device.name+'-search.png',fullPage:true});
 
-    await page.locator('.results a.result').first().click();
+    await page.locator('.restaurant-card-grid .we-card h3 a').first().click();
     await page.waitForURL(url=>url.pathname.startsWith('/restaurant/'));
     await check(page,device.name+' restaurant');
     assert.ok((await page.locator('main h1').textContent())?.includes('테스트카페'));
