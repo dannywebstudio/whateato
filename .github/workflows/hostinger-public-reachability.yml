@@ -29,6 +29,11 @@ jobs:
               continue
             }
             echo "$info"
+            if [ "$suffix" = '/robots.txt' ] || [ "$suffix" = '/sitemap.xml' ]; then
+              printf 'Public %s content: ' "$suffix"
+              head -c 1000 /tmp/whateato-response
+              echo
+            fi
             if [ "$suffix" = '/' ]; then
               status=$(printf '%s' "$info" | sed -nE 's/.*http=([0-9]{3}).*/\1/p')
               if [ "$status" != '200' ]; then failed=1; fi
