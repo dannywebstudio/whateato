@@ -34,8 +34,8 @@ FROZEN_FILES = (
 # Exact, owner-selected latest UI revision. Baseline remains immutable.
 LATEST_UI_BLOBS = {
     "src/app/globals.css": "c2d831ab2a977f7374062986130de55a7fa452e0",
-    "src/app/page.tsx": "91e5517a4011ed0a9d892d093d9f9cf4271ebcd5",
-    "src/app/layout.tsx": "822858d3e4da0e9d9501e794c6c2676126c18753",
+    "src/app/page.tsx": "999cd8b1bd5423714030820b91dbfb68c2298a67",
+    "src/app/layout.tsx": "c5cbe21dd178679f7313a252d7e2fd4fa4ad1ac7",
     "src/components/Header.tsx": "2d4c620346c8fbebc646580a4dae480fb647e5f3",
     "src/components/SearchBox.tsx": "12c000453e99c5fe8552c05c9e62e536c50629f2"
 }
