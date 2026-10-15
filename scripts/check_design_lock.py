@@ -42,7 +42,7 @@ APPROVED_I18N_BLOBS = {
 }
 
 def git_blob_hash(content: bytes) -> str:
-    return hashlib.sha1(b"blob " + str(len(content)).encode() + b"\\0" + content).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(content)).encode() + bytes([0]) + content).hexdigest()
 
 FROZEN_PREVIEW_FUNCTIONS = (
     "renderHeader",
