@@ -123,3 +123,17 @@ try{csrfIssued=typeof JSON.parse(csrf.body)?.csrfToken==='string'}catch{}
 console.log('AUTH CSRF: http='+csrf.status+' token_issued='+csrfIssued+
   ' (token never logged)');
 console.log('PASS: All canonical public SEO tests');
+ // New Google-only visitor login and private My Page, without any real sign-in.
+ const visitorLogin=await get('/login?hl=en');
+ const visitorPrivate=await get('/my-page?hl=en');
+ const loginAvailable=visitorLogin.status===200&&visitorLogin.body.includes('Continue with Google');
+ const privateRedirect=visitorPrivate.status===200&&
+   visitorPrivate.url.startsWith(base+'/login')&&
+   !visitorPrivate.body.includes('My reviews');
+ console.log('VISITOR AUTH RELEASE: login='+visitorLogin.status+
+   ' login_page='+loginAvailable+
+   ' anonymous_private_redirect='+privateRedirect);
+ assert.ok(loginAvailable,'new Google-only Login page not deployed');
+ assert.ok(privateRedirect,'anonymous My Page must redirect to Google login');
+ console.log('PASS: Google Login and protected My Page deployed');
+
