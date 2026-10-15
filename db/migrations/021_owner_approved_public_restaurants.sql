@@ -15,6 +15,19 @@ CREATE TABLE IF NOT EXISTS whateato_restaurant_public_approvals_v1(
 );
 CREATE INDEX IF NOT EXISTS idx_whateato_restaurant_approval_visible
  ON whateato_restaurant_public_approvals_v1(restaurant_id) WHERE is_visible;
+-- Append-only owner decisions. The legacy three are tracked as a baseline,
+-- while every later approval/revocation records the authenticated owner ID.
+CREATE TABLE IF NOT EXISTS whateato_public_restaurant_approval_audit_v1(
+ id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+ restaurant_id uuid NOT NULL REFERENCES restaurants(id) ON DELETE RESTRICT,
+ actor_id uuid NOT NULL REFERENCES whateato_review_accounts(id) ON DELETE RESTRICT,
+ action text NOT NULL CHECK(action IN ('approve','revoke')),
+ evidence_url text,
+ created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_whateato_public_restaurant_approval_audit
+ ON whateato_public_restaurant_approval_audit_v1(restaurant_id,created_at DESC);
+
 -- The ONLY automatic initial approvals: these three manually confirmed venues.
 -- Never enroll the remaining cohort, even if it was already 'published'.
 INSERT INTO whateato_restaurant_public_approvals_v1
