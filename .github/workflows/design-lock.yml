@@ -29,3 +29,5 @@ jobs:
         run: python scripts/check_design_lock.py --self-test
       - name: Verify approved WhatEatO visual baseline
         run: python scripts/check_design_lock.py
+      - name: Verify multilingual legal footer and original Contact
+        run: node scripts/test_legal_footer_policy.mjs
