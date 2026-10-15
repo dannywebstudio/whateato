@@ -35,7 +35,8 @@ export default function SearchBoxSynced({
     const sync=()=>{
       let choice='auto';
       try{choice=localStorage.getItem('we_language')||'auto'}catch{}
-      setLang(choice==='auto'?(initialLocale||navigator.language||'en').split('-')[0]:choice);
+      const resolved=localStorage.getItem('we_resolved_language')||initialLocale||'en';
+      setLang(resolved);
     };
     sync();window.addEventListener('we_preferences',sync);
     return()=>window.removeEventListener('we_preferences',sync);
@@ -48,7 +49,7 @@ export default function SearchBoxSynced({
     if(initialRegion)p.set('region',initialRegion);
     let choice='auto';
     try{choice=localStorage.getItem('we_language')||'auto'}catch{}
-    p.set('hl',choice==='auto'?(/[가-힣]/.test(q)?'ko':lang):choice);
+    p.set('hl',lang);
     router.push('/'+target+'?'+p.toString());
   }
   const normalized=normalizeLocale(lang);
