@@ -196,7 +196,7 @@ try{
 const myCookie=await signedCookie(myReviewer);
 const anonymousMy=await req('/my-page?hl=en');
 assert.ok([302,303,307,308].includes(anonymousMy.status),'anonymous My Page must redirect to Google login');
-assert.match(anonymousMy.raw+' '+(anonymousMy.data?.error||''),/^|$/); // redirect body never contains private content
+assert.ok(!anonymousMy.raw.includes('My review was collected for local integration testing'),'login redirect must not leak private reviews');
 assert.equal((await req('/my-page?hl=en','GET',myCookie)).status,200,'authenticated reviewer can access private My Page');
 const firstReview=await req('/api/restaurants/'+myVenue+'/reviews','POST',myCookie,{
  rating:4,body:myText
