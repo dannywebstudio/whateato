@@ -33,7 +33,7 @@ const render=(translation:BlogTranslation,images:ApprovedImage[])=>
    if(block.type==='list')return '<ul'+attrs+'>'+((block.items||[]).map(item=>'<li>'+textHtml(item)+'</li>').join(''))+'</ul>';
    if(block.type==='image'){
     const image=images.find(item=>item.id===block.image_id);
-    return '<figure contenteditable="false" data-image-id="'+escapeHtml(block.image_id||'')+'" data-width="'+(block.image_width||100)+'" style="width:'+(block.image_width||100)+'%;max-width:100%;margin-inline:auto">'+
+    return '<figure class="inlinePhoto" contenteditable="false" data-image-id="'+escapeHtml(block.image_id||'')+'" data-width="'+(block.image_width||100)+'" style="width:'+(block.image_width||100)+'%;max-width:100%;margin-inline:auto">'+
       (image?'<img src="'+escapeHtml(image.image_url)+'" alt="'+escapeHtml(image.alt_text)+'"/>':'<p>이미지 선택 또는 승인 필요</p>')+
       '<figcaption>'+escapeHtml(block.caption||'')+'</figcaption></figure>';
    }
@@ -92,7 +92,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    const img=pending.querySelector('img');
    if(img)img.src=detail.url;
    const caption=pending.querySelector('figcaption');
-   if(caption)caption.textContent='사용권 승인 대기';
+   if(caption)caption.textContent='';
    sync();
    setNote('사진을 본문 위치에 연결했어. 사용권 승인 후 공개할 수 있어.');
   };
@@ -168,10 +168,10 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  };
  const previewFile=(file:File)=>{
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024){setNote('JPG/PNG/WebP 8MB 이하만 지원해.');return}
-  const figure=document.createElement('figure');figure.contentEditable='false';figure.dataset.pending='true';
+  const figure=document.createElement('figure');figure.contentEditable='false';figure.dataset.pending='true';figure.className='inlinePhoto';figure.dataset.width=String(imageSize);figure.style.width=imageSize+'%';
   const img=document.createElement('img');img.src=URL.createObjectURL(file);img.alt=file.name;
   img.onload=()=>URL.revokeObjectURL(img.src);
-  const caption=document.createElement('figcaption');caption.textContent='업로드 대기 · '+file.name;
+  const caption=document.createElement('figcaption');caption.textContent='업로드 중 · '+file.name;
   figure.append(img,caption);putNode(figure);onChooseFile(file);
   setNote('사진 미리보기가 본문에 삽입됐어. 저장 전에 아래에서 출처와 사용권을 확인하고 업로드해.');
  };
@@ -189,7 +189,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   const selected=lastCaret.current?.startContainer;
   const figure=(selected instanceof HTMLElement?selected:selected?.parentElement)?.closest('figure') as HTMLElement|null;
   const target=selectedFigure.current&&ref.current?.contains(selectedFigure.current)?selectedFigure.current:figure&&ref.current?.contains(figure)?figure:null;
-  if(target){target.dataset.width=String(imageSize);target.style.width=imageSize+'%';sync();}
+  if(target){target.dataset.width=String(imageSize);target.style.width=imageSize+'%';target.style.maxWidth='100%';sync();setNote('사진 크기를 '+imageSize+'%로 변경했어.');}
   else setNote('크기를 변경할 이미지를 클릭해 주세요.');
  };
  const insertImage=(id:string)=>{
@@ -197,10 +197,10 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   if(!image){setNote('승인된 이미지만 본문에 삽입할 수 있어.');return}
   focus();
   const figure=document.createElement('figure');
-  figure.contentEditable='false';
+  figure.contentEditable='false';figure.className='inlinePhoto';figure.dataset.width=String(imageSize);figure.style.width=imageSize+'%';
   figure.dataset.imageId=id;
   const img=document.createElement('img');img.src=image.image_url;img.alt=image.alt_text;
-  const caption=document.createElement('figcaption');caption.textContent=image.alt_text;
+  const caption=document.createElement('figcaption');caption.textContent='';
   figure.append(img,caption);
   const selection=window.getSelection();
   if(lastCaret.current&&ref.current?.contains(lastCaret.current.commonAncestorContainer)){
@@ -244,6 +244,6 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   </div>
   {note&&<p className={styles.editorNotice} role="status">{note}</p>}
   <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onKeyUp={rememberCaret} onMouseUp={rememberCaret} onClick={e=>{const node=e.target as HTMLElement;const figure=node.closest('figure');if(figure&&ref.current?.contains(figure)){selectedFigure.current=figure as HTMLElement;setImageSize(Number(figure.getAttribute('data-width'))||100)}}} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
-  <p className={styles.editorHint}>포스팅 제목은 위쪽 별도 입력칸에서 작성해. 글자를 선택한 뒤 위 도구를 누르면 서식이 적용돼. 사진은 업로드·권리 승인 후 원하는 커서 위치에 삽입해.</p>
+  <p className={styles.editorHint}>사진을 클릭한 뒤 크기를 선택하면 크기를 조절할 수 있어. 사진은 문단 사이에 자유롭게 배치돼.</p>
  </div>;
 }
