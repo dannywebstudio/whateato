@@ -105,7 +105,7 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
   if(published&&window.prompt('발행된 글을 영구 삭제하려면 DELETE를 입력해.')!=='DELETE')return;
   setBusy(true);
   try{
-   await api('/api/v1/owner/blog/'+post.id,{method:'DELETE',headers:published?{'x-whateato-confirm-delete':post.id}:undefined});
+   await api('/api/v1/owner/blog/'+post.id,{method:'DELETE',headers:{'x-whateato-confirm-delete':post.id}});
    if(current?.id===post.id){setCurrent(null);setDirty(false)}
    await refresh();setMessage(label+'을 삭제했어.');
   }catch(e){error(e)}finally{setBusy(false)}
@@ -230,6 +230,7 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
  };
  const deleteLibraryImage=async(image:BlogImage)=>{
   if(!current||!owner)return;
+  if(JSON.stringify(draft.translations).includes(image.id))throw Error('현재 편집 중인 글에서 이 사진을 먼저 제거하고 초안을 저장해 줘.');
   const articleId=current.id;
   await api('/api/v1/owner/blog/'+articleId+'/media/'+image.id,{method:'DELETE',headers:{'x-whateato-confirm-delete':image.id}});
   setCurrent(previous=>previous?.id===articleId?{...previous,images:previous.images.filter(item=>item.id!==image.id)}:previous);
