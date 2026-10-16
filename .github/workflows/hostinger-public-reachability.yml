@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [feature/i18n-analytics-backend-v1]
-    paths: ['.github/workflows/hostinger-public-reachability.yml', 'scripts/verify_public_seo_live.mjs', 'scripts/verify_public_legal_live.mjs']
+    paths: ['.github/workflows/hostinger-public-reachability.yml', 'scripts/verify_public_seo_live.mjs', 'scripts/verify_public_legal_live.mjs', 'scripts/verify_login_my_page_live.mjs']
 permissions:
   contents: read
 jobs:
@@ -57,3 +57,5 @@ jobs:
         run: node scripts/verify_public_seo_live.mjs
       - name: Inspect live legal footer, four languages, and original Contact (GET only)
         run: node scripts/verify_public_legal_live.mjs
+      - name: Validate deployed Google-only Login and private My Page (read-only)
+        run: node scripts/verify_login_my_page_live.mjs
