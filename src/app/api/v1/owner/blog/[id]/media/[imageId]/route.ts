@@ -72,7 +72,7 @@ export async function DELETE(req:NextRequest,{params}:Ctx){
    SELECT EXISTS(
     SELECT 1 FROM whateato_blog_drafts WHERE post_id=$1 AND translations::text LIKE $2
     UNION ALL
-    SELECT 1 FROM whateato_blog_publications WHERE post_id=$1 AND translations::text LIKE $2
+    SELECT 1 FROM whateato_blog_publications WHERE post_id=$1 AND snapshot::text LIKE $2
    ) AS referenced`,[id,'%'+imageId+'%']);
   if(used.rows[0]?.referenced){
    await client.query('ROLLBACK');
