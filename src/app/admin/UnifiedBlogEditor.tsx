@@ -27,7 +27,7 @@ const inlineText=(node:Node):string=>{
 const render=(translation:BlogTranslation,images:ApprovedImage[])=>
   translation.blocks.map(block=>{
    const value=textHtml(block.text||'');
-   const attrs=' data-align="'+(block.align||'left')+'" data-size="'+(block.font_size||16)+'" style="text-align:'+(block.align||'left')+';font-size:'+(block.font_size||16)+'px"';
+   const attrs=' data-align="'+(block.align||'left')+'"'+(block.font_size?' data-size="'+block.font_size+'"':'')+' style="text-align:'+(block.align||'left')+';'+(block.font_size?'font-size:'+block.font_size+'px':'')+'"';
    if(block.type==='heading')return '<h'+(block.level===3?'3':'2')+attrs+'>'+value+'</h'+(block.level===3?'3':'2')+'>';
    if(block.type==='quote')return '<blockquote'+attrs+'>'+value+'</blockquote>';
    if(block.type==='list')return '<ul'+attrs+'>'+((block.items||[]).map(item=>'<li>'+textHtml(item)+'</li>').join(''))+'</ul>';
@@ -60,7 +60,7 @@ function serialize(root:HTMLElement):{blocks:BlogBlock[]}{
   else if(name==='table'){
    const rows=Array.from(node.querySelectorAll('tr')).slice(0,20).map(tr=>Array.from(tr.querySelectorAll('td,th')).slice(0,6).map(cell=>inlineText(cell).slice(0,240)));
    if(rows.length&&rows.every(row=>row.length===rows[0].length&&row.length>=2))add('table',{...style,rows});
-  }else if(name!=='h1')add('paragraph',{text:(node.textContent||'').slice(0,8000)});
+  }else if(name!=='h1')add('paragraph',{...style,text:inlineText(node).slice(0,8000)});
  }
  return {blocks:blocks.slice(0,80)};
 }
@@ -72,6 +72,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  const [imageChoice,setImageChoice]=useState('');
  const [note,setNote]=useState('');
  const [imageSize,setImageSize]=useState(100);
+ const selectedFigure=useRef<HTMLElement|null>(null);
  const recent=useRef<{articleId:string;locale:string}|null>(null);
  const lastCaret=useRef<Range|null>(null);
  useEffect(()=>{
@@ -156,11 +157,14 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  };
  const putNode=(node:HTMLElement)=>{
   const range=lastCaret.current;
-  if(range&&ref.current?.contains(range.commonAncestorContainer)){
-   range.deleteContents();range.insertNode(node);
-   const p=document.createElement('p');p.append(document.createElement('br'));node.after(p);
-   range.setStart(p,0);range.collapse(true);window.getSelection()?.removeAllRanges();window.getSelection()?.addRange(range);
-  }else ref.current?.append(node);
+  const element=range?.startContainer instanceof HTMLElement?range.startContainer:range?.startContainer.parentElement;
+  const block=element?.closest('p,h2,h3,blockquote,ul,ol,table,figure');
+  if(block&&ref.current?.contains(block)){block.after(node)}
+  else ref.current?.append(node);
+  const p=document.createElement('p');p.append(document.createElement('br'));node.after(p);
+  const caret=document.createRange();caret.setStart(p,0);caret.collapse(true);
+  const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(caret);
+  lastCaret.current=caret.cloneRange();
  };
  const previewFile=(file:File)=>{
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024){setNote('JPG/PNG/WebP 8MB 이하만 지원해.');return}
@@ -184,7 +188,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  const resizeImage=()=>{
   const selected=lastCaret.current?.startContainer;
   const figure=(selected instanceof HTMLElement?selected:selected?.parentElement)?.closest('figure') as HTMLElement|null;
-  const target=figure&&ref.current?.contains(figure)?figure:ref.current?.querySelector('figure:last-of-type') as HTMLElement|null;
+  const target=selectedFigure.current&&ref.current?.contains(selectedFigure.current)?selectedFigure.current:figure&&ref.current?.contains(figure)?figure:null;
   if(target){target.dataset.width=String(imageSize);target.style.width=imageSize+'%';sync();}
   else setNote('크기를 변경할 이미지를 클릭해 주세요.');
  };
@@ -239,7 +243,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    </select>
   </div>
   {note&&<p className={styles.editorNotice} role="status">{note}</p>}
-  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onKeyUp={rememberCaret} onMouseUp={rememberCaret} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
+  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onKeyUp={rememberCaret} onMouseUp={rememberCaret} onClick={e=>{const node=e.target as HTMLElement;const figure=node.closest('figure');if(figure&&ref.current?.contains(figure)){selectedFigure.current=figure as HTMLElement;setImageSize(Number(figure.getAttribute('data-width'))||100)}}} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
   <p className={styles.editorHint}>포스팅 제목은 위쪽 별도 입력칸에서 작성해. 글자를 선택한 뒤 위 도구를 누르면 서식이 적용돼. 사진은 업로드·권리 승인 후 원하는 커서 위치에 삽입해.</p>
  </div>;
 }
