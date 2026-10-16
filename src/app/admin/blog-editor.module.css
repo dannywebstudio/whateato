@@ -241,3 +241,17 @@
 .libraryPhotoDelete:disabled{opacity:.3;cursor:not-allowed}
 @media(hover:none){.libraryPhotoDelete{opacity:1}}
 @media(max-width:1050px){.sidebar{max-height:none;overflow:visible}}
+
+/* Editorial toolbar: separate typography, paragraph, table and image controls. */
+.unifiedToolbar{display:grid;grid-template-columns:1fr;gap:8px;position:sticky;top:0;z-index:4;max-height:55vh;overflow-y:auto}
+.toolGroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;border:1px solid #dfe9e2;border-radius:9px;padding:8px}
+.toolGroup>strong{min-width:74px;font-size:11px;color:#216344;border-right:1px solid #e0eae2;padding-right:10px;margin-right:3px}
+.toolGroup button,.toolGroup select{border:1px solid #d5e1d8;background:#fff;color:#264a35;border-radius:7px;padding:7px 9px;min-height:32px;font-size:11px;font-weight:650;cursor:pointer}
+.toolGroup label{display:flex!important;flex-direction:row!important;align-items:center;gap:5px!important;font-size:11px!important}
+.toolGroup label select{width:auto;max-width:140px}
+.toolGroup input[type=color]{width:28px;height:27px;padding:2px;border:1px solid #d5e1d8;border-radius:5px;cursor:pointer}
+.toolGroup button:disabled{opacity:.35;cursor:not-allowed}
+.unifiedCanvas table{table-layout:fixed;width:max-content;max-width:100%;overflow:visible}
+.unifiedCanvas td{min-width:45px;min-height:25px;position:relative}
+.unifiedCanvas table:focus-within{outline:2px solid #c5e8d0;outline-offset:3px}
+@media(max-width:620px){.unifiedToolbar{position:static;max-height:none}.toolGroup>strong{width:100%;border:0}}
