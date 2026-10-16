@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useState,type ChangeEvent} from 'react';
 import styles from './admin.module.css';
 import BlogEditor from './BlogEditor';
+import StorageProbe from './StorageProbe';
 import ReviewPanel from './ReviewPanel';
 import BatchPanel from './BatchPanel';
 import RestaurantPanel from './RestaurantPanel';
@@ -347,6 +348,7 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
      ).map(([key,label])=><button key={key} aria-selected={tab===key} onClick={()=>{setTab(key as Tab);setNotice('')}}>{label}</button>)}
    </nav>
    {notice&&<div className={styles.status} role="status">{notice}</div>}
+   {tab==='blog'&&owner&&<StorageProbe/>}
    {tab==='blog'&&edit&&<BlogEditor owner={owner} initialSlug={initialBlogSlug}/>}
    {tab==='restaurants'&&edit&&<RestaurantPanel owner={owner} busy={busy} q={q} matches={matches} selected={selected} cursor={cursor} creating={creating} newVenue={newVenue} publicEvidence={publicEvidence} locale={locale} displayName={displayName} intro={intro} full={full} source={source} menus={menus} chosenTags={chosenTags} tagEvidence={tagEvidence} days={days} hoursEvidence={hoursEvidence} address={address} addressProof={addressProof} publishNew={publishNew} photoRole={photoRole} image={image} rights={rights} imageEvidence={imageEvidence} rightsEvidence={rightsEvidence} imagePosition={imagePosition} imageResult={imageResult} batchTitle={batchTitle} edit={edit} setQ={setQ} setCreating={setCreating} setNewVenue={setNewVenue} setPublicEvidence={setPublicEvidence} setLocale={setLocale} setDisplayName={setDisplayName} setIntro={setIntro} setFull={setFull} setSource={setSource} setMenus={setMenus} setChosenTags={setChosenTags} setTagEvidence={setTagEvidence} setDays={setDays} setHoursEvidence={setHoursEvidence} setAddress={setAddress} setAddressProof={setAddressProof} setPublishNew={setPublishNew} setPhotoRole={setPhotoRole} setImage={setImage} setRights={setRights} setImageEvidence={setImageEvidence} setRightsEvidence={setRightsEvidence} setImagePosition={setImagePosition} setBusy={setBusy} setBatchTitle={setBatchTitle} search={search} select={select} createRestaurant={createRestaurant} changePublicApproval={changePublicApproval} save={save} stageVisibility={stageVisibility} inform={inform} uploadPhoto={uploadPhoto}/>}
    {tab==='batches'&&edit&&<BatchPanel owner={owner} busy={busy} batches={batches} batchId={batchId} setBatchId={setBatchId} currentBatch={currentBatch} batchTitle={batchTitle} setBatchTitle={setBatchTitle} bulkFile={bulkFile} setBulkFile={setBulkFile} setNotice={setNotice} loadBatches={loadBatches} loadBatch={loadBatch} batchAction={batchAction} importFile={importFile} setBusy={setBusy} inform={inform}/>}
