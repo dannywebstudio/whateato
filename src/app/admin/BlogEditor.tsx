@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState,type ChangeEvent,type DragEvent} from 'react';
 import {BLOG_LOCALES,BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS,blogLocaleReadiness,publishableBlog,parseBlogDraft,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
 import BlogCategoryManager from './BlogCategoryManager';
+import UnifiedBlogEditor from './UnifiedBlogEditor';
 import {BlogBody} from '@/components/BlogBody';
 import styles from './blog-editor.module.css';
 
@@ -282,8 +283,6 @@ export default function BlogEditor({owner}:{owner:boolean}){
        {readiness.find(item=>item.locale===l)?.ready?' ✓':''}</button>)}
      </div>
      <div className={styles.details}>
-      <label>제목 <input value={translation.title} maxLength={140}
-        onChange={e=>updateTranslation({title:e.target.value})} placeholder="Human-focused editorial title"/></label>
       <label>짧은 소개 (글 목록·검색에 표시) <textarea value={translation.excerpt}
         maxLength={320} rows={3} onChange={e=>updateTranslation({excerpt:e.target.value})}/></label>
       <div className={styles.twoCols}>
@@ -328,77 +327,14 @@ export default function BlogEditor({owner}:{owner:boolean}){
           {restaurantMatches.find(r=>r.id===id)?.name_ko||id} ×</button>)}</div>
       </div>
      </div>
-     <div className={styles.blockArea}>
-      <div className={styles.editorSubhead}><div><h4>본문 편집기</h4>
-       <p>블록 추가 · 드래그 정렬 · 모바일에서 ↑↓ 이동 · 간단한 강조 문법과 표 지원</p></div>
-       <button className={styles.smallButton} onClick={()=>setPreview(x=>!x)}>{preview?'편집 화면':'미리보기'}</button>
-      </div>
-      {preview?<BlogBody blocks={translation.blocks} preview/>:<>
-       <div className={styles.toolbar}>
-        {(['paragraph','heading','list','quote','table','image','divider'] as const).map(type=>
-         <button key={type} onClick={()=>addBlock(type)}>+ {type==='paragraph'?'문단':
-           type==='heading'?'제목':type==='list'?'목록':type==='quote'?'인용':
-           type==='table'?'표':type==='image'?'사진':'구분선'}</button>)}
-        <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('bold')}>**굵게**</button>
-        <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('italic')}>*기울임*</button>
-        <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('link')}>링크</button>
-        {['🍜','🥢','🥘','☕','🍽️','📍','⭐','✨'].map(emoji=>
-         <button key={emoji} title="아래 새 문단에 추가" onClick={()=>setBlocks([
-           ...translation.blocks,{...newBlock('paragraph'),text:emoji+' '}])}>{emoji}</button>)}
-       </div>
-       {translation.blocks.map((block,index)=><article key={block.id}
-         draggable onDragStart={()=>setDragged(block.id)}
-         onDragOver={e=>e.preventDefault()} onDrop={e=>onDrop(block.id,e)}
-         onDragEnd={()=>setDragged(null)} className={styles.blockCard}>
-         <div className={styles.blockHeader}><strong>⠿ {index+1}. {block.type}</strong>
-          <div className={styles.actions}>
-           <button title="위로" disabled={index===0} onClick={()=>shift(block.id,index-1)}>↑</button>
-           <button title="아래로" disabled={index===translation.blocks.length-1}
-             onClick={()=>shift(block.id,index+1)}>↓</button>
-           <button title="블록 복제" onClick={()=>setBlocks([...translation.blocks.slice(0,index+1),
-             {...block,id:crypto.randomUUID()},...translation.blocks.slice(index+1)])}>복제</button>
-           <button title="삭제" onClick={()=>setBlocks(translation.blocks.filter(b=>b.id!==block.id))}>삭제</button>
-          </div>
-         </div>
-         {(block.type==='paragraph'||block.type==='heading'||block.type==='quote')&&<>
-          {block.type==='heading'&&<select value={block.level||2}
-            onChange={e=>changeBlock(block.id,{level:Number(e.target.value) as 2|3})}>
-             <option value="2">H2 섹션 제목</option><option value="3">H3 소제목</option></select>}
-          <textarea data-blog-block-id={block.id} rows={block.type==='paragraph'?5:2}
-           value={block.text||''} placeholder="사실과 검증된 정보만 입력해."
-           onChange={e=>changeBlock(block.id,{text:e.target.value})}/>
-         </>}
-         {block.type==='list'&&<textarea rows={5} value={(block.items||[]).join('\n')}
-          placeholder="항목 하나당 한 줄"
-          onChange={e=>changeBlock(block.id,{items:e.target.value.split('\n').slice(0,30)})}/>}
-         {block.type==='table'&&<div className={styles.tableEditor}>
-          {(block.rows||[]).map((row,r)=><div className={styles.tableRow} key={r}>
-           {row.map((cell,col)=><input key={col} value={cell} aria-label={r+'행 '+col+'열'}
-            onChange={e=>changeBlock(block.id,{rows:(block.rows||[]).map((v,i)=>i===r?
-              v.map((x,j)=>j===col?e.target.value:x):v)})}/>)}
-          </div>)}
-          <button onClick={()=>changeBlock(block.id,{rows:[...(block.rows||[]),
-           new Array(block.rows?.[0]?.length||2).fill('')]})}>+ 행 추가</button>
-          <button onClick={()=>changeBlock(block.id,{rows:(block.rows||[]).map(r=>[...r,''])})}>+ 열 추가</button>
-          <button onClick={()=>changeBlock(block.id,{rows:(block.rows||[]).slice(0,-1)})}>− 마지막 행</button>
-         </div>}
-         {block.type==='image'&&<>
-          <label>승인된 사진 선택
-           <select value={block.image_id||''} onChange={e=>changeBlock(block.id,{image_id:e.target.value})}>
-            <option value="">본문에 넣을 사진 선택</option>
-            {current.images.filter(m=>m.rights_status==='approved').map(m=>
-             <option key={m.id} value={m.id}>{m.alt_text} ({m.media_role})</option>)}
-           </select></label>
-          <input placeholder="이미지 캡션" maxLength={250} value={block.caption||''}
-           onChange={e=>changeBlock(block.id,{caption:e.target.value})}/>
-          {block.image_id&&<img src={'/api/v1/owner/blog/images/'+block.image_id}
-            alt={block.caption||'블로그 사진'} loading="lazy" className={styles.thumbnail}/>}
-         </>}
-         {block.type==='divider'&&<hr/>}
-       </article>)}
-       {!translation.blocks.length&&<p className={styles.blank}>상단에서 + 문단 또는 + 제목을 눌러 본문을 작성해.</p>}
-      </>}
-     </div>
+     <section className={styles.blockArea}>
+      <div className={styles.editorSubhead}><h4>통합 글쓰기</h4><button className={styles.smallButton} onClick={()=>setPreview(x=>!x)}>{preview?'편집 화면':'미리보기'}</button></div>
+      {preview?<BlogBody blocks={translation.blocks} preview/>:
+       <UnifiedBlogEditor key={current.id+locale} articleId={current.id} locale={locale}
+        translation={translation} images={current.images}
+        onChange={patch=>updateTranslation(patch)}
+        onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');setMessage('본문용 사진을 선택했어. 아래에서 출처와 사용권을 확인하고 업로드해.')}}/>}
+     </section>
      <section className={styles.mediaPanel}>
       <h4>블로그 사진 관리</h4>
       <div className={styles.photoDrop}
