@@ -94,8 +94,9 @@ export async function POST(req:NextRequest,{params}:Ctx){
       }
     }
     // The first image in the article becomes its card cover, regardless of upload role.
-    const imageBlocks=draft.translations.en?.blocks||draft.translations.ko?.blocks||[];
-    const firstImage=imageBlocks.find(block=>block.type==='image'&&block.image_id)?.image_id||null;
+    const firstImage=(['en','ko','ja','zh-CN'] as const)
+      .flatMap(locale=>draft.translations[locale]?.blocks||[])
+      .find(block=>block.type==='image'&&block.image_id)?.image_id||null;
     const cover=await client.query<{id:string}>(`
       SELECT id::text FROM whateato_blog_media
       WHERE post_id=$1 AND rights_status='approved'
