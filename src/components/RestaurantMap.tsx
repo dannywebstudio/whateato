@@ -13,7 +13,7 @@ import type {Map as MapLibreMap,GeoJSONSource,MapLayerMouseEvent} from 'maplibre
 // Attribution is mandatory. Outages fall back to a genuine DB-powered directory.
 type Place={
   id:string;name:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;latitude:number;longitude:number;
-  editorial_score:number|null;visitor_score:number|null;featured_image_url:string|null;category_code:string|null;opening_hours:{state:'open'|'closed'|'preparing'|'unknown';today_hours:string|null}|null;region_sigungu:string|null;tags:{code:string;label:string}[];
+  card_accent_color:string|null;editorial_score:number|null;visitor_score:number|null;featured_image_url:string|null;category_code:string|null;opening_hours:{state:'open'|'closed'|'preparing'|'unknown';today_hours:string|null}|null;region_sigungu:string|null;tags:{code:string;label:string}[];
 };
 type Response={items:Place[];has_more:boolean;location_note:string};
 type Feature={
@@ -84,7 +84,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
     if(!source||!seed.length)return;
     source.setData({type:'FeatureCollection',features:seed.map(x=>({
       type:'Feature',geometry:{type:'Point',coordinates:[x.longitude,x.latitude]},
-      properties:{id:x.id,name:x.name,pinColor:cuisineColor(x.category_code),openingState:x.opening_hours?.state||'unknown'}
+      properties:{id:x.id,name:x.name,pinColor:x.card_accent_color||cuisineColor(x.category_code),openingState:x.opening_hours?.state||'unknown'}
     }))});
   },[]);
   useEffect(()=>{setPage(0);setSelected(null)},[q,filter,locale,focusId]);
@@ -422,7 +422,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
       {focusId&&focusStatus==='loading'&&<p className="hint" role="status">{ui.loading}</p>}
       {resultsReady&&visibleItems.length===0&&<p className="hint">{focusId&&focusStatus==='error'?ui.error:directoryError?ui.error:ui.empty}</p>}
       <div className="map-explore-cards">
-        {visibleItems.slice(safePage*pageSize,(safePage+1)*pageSize).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} category={x.category_code} status={x.opening_hours?.state||"unknown"} hours={x.opening_hours?.today_hours} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={null} editorialRating={x.editorial_score} visitorRating={x.visitor_score} restaurantId={x.id} imageUrl={x.featured_image_url} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}
+        {visibleItems.slice(safePage*pageSize,(safePage+1)*pageSize).map(x=><RestaurantExperienceCard key={x.id} variant="map" name={x.name} category={x.category_code} accentColor={x.card_accent_color} status={x.opening_hours?.state||"unknown"} hours={x.opening_hours?.today_hours} address={x.address||x.address_ko||x.region_sigungu} description={x.short_description} menu={x.main_menu} href={'/restaurant/'+x.id+'?'+params.toString()} locale={locale} rating={null} editorialRating={x.editorial_score} visitorRating={x.visitor_score} restaurantId={x.id} imageUrl={x.featured_image_url} tags={x.tags.map(t=>t.label)} mapButtonLabel={locale==='ko'?x.name+' 지도에서 위치 보기':undefined} onMapClick={()=>selectOnMap(x)}/> )}
       </div>
       <p className="map-explore-notice">{ui.license}</p>
     </section>
