@@ -9,6 +9,7 @@ import RestaurantPanel from './RestaurantPanel';
 import type {Role,Tab,Place,Detail,Batch,Review,Day,Menu,Item} from './modules/types';
 import {weekdays,emptyDays,tags,locales,timeToMin,minToTime,blankMenu} from './modules/restaurants';
 import {json,post} from './modules/client';
+import {ownerApi} from './modules/owner-api';
 import {parseBatchLines} from './modules/batches';
 import {MAX_CMS_IMAGE_BYTES,mediaRoleLabel} from './modules/media';
 
@@ -52,15 +53,14 @@ export default function AdminConsole({role}:{role:Role}){
  const inform=(e:unknown)=>setNotice(e instanceof Error?e.message:String(e));
  const search=useCallback(async(after?:string)=>{
    try{
-    const p=new URLSearchParams({q});if(after)p.set('after',after);
-    const result=await json('/api/v1/owner/catalog?'+p);
+    const result=await ownerApi.searchRestaurants(q,after);
     setMatches(prev=>after?[...prev,...result.items]:result.items);
     setCursor(result.next_cursor);
    }catch(e){inform(e)}
  },[q]);
  const select=async(id:string)=>{
    setBusy(true);try{
-    const data:Detail=await json('/api/v1/owner/catalog/'+id);
+    const data:Detail=await ownerApi.getRestaurant(id);
     setSelected(data);setImageResult('');setPublishNew(false);
     setPublicEvidence(data.restaurant.cms_source_url||'');
     setAddress({road_address_ko:data.restaurant.road_address_ko||'',
@@ -99,7 +99,7 @@ export default function AdminConsole({role}:{role:Role}){
  useEffect(()=>{if(edit)void search()},[edit,search]);
  useEffect(()=>{
    if(!edit)return;
-   void json('/api/v1/owner/readiness').then(setReadiness).catch(()=>setReadiness(null));
+   void ownerApi.readiness().then(setReadiness).catch(()=>setReadiness(null));
  },[edit]);
  useEffect(()=>{
    const id=new URLSearchParams(window.location.search).get('restaurant');
@@ -119,9 +119,9 @@ export default function AdminConsole({role}:{role:Role}){
      description:x.description||'',evidence:'',featured:i===0
    })):[blankMenu()]);
  },[locale,selected]);
- const loadBatches=async()=>{try{const r=await json('/api/v1/owner/bulk/batches?limit=30');setBatches(r.items)}catch(e){inform(e)}};
- const loadBatch=async(id:string)=>{try{const r=await json('/api/v1/owner/bulk/batches/'+id);setCurrentBatch(r);setBatchId(id)}catch(e){inform(e)}};
- const loadReviews=async()=>{try{const r=await json('/api/v1/owner/reviews?limit=50&status='+reviewStatus);setReviews(r.items)}catch(e){inform(e)}};
+ const loadBatches=async()=>{try{const r=await ownerApi.listBatches();setBatches(r.items)}catch(e){inform(e)}};
+ const loadBatch=async(id:string)=>{try{const r=await ownerApi.getBatch(id);setCurrentBatch(r);setBatchId(id)}catch(e){inform(e)}};
+ const loadReviews=async()=>{try{const r=await ownerApi.listReviews(reviewStatus);setReviews(r.items)}catch(e){inform(e)}};
  useEffect(()=>{if(tab==='batches'&&edit)void loadBatches();if(tab==='reviews'&&moderate)void loadReviews()},[tab,edit,moderate,reviewStatus]);
  const makeBatch=async(items:Item[],title:string)=>{
    if(!items.length)throw Error('등록할 항목이 없어.');
@@ -306,7 +306,7 @@ export default function AdminConsole({role}:{role:Role}){
    for(let i=0;i<rows.length;i+=50)await post('/api/v1/owner/bulk/batches/'+batchId+'/items',{items:rows.slice(i,i+50)});
    setImported(rows.length);setNotice(rows.length+'건의 데이터를 초안에 추가했어. 승인 전 검수해.');await loadBatch(batchId);
  };
- const loadBatchSafe=(id:string)=>json('/api/v1/owner/bulk/batches/'+id);
+ const loadBatchSafe=(id:string)=>ownerApi.getBatch(id);
  const uploadPhoto=async()=>{
    if(!selected||!image)throw Error('식당과 사진을 선택해.');
    if(!rights)throw Error('사진 사용 권한을 확인해.');
@@ -333,7 +333,7 @@ export default function AdminConsole({role}:{role:Role}){
    {readiness&&<section className={styles.panel} aria-label="관리자 환경 연결 상태">
      <div className={styles.row}>
        <div><strong>관리자 시스템 연결</strong><p className={styles.note}>비밀키 값은 표시하지 않아.</p></div>
-       <button className={styles.button+' '+styles.secondary} onClick={()=>void json('/api/v1/owner/readiness').then(setReadiness).catch(inform)}>다시 확인</button>
+       <button className={styles.button+' '+styles.secondary} onClick={()=>void ownerApi.readiness().then(setReadiness).catch(inform)}>다시 확인</button>
      </div>
      <div className={styles.chips}>
        {([['Neon DB',readiness.database_schema],['Google',readiness.google_session],
