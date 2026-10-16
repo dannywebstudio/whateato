@@ -98,7 +98,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
   const session=authReady()?await auth():null;
   const staff=await currentStaff();
   const [reviews,summary,external]=await Promise.all([
-    getPublicReviews(id),getOwnReviewSummary(id),getLicensedReviewInsights(id)
+    getPublicReviews(id,locale),getOwnReviewSummary(id),getLicensedReviewInsights(id)
   ]);
   return <main className="content restaurant-detail-page">
     <AnalyticsBeacon eventType="detail_view" pageType="restaurant" restaurantId={id}/>
