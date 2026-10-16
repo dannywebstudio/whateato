@@ -142,12 +142,12 @@ export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,cr
              onChange={e=>setAddressProof(e.target.value)} placeholder="https://..."/></label>
          <h3>다국어 소개</h3>
          <div className={styles.panel}>
-           <strong>4개 언어 소개 JSON 업로드</strong>
-           <p className={styles.note}>신규 등록한 식당 또는 기존 식당을 선택한 뒤 JSON을 올리면 한국어·영어·일본어·중국어 소개가 한 번에 검수 대기 배치로 등록돼. 자동 공개하지 않아.</p>
+           <strong>4개 언어 상호명·주소·소개 JSON 업로드</strong>
+           <p className={styles.note}>신규 등록한 식당 또는 기존 식당을 선택한 뒤 JSON을 올리면 한국어·영어·일본어·중국어 상호명·소개는 검수 배치로 등록하고, 별도로 검증한 표시 주소는 Owner 승인 확인 후 적용해. 실제 한국 주소·좌표는 변경하지 않아.</p>
            <label className={styles.field}>JSON 파일 선택
              <input type="file" accept=".json,application/json" disabled={busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void importRestaurantLocaleJson(file).catch(inform)}}/>
            </label>
-           <details><summary style={{cursor:'pointer'}}>JSON 구조 예시</summary><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',fontSize:11}}>{JSON.stringify({ko:{display_name:'식당 이름',short_description:'한국어 짧은 소개를 15자 이상 입력하세요.',full_description:'자세한 소개',source_notes:'직접 검증한 정보 출처'},en:{display_name:'Restaurant name',short_description:'A concise English introduction for travelers.',full_description:'More details',source_notes:'Verified source'},ja:{display_name:'店舗名',short_description:'旅行者向けのお店の紹介文を入力します。',full_description:'詳しい紹介',source_notes:'確認済みの出典'},'zh-CN':{display_name:'餐厅名称',short_description:'为游客撰写的餐厅介绍信息，内容准确清晰。',full_description:'详细介绍',source_notes:'已核实来源'}},null,2)}</pre></details>
+           <details><summary style={{cursor:'pointer'}}>JSON 구조 예시</summary><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',fontSize:11}}>{JSON.stringify({ko:{display_name:'식당 이름',address:'서울특별시 중구 명동 00길 12',short_description:'한국어 짧은 소개를 15자 이상 입력하세요.',full_description:'자세한 소개',source_notes:'직접 검증한 정보 출처'},en:{display_name:'Restaurant name',address:'12 Myeongdong Street, Jung-gu, Seoul',short_description:'A concise English introduction for travelers.',full_description:'More details',source_notes:'Verified source'},ja:{display_name:'店舗名',address:'ソウル特別市 中区 明洞 00ギル 12',short_description:'旅行者向けのお店の紹介文を入力します。',full_description:'詳しい紹介',source_notes:'確認済みの出典'},'zh-CN':{display_name:'餐厅名称',address:'首尔特别市 中区 明洞00街12号',short_description:'为游客撰写的餐厅介绍信息，内容准确清晰。',full_description:'详细介绍',source_notes:'已核实来源'}},null,2)}</pre></details>
          </div>
          <div className={styles.grid}>
            <label className={styles.field}>작성 언어

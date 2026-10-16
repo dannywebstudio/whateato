@@ -34,7 +34,7 @@ export type RestaurantMenu={
 export type RestaurantDetailResponse={
   locale:Locale;restaurant:RestaurantDetailInfo;menus:RestaurantMenu[];
   tags:CatalogTag[];images:FeaturedImageMetadata[];
-  image_note:string;rating_note:string;
+  image_note:string;rating_note:string;localized_names:Partial<Record<'ko'|'en'|'ja'|'zh-CN',string>>;
 };
 export class CatalogDatabaseUnavailable extends Error {
   constructor(){super('database_not_configured')}
@@ -228,8 +228,10 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
         AND cms_photo_role='gallery'
       ORDER BY position,id LIMIT 25`,[id])
   ]);
-  const [opening,ratings]=await Promise.all([getOpeningHours(pool,[id]),loadRatingDisplays(pool,[id])]);
+  const [opening,ratings,names]=await Promise.all([getOpeningHours(pool,[id]),loadRatingDisplays(pool,[id]),
+    pool.query<{locale:'ko'|'en'|'ja'|'zh-CN';display_name:string}>(`SELECT locale,display_name FROM restaurant_localizations WHERE restaurant_id=$1 AND publication_state='published' AND locale IN ('ko','en','ja','zh-CN')`,[id])]);
   return {locale,restaurant:{...row.rows[0],opening_hours:opening[id]||null,ratings:ratings[id]||{external:null,whateato:null}},menus:menus.rows,tags:tags.rows,images:images.rows,
+    localized_names:{ko:row.rows[0].name_ko,...Object.fromEntries(names.rows.map(n=>[n.locale,n.display_name]))},
     image_note:'Licensed media delivered via internal route only when server-owned media storage is configured.',
     rating_note:'Independent editorial score is not a Google/Naver or user-review average.'};
 }
