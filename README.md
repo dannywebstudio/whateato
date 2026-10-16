@@ -1,22 +1,33 @@
 # WhatEatO
 
-Independent Korea restaurant search platform. **Hostinger Business + GitHub** preview deployment.
+WhatEatO is a multilingual restaurant discovery and review website focused on Korea. The production website runs on **Hostinger**, with source code managed in this GitHub repository.
 
-This is a deployable first-stage **frontend preview**, not a live nationwide restaurant database. Search is deliberately empty until the independent PostgreSQL/PostGIS database is configured and populated. Blog CMS and actual map provider follow in later phases.
+## Stack
+- Next.js 15, React 19, Node.js 22+
+- PostgreSQL, Auth.js (Google sign-in)
+- MapLibre GL, image storage integration
 
-## Local testing
-Node.js 22:
+## Current application
+- Restaurant search, map, restaurant pages and editorial/blog content
+- Four supported site languages: Korean (`ko`), English (`en`), Japanese (`ja`), Simplified Chinese (`zh-CN`)
+- Account and review management: `/login`, `/my-page`, `/account`
+- Role-restricted owner CMS: `/admin`
+
+## Development
 ```sh
-npm install
+npm install --no-audit --no-fund
+npm run typecheck
 npm run build
+npm run test:mapworker
 npm run dev
 ```
-Open http://localhost:3000.
 
-## Hostinger Business
-In hPanel → Websites → Add Website → Node.js Web App → Import Git Repository, choose `dannywebstudio/whateato`, branch `main`, Node 22, Next.js.
-Configure `NEXT_PUBLIC_LAUNCH_READY=false`; keep `DATABASE_URL` unset initially. Test `/api/health` and `/api/ready` (503 is expected before DB provisioning).
+Use Node.js version >=22 and <25. Environment-specific credentials and services are required for some authenticated, database and storage workflows.
 
-Do not commit `.env`, passwords, keys, raw licensed datasets, or personal visitor data.
+## Deployment safety
+Production hosting is **Hostinger**, not Render. The repository default branch is `main`, but recent integration changes have been made on `feature/i18n-analytics-backend-v1`. **Verify the Hostinger hPanel-connected branch and redeploy status before assuming a push or merge updates production.** A successful GitHub CI run alone does not prove live rollout.
 
-**No other project code or data is used.**
+Never commit secrets, `.env` files, licensed raw datasets or private user data. Do not modify production database state during source cleanup.
+
+## CMS refactor baseline
+See [CMS refactor baseline (2026-10-16)](docs/CMS_REFACTOR_BASELINE_2026-10-16.md) for verified components, safety constraints, and the staged cleanup backlog.
