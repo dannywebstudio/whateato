@@ -22,5 +22,5 @@ export default function InlineBlogRestaurantCard({id,locale='ko'}:{id:string;loc
   mapHref={'/map?restaurant='+encodeURIComponent(id)}
   locale={locale} category={r.category_code} accentColor={r.card_accent_color}
   editorialRating={r.editorial_score} restaurantId={id}
-  tags={detail.tags.map(t=>t.name)} imageUrl={detail.images[0]?.image_url||null}/>;
+  tags={detail.tags.map(t=>t.label)} imageUrl={detail.images[0]?.url||null}/>;
 }
