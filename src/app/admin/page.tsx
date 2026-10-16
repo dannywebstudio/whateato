@@ -5,7 +5,9 @@ import AdminConsole from './AdminConsole';
 import styles from './admin.module.css';
 export const dynamic='force-dynamic';
 export const metadata={title:'WhatEatO CMS',robots:{index:false,follow:false}};
-export default async function AdminPage(){
+export default async function AdminPage({searchParams}:{searchParams:Promise<{tab?:string;editBlog?:string}>}){
+ const params=await searchParams;
+ const editSlug=typeof params.editBlog==='string'&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(params.editBlog)?params.editBlog:'';
  const staff=await currentStaff();
  return <main className={styles.wrap}>
    {!staff?<section className={styles.locked}>
@@ -19,6 +21,6 @@ export default async function AdminPage(){
       </form>:
       <p>Google OAuth가 아직 연결되지 않았어. 아래 계정 페이지에서 일반 로그인 상태를 확인할 수 있어.</p>}
      <Link href="/account">계정 상태 확인 ↗</Link>
-   </section>:<AdminConsole role={staff.role}/>}
+   </section>:<AdminConsole role={staff.role} initialBlogSlug={editSlug} initialTab={params.tab==='blog'?'blog':undefined}/>}
  </main>;
 }
