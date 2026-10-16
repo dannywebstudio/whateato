@@ -14,8 +14,8 @@ import {useCmsQueues} from './modules/use-cms-queues';
 import {parseBatchLines} from './modules/batches';
 import {MAX_CMS_IMAGE_BYTES,mediaRoleLabel} from './modules/media';
 
-export default function AdminConsole({role}:{role:Role}){
- const [tab,setTab]=useState<Tab>(role==='moderator'?'reviews':'restaurants');
+export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:Role;initialBlogSlug?:string;initialTab?:Tab}){
+ const [tab,setTab]=useState<Tab>(initialTab&&role!=='moderator'?initialTab:role==='moderator'?'reviews':'restaurants');
  const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);
  const [readiness,setReadiness]=useState<Record<string,string|boolean>|null>(null);
  const [q,setQ]=useState('');const [matches,setMatches]=useState<Place[]>([]);
@@ -347,7 +347,7 @@ export default function AdminConsole({role}:{role:Role}){
      ).map(([key,label])=><button key={key} aria-selected={tab===key} onClick={()=>{setTab(key as Tab);setNotice('')}}>{label}</button>)}
    </nav>
    {notice&&<div className={styles.status} role="status">{notice}</div>}
-   {tab==='blog'&&edit&&<BlogEditor owner={owner}/>}
+   {tab==='blog'&&edit&&<BlogEditor owner={owner} initialSlug={initialBlogSlug}/>}
    {tab==='restaurants'&&edit&&<RestaurantPanel owner={owner} busy={busy} q={q} matches={matches} selected={selected} cursor={cursor} creating={creating} newVenue={newVenue} publicEvidence={publicEvidence} locale={locale} displayName={displayName} intro={intro} full={full} source={source} menus={menus} chosenTags={chosenTags} tagEvidence={tagEvidence} days={days} hoursEvidence={hoursEvidence} address={address} addressProof={addressProof} publishNew={publishNew} photoRole={photoRole} image={image} rights={rights} imageEvidence={imageEvidence} rightsEvidence={rightsEvidence} imagePosition={imagePosition} imageResult={imageResult} batchTitle={batchTitle} edit={edit} setQ={setQ} setCreating={setCreating} setNewVenue={setNewVenue} setPublicEvidence={setPublicEvidence} setLocale={setLocale} setDisplayName={setDisplayName} setIntro={setIntro} setFull={setFull} setSource={setSource} setMenus={setMenus} setChosenTags={setChosenTags} setTagEvidence={setTagEvidence} setDays={setDays} setHoursEvidence={setHoursEvidence} setAddress={setAddress} setAddressProof={setAddressProof} setPublishNew={setPublishNew} setPhotoRole={setPhotoRole} setImage={setImage} setRights={setRights} setImageEvidence={setImageEvidence} setRightsEvidence={setRightsEvidence} setImagePosition={setImagePosition} setBusy={setBusy} setBatchTitle={setBatchTitle} search={search} select={select} createRestaurant={createRestaurant} changePublicApproval={changePublicApproval} save={save} stageVisibility={stageVisibility} inform={inform} uploadPhoto={uploadPhoto}/>}
    {tab==='batches'&&edit&&<BatchPanel owner={owner} busy={busy} batches={batches} batchId={batchId} setBatchId={setBatchId} currentBatch={currentBatch} batchTitle={batchTitle} setBatchTitle={setBatchTitle} bulkFile={bulkFile} setBulkFile={setBulkFile} setNotice={setNotice} loadBatches={loadBatches} loadBatch={loadBatch} batchAction={batchAction} importFile={importFile} setBusy={setBusy} inform={inform}/>}
    {tab==='reviews'&&moderate&&<ReviewPanel owner={owner} reviews={reviews} reviewStatus={reviewStatus} setReviewStatus={setReviewStatus} reason={reason} setReason={setReason} photosInspected={photosInspected} setPhotosInspected={setPhotosInspected} deletingReviewId={deletingReviewId} loadReviews={loadReviews} reviewAction={reviewAction} deleteReview={deleteReview}/>} 
