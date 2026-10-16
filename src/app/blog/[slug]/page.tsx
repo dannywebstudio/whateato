@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import {seoPublicEnabled} from '@/lib/public-seo';
+import {currentStaff,hasPermission} from '@/lib/owner-cms-auth';
 import {notFound} from 'next/navigation';
 import type {Metadata} from 'next';
 import {findPublishedBlog,relatedBlogRestaurants} from '@/lib/blog-public';
@@ -40,8 +41,8 @@ export default async function BlogStory({params,searchParams}:Ctx){
  const published=await findPublishedBlog(slug,hl);
  if(!published)notFound();
  const t=published.draft.translations[published.locale]||published.draft.translations.en!;
- const [restaurants,categories]=await Promise.all([
-   relatedBlogRestaurants(published.draft,published.locale),getBlogCategories(true)
+ const [restaurants,categories,staff]=await Promise.all([
+   relatedBlogRestaurants(published.draft,published.locale),getBlogCategories(true),currentStaff()
  ]);
  const activeCategory=categories.find(c=>c.slug===published.draft.category);
  const parentCategory=categories.find(c=>c.slug===activeCategory?.parent_slug);
@@ -82,6 +83,7 @@ export default async function BlogStory({params,searchParams}:Ctx){
        {BLOG_LOCALE_LABELS[l]}
       </Link>)}
      </nav>
+     {staff&&hasPermission(staff,'edit')&&<Link href={'/admin?tab=blog&editBlog='+encodeURIComponent(slug)} className={styles.ownerEditButton} rel="nofollow">Edit</Link>}
    </header>
    {published.cover_image_id&&<figure className={styles.cover}>
      {/* eslint-disable-next-line @next/next/no-img-element */}
