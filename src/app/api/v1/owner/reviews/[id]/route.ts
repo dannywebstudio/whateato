@@ -88,3 +88,10 @@ export async function PATCH(request:NextRequest,{params}:Context){
       {status:503,headers:ownerHeaders});
   }
 }
+
+// Preserve the Owner-only irreversible deletion route alongside moderation decisions.
+export async function DELETE(request:NextRequest,{params}:Context){
+ const {id}=await params;
+ const {deleteReviewAsOwner}=await import('@/lib/admin-review-delete');
+ return deleteReviewAsOwner(request,id);
+}
