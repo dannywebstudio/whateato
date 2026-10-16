@@ -7,7 +7,20 @@ type ApprovedImage={id:string;alt_text:string;rights_status:string;image_url:str
 type Props={locale:string;articleId:string;translation:BlogTranslation;images:ApprovedImage[];onChange:(patch:Partial<BlogTranslation>)=>void;onChooseFile:(file:File)=>void};
 
 const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,char=>(({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' } as Record<string,string>)[char]||char));
-const textHtml=(value:string)=>escapeHtml(value).replace(/\n/g,'<br>');
+const textHtml=(value:string)=>escapeHtml(value).replace(/\[([^\]\n]{1,120})\]\((https:\/\/[^\s)&lt;&gt;]{5,500})\)/g,(_match,label,url)=>'<a href="'+url+'" target="_blank" rel="noopener noreferrer sponsored nofollow">'+label+'</a>').replace(/\n/g,'<br>');
+const inlineText=(node:Node):string=>{
+ if(node.nodeType===Node.TEXT_NODE)return node.textContent||'';
+ if(!(node instanceof HTMLElement))return '';
+ const content=Array.from(node.childNodes).map(inlineText).join('');
+ if(node.tagName==='A'){
+  const url=node.getAttribute('href')||'';
+  return /^https:\/\/[^\s)<>]{5,500}$/.test(url)?'['+content.replace(/[\[\]]/g,'')+']('+url+')':content;
+ }
+ if(node.tagName==='BR')return '\\n';
+ if(node.tagName==='STRONG'||node.tagName==='B')return '**'+content+'**';
+ if(node.tagName==='EM'||node.tagName==='I')return '*'+content+'*';
+ return content;
+};
 const render=(translation:BlogTranslation,images:ApprovedImage[])=>'<h1 data-title="true">'+textHtml(translation.title)+'</h1>'+
   translation.blocks.map(block=>{
    const value=textHtml(block.text||'');
@@ -33,13 +46,13 @@ function serialize(root:HTMLElement):{title:string;blocks:BlogBlock[]}{
  for(const node of nodes){
   const name=node.tagName.toLowerCase();
   if(name==='h1'&&node.hasAttribute('data-title'))continue;
-  if(name==='h2'||name==='h3')add('heading',{level:name==='h2'?2:3,text:(node.textContent||'').slice(0,8000)});
+  if(name==='h2'||name==='h3')add('heading',{level:name==='h2'?2:3,text:inlineText(node).slice(0,8000)});
   else if(name==='blockquote')add('quote',{text:(node.textContent||'').slice(0,8000)});
-  else if(name==='ul'||name==='ol')add('list',{items:Array.from(node.querySelectorAll(':scope > li')).map(li=>(li.textContent||'').slice(0,450)).slice(0,30)});
+  else if(name==='ul'||name==='ol')add('list',{items:Array.from(node.querySelectorAll(':scope > li')).map(li=>inlineText(li).slice(0,450)).slice(0,30)});
   else if(name==='figure')add('image',{image_id:node.getAttribute('data-image-id')||'',caption:(node.querySelector('figcaption')?.textContent||'').slice(0,250)});
   else if(name==='hr')add('divider');
   else if(name==='table'){
-   const rows=Array.from(node.querySelectorAll('tr')).slice(0,20).map(tr=>Array.from(tr.querySelectorAll('td,th')).slice(0,6).map(cell=>(cell.textContent||'').slice(0,240)));
+   const rows=Array.from(node.querySelectorAll('tr')).slice(0,20).map(tr=>Array.from(tr.querySelectorAll('td,th')).slice(0,6).map(cell=>inlineText(cell).slice(0,240)));
    if(rows.length&&rows.every(row=>row.length===rows[0].length&&row.length>=2))add('table',{rows});
   }else if(name!=='h1')add('paragraph',{text:(node.textContent||'').slice(0,8000)});
  }
@@ -85,6 +98,26 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   else document.execCommand('formatBlock',false,tag);
   sync();
  };
+ const insertLink=()=>{
+  const range=lastCaret.current;
+  if(!range||range.collapsed||!ref.current?.contains(range.commonAncestorContainer)){
+   setNote('링크를 걸 글자를 드래그해 선택해 주세요.');return;
+  }
+  const raw=window.prompt('제휴마케팅 또는 외부 링크 URL (https://)');
+  if(raw===null)return;
+  const url=raw.trim();
+  if(!/^https:\/\/[^\s)<>]{5,500}$/.test(url)){
+   setNote('https:// 로 시작하는 올바른 링크를 입력해 주세요.');return;
+  }
+  const label=range.toString().trim();
+  if(!label||label.length>120||/[\[\]\n]/.test(label)){
+   setNote('링크 텍스트는 1~120자로 선택해 주세요.');return;
+  }
+  const anchor=document.createElement('a');anchor.href=url;anchor.textContent=label;
+  anchor.rel='noopener noreferrer sponsored nofollow';anchor.target='_blank';
+  range.deleteContents();range.insertNode(anchor);
+  lastCaret.current=null;sync();setNote('링크가 삽입됐어. 초안 저장 후에도 유지돼.');
+ };
  const insertImage=(id:string)=>{
   const image=images.find(item=>item.id===id&&item.rights_status==='approved');
   if(!image){setNote('승인된 이미지만 본문에 삽입할 수 있어.');return}
@@ -116,6 +149,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('blockquote')}>인용</button>
    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('bold')}>굵게</button>
    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('italic')}>기울임</button>
+   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={insertLink}>링크 / 제휴 링크</button>
    <label className={styles.fontSelect}>글꼴 <select value={font} onChange={e=>setFont(e.target.value)}>
     <option value="sans">Noto Sans KR</option><option value="serif">Noto Serif KR</option>
     <option value="nanum">나눔고딕</option><option value="myeongjo">나눔명조</option>
