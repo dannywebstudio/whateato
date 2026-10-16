@@ -90,7 +90,7 @@ export default async function BlogStory({params,searchParams}:Ctx){
      <img src={'/api/blog/images/'+published.cover_image_id}
         alt={published.title} width={1200} height={810}/>
    </figure>}
-   <RenderBody blocks={t.blocks}/>
+   <RenderBody blocks={t.blocks} locale={published.locale}/>
    {published.draft.tags.length>0&&<div className={styles.tags}>
      {published.draft.tags.map(tag=><span className={styles.tag} key={tag}>
       #{tag.replaceAll('-',' ')}</span>)}
