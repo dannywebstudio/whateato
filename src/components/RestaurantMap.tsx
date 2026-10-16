@@ -65,6 +65,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
   const queryRef=useRef({q,filter,locale});
   const focusCenterRef=useRef<[number,number]|null>(null);
   const focusItemsRef=useRef<Place[]>([]);
+  const directorySeedRef=useRef<Place[]>([]);
   const [items,setItems]=useState<Place[]>([]);
   const [state,setState]=useState<'loading'|'zoom'|'ready'|'error'>('loading');
   const [basemapFailed,setBasemapFailed]=useState(false);
@@ -78,6 +79,14 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
   const [focusItems,setFocusItems]=useState<Place[]>([]);
   const [focusStatus,setFocusStatus]=useState<'loading'|'ready'|'error'>('loading');
   queryRef.current={q,filter,locale};
+  const paintSeed=useCallback((m:MapLibreMap,seed:Place[])=>{
+    const source=m.getSource(markerSource) as GeoJSONSource|undefined;
+    if(!source||!seed.length)return;
+    source.setData({type:'FeatureCollection',features:seed.map(x=>({
+      type:'Feature',geometry:{type:'Point',coordinates:[x.longitude,x.latitude]},
+      properties:{id:x.id,name:x.name,pinColor:cuisineColor(x.category_code),openingState:x.opening_hours?.state||'unknown'}
+    }))});
+  },[]);
   useEffect(()=>{setPage(0);setSelected(null)},[q,filter,locale,focusId]);
   const load=useCallback(async (currentMap:MapLibreMap)=>{
     // Adding a fresh GeoJSON source briefly makes isStyleLoaded() false.
@@ -203,6 +212,8 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
           });
         }
         styleReady=true;
+        // Reuse the parallel directory/focus response for immediate first pins.
+        paintSeed(m,focusItemsRef.current.length?focusItemsRef.current:directorySeedRef.current);
         syncNameVisibility();
         window.clearTimeout(timeout);
         setBasemapFailed(false);
@@ -284,7 +295,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
       lastRequest.current?.abort();requestId.current++;
       removeMapEvents();instance?.remove();map.current=null;
     };
-  },[load,mapRetry]);
+  },[load,mapRetry,paintSeed]);
   useEffect(()=>{if(map.current?.getSource(markerSource))void load(map.current);},[q,filter,locale,load]);
   // Deep-link focus has its own DB-backed nearest-neighbor directory,
   // independent of the current viewport's map tile/marker availability.
@@ -312,7 +323,8 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
       if(!valid)throw Error('Invalid focus coordinates');
       focusCenterRef.current=payload.center;
       focusItemsRef.current=payload.items;
-      setFocusItems(payload.items);setSelected(focusId);setFocusStatus('ready');
+      setFocusItems(payload.items);
+      if(map.current)paintSeed(map.current,payload.items);setSelected(focusId);setFocusStatus('ready');
       const m=map.current;
       if(m?.getSource(markerSource)){
         m.jumpTo({center:payload.center,zoom:15});
@@ -323,7 +335,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
       setFocusStatus('error');setFocusItems([]);focusItemsRef.current=[];
     });
     return ()=>controller.abort();
-  },[focusId,locale,load]);
+  },[focusId,locale,load,paintSeed]);
   // Keep the map pin visually in sync with both list selections and pin clicks.
   useEffect(()=>{
     const m=map.current;
@@ -340,6 +352,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
     });
     if(q)params.set('q',q);
     if(filter)params.set('f',filter);
+    directorySeedRef.current=[];
     setDirectoryReady(false);setDirectoryError(false);
     void fetch('/api/v1/map/markers?'+params.toString(),{
       signal:controller.signal,cache:'no-store',credentials:'same-origin'
@@ -353,14 +366,16 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         Number.isFinite(x.latitude)&&Number.isFinite(x.longitude)&&
         x.latitude>=33&&x.latitude<=39.5&&x.longitude>=124&&x.longitude<=132
       ).slice(0,40);
+      directorySeedRef.current=safe;
       setDirectory(safe);setDirectoryReady(true);
+      if(map.current&&state!=='ready')paintSeed(map.current,safe);
     }).catch(()=>{
       if(!controller.signal.aborted){
         setDirectory([]);setDirectoryError(true);setDirectoryReady(true);
       }
     });
     return ()=>controller.abort();
-  },[q,filter,locale,focusId]);
+  },[q,filter,locale,focusId,paintSeed]);
   const visibleItems=focusId?focusItems:state==='ready'&&!basemapFailed?items:directory;
   const pageSize=4;
   const totalPages=Math.max(1,Math.ceil(visibleItems.length/pageSize));
