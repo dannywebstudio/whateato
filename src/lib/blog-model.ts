@@ -13,7 +13,7 @@ export const BLOG_LOCALES=['en','ja','zh-CN','ko'] as const;
 export type BlogLocale=typeof BLOG_LOCALES[number];
 export type BlogCategory=string;
 export type BlogBlock={id:string;type:'paragraph'|'heading'|'quote'|'list'|'table'|'image'|'divider';
- text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;caption?:string;align?:'left'|'center'|'right';font_size?:number;image_width?:number};
+ text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;caption?:string;align?:'left'|'center'|'right';font_size?:number;image_width?:number;table_border_width?:number;table_border_color?:string;table_border_style?:'solid'|'dashed'|'dotted'|'none';table_col_widths?:number[];table_row_heights?:number[]};
 export type BlogTranslation={title:string;excerpt:string;seo_title:string;seo_description:string;blocks:BlogBlock[]};
 export type BlogDraft={
  category:BlogCategory;tags:string[];related_restaurant_ids:string[];
@@ -48,7 +48,7 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
   const blocks:BlogBlock[]=[];
   let total=0;
   for(const original of entry.blocks){
-   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','caption','align','font_size','image_width'])||
+   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','caption','align','font_size','image_width','table_border_width','table_border_color','table_border_style','table_col_widths','table_row_heights'])||
     typeof original.id!=='string'||!/^[a-z0-9-]{3,64}$/.test(original.id)||
     !['paragraph','heading','quote','list','table','image','divider'].includes(String(original.type)))
      return null;
@@ -65,6 +65,28 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
    if(original.image_width!==undefined){
     if(kind!=='image'||!Number.isInteger(original.image_width)||Number(original.image_width)<20||Number(original.image_width)>100)return null;
     block.image_width=Number(original.image_width);
+   }
+   if(kind==='table'){
+    if(original.table_border_width!==undefined){
+     if(!Number.isInteger(original.table_border_width)||Number(original.table_border_width)<0||Number(original.table_border_width)>8)return null;
+     block.table_border_width=Number(original.table_border_width);
+    }
+    if(original.table_border_color!==undefined){
+     if(typeof original.table_border_color!=='string'||!/^#[0-9a-fA-F]{6}$/.test(original.table_border_color))return null;
+     block.table_border_color=original.table_border_color;
+    }
+    if(original.table_border_style!==undefined){
+     if(!['solid','dashed','dotted','none'].includes(String(original.table_border_style)))return null;
+     block.table_border_style=original.table_border_style as BlogBlock['table_border_style'];
+    }
+    if(original.table_col_widths!==undefined){
+     if(!Array.isArray(original.table_col_widths)||original.table_col_widths.length>6||!original.table_col_widths.every(v=>Number.isInteger(v)&&v>=45&&v<=1200))return null;
+     block.table_col_widths=original.table_col_widths as number[];
+    }
+    if(original.table_row_heights!==undefined){
+     if(!Array.isArray(original.table_row_heights)||original.table_row_heights.length>20||!original.table_row_heights.every(v=>Number.isInteger(v)&&v>=25&&v<=600))return null;
+     block.table_row_heights=original.table_row_heights as number[];
+    }
    }
    if(['paragraph','heading','quote'].includes(kind)){
      if(!text(original.text,8000)||typeof original.text!=='string')return null;
