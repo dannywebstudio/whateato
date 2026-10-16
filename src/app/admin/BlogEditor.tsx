@@ -70,8 +70,8 @@ export default function BlogEditor({owner}:{owner:boolean}){
   setPosts(data.items||[]);
  },[]);
  useEffect(()=>{void refresh().catch(error);void refreshCategories().catch(error)},[refresh,refreshCategories]);
- const open=async(id:string)=>{
-  if(dirty&&!window.confirm('저장되지 않은 수정 사항이 있어. 이동할까?'))return;
+ const open=async(id:string,ignoreDirty=false)=>{
+  if(dirty&&!ignoreDirty&&!window.confirm('저장되지 않은 수정 사항이 있어. 이동할까?'))return;
   setBusy(true);setMessage('');
   try{
    const {article}: {article:Detail}=await api('/api/v1/owner/blog/'+id);
@@ -83,13 +83,14 @@ export default function BlogEditor({owner}:{owner:boolean}){
   }catch(e){error(e)}finally{setBusy(false)}
  };
  const create=async()=>{
-  if(!safeSlug(slug)||safeSlug(slug).length<3){setMessage('영문 슬러그를 3자 이상 입력해.');return}
+  const nextSlug=safeSlug(slug)||'new-story-'+Date.now().toString(36);
+  if(nextSlug.length<3){setMessage('영문 주소를 3자 이상 입력해.');return}
   setBusy(true);
   try{
-   const made=await json('/api/v1/owner/blog',{slug:safeSlug(slug)});
-   setDirty(false);await refresh();await open(made.id);setSlug('');
+   const made=await json('/api/v1/owner/blog',{slug:nextSlug});
+   setDirty(false);await refresh();await open(made.id,true);setSlug('');
    setMessage('새 글 초안을 만들었어. 제목과 본문을 작성해.');
-  }catch(e){error(e)}finally{setBusy(false)}
+  }catch(e){error(e);if(e instanceof Error&&e.message==='slug_already_exists')setMessage('이미 사용 중인 주소야. 다른 주소를 입력해.')}finally{setBusy(false)}
  };
  const update=(patch:Partial<BlogDraft>)=>{setDraft(p=>({...p,...patch}));setDirty(true)};
  const updateTranslation=(patch:Partial<BlogTranslation>)=>{
