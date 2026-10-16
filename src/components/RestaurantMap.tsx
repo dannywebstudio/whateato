@@ -137,7 +137,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
     let styleReady=false;
     const timeout=window.setTimeout(()=>{
       if(!cancelled&&!styleReady){setBasemapFailed(true);setState('error')}
-    },12000);
+    },18000);
     setBasemapFailed(false);
     setState('loading');
     let instance:MapLibreMap|null=null;
@@ -225,6 +225,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         setSelected(id);
         const coords=feature?.geometry?.type==='Point'?feature.geometry.coordinates:null;
         if(!Array.isArray(coords)||coords.length<2||!Number.isFinite(coords[0])||!Number.isFinite(coords[1]))return;
+        m.easeTo({center:[coords[0],coords[1]],zoom:Math.max(m.getZoom(),FOCUS_ZOOM),duration:350});
         currentPopup?.remove();
         const activeLocale=queryRef.current.locale;
         const details=activeLocale==='ko'?'상세 보기':activeLocale==='ja'?'詳しく見る':activeLocale==='zh-CN'?'查看详情':'View details';
