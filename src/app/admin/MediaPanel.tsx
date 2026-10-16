@@ -3,12 +3,14 @@ import type {Detail} from './modules/types';
 import {useEffect,useState} from 'react';
 import {post} from './modules/client';
 import styles from './admin.module.css';
-type Props={selected:Detail;owner:boolean;busy:boolean;image:File|null;setImage:(file:File|null)=>void;rights:boolean;setRights:(value:boolean)=>void;photoRole:'cover'|'gallery';photoOrigin:'owner_original'|'external_licensed';setPhotoOrigin:(v:'owner_original'|'external_licensed')=>void;setPhotoRole:(value:'cover'|'gallery')=>void;imagePosition:number;setImagePosition:(value:number)=>void;imageEvidence:string;setImageEvidence:(value:string)=>void;rightsEvidence:string;setRightsEvidence:(value:string)=>void;imageResult:string;setBusy:(value:boolean)=>void;uploadPhoto:()=>Promise<void>;inform:(error:unknown)=>void;select:(id:string)=>Promise<void>};
+type Props={selected:Detail;owner:boolean;busy:boolean;image:File|null;setImage:(file:File|null)=>void;rights:boolean;setRights:(value:boolean)=>void;photoRole:'cover'|'gallery';photoOrigin:'owner_original'|'external_licensed';setPhotoOrigin:(v:'owner_original'|'external_licensed')=>void;setPhotoRole:(value:'cover'|'gallery')=>void;imagePosition:number;setImagePosition:(value:number)=>void;imageEvidence:string;setImageEvidence:(value:string)=>void;rightsEvidence:string;setRightsEvidence:(value:string)=>void;imageResult:string;setBusy:(value:boolean)=>void;uploadPhoto:(file?:File,position?:number)=>Promise<void>;inform:(error:unknown)=>void;select:(id:string)=>Promise<void>};
 export default function MediaPanel({selected,owner,busy,image,setImage,rights,setRights,photoRole,photoOrigin,setPhotoOrigin,setPhotoRole,imagePosition,setImagePosition,imageEvidence,setImageEvidence,rightsEvidence,setRightsEvidence,imageResult,setBusy,uploadPhoto,inform,select}:Props){
  const [preview,setPreview]=useState('');
+ const [queue,setQueue]=useState<File[]>([]);
+ const [progress,setProgress]=useState('');
  const [uploading,setUploading]=useState(false);
  useEffect(()=>{if(!image){setPreview('');return}const url=URL.createObjectURL(image);setPreview(url);return()=>URL.revokeObjectURL(url)},[image]);
- const canUpload=Boolean(image&&rights&&!busy&&!uploading&&(photoOrigin==='owner_original'||(/^https:\/\//.test(imageEvidence)&&/^https:\/\//.test(rightsEvidence))));
+ const canUpload=Boolean(queue.length&&rights&&!busy&&!uploading&&(photoOrigin==='owner_original'||(/^https:\/\//.test(imageEvidence)&&/^https:\/\//.test(rightsEvidence))));
  return (<section className={styles.panel} aria-label="사진 관리">
      <h2>식당 사진 관리</h2>
      <p className={styles.note}>사진을 선택하면 WebP로 최적화해 비공개 저장하고, 관리자 승인 후 카드나 상세페이지에 노출해.</p>
@@ -27,8 +29,9 @@ export default function MediaPanel({selected,owner,busy,image,setImage,rights,se
        </label>
      </div>
      <label className={styles.field}>사진 선택 (JPG · PNG · WebP / 최대 8MB)
-       <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setImage(e.target.files?.[0]||null)}/>
+       <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>{const selectedFiles=Array.from(e.target.files||[]).slice(0,20);setQueue(selectedFiles);setImage(selectedFiles[0]||null)}}/>
      </label>
+     {queue.length>0&&<p role="status" className={styles.note}>{queue.length}장 선택됨 · 순서대로 업로드 (최대 20장)</p>}
      {preview&&<div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',padding:12,border:'1px solid #d7e5da',borderRadius:10,background:'#f6faf7'}}>
        {/* eslint-disable-next-line @next/next/no-img-element */}
        <img src={preview} alt="업로드 전 사진 미리보기" style={{width:140,height:100,objectFit:'contain',background:'#e9eeeb',borderRadius:7}}/>
@@ -52,9 +55,14 @@ export default function MediaPanel({selected,owner,busy,image,setImage,rights,se
      </label>
      <div className={styles.actions}>
        <button className={styles.button} disabled={!canUpload} onClick={()=>void(async()=>{
-         setUploading(true);try{await uploadPhoto()}catch(e){inform(e)}finally{setUploading(false)}
+         setUploading(true);let done=0;const failures:string[]=[];
+         try{for(const file of queue){setImage(file);setProgress((done+1)+' / '+queue.length+' 업로드 중');try{await uploadPhoto(file,photoRole==='gallery'?imagePosition+done:0);done++}catch(e){failures.push(file.name+': '+(e instanceof Error?e.message:'업로드 실패'))}}
+          setProgress(done+' / '+queue.length+'장 업로드 완료'+(failures.length?' · 실패 '+failures.length+'장: '+failures.join(' / '):''));
+          if(!failures.length){setQueue([]);setImage(null)}
+         }finally{setUploading(false)}
        })()}>{uploading?'사진 업로드 중…':'사진 업로드 · 검수 대기'}</button>
      </div>
+     {progress&&<p role="status" className={styles.note}>{progress}</p>}
      {imageResult&&<p role="status" className={styles.note}>{imageResult}</p>}
      <h3>등록된 사진 <span className={styles.small}>{selected.images.length}장</span></h3>
        <div className={styles.cardList}>{selected.images.map(i=><div key={i.id} className={styles.row}>
