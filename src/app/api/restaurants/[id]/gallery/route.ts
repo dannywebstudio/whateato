@@ -11,7 +11,7 @@ export async function GET(_req:Request,{params}:Ctx){
  const {id}=await params;
  if(!isUuid(id))return NextResponse.json({error:'invalid_id'},{status:400});
  try{
-  const detail=await getRestaurantCatalogDetail(id);
+  const detail=await getRestaurantCatalogDetail(id,'ko');
   if(!detail)return NextResponse.json({error:'not_found'},{status:404});
   const reviews=await getPublicReviews(id);
   const result=[...detail.images.map(p=>({url:p.url,alt:p.alt_ko||detail.restaurant.name})),
