@@ -12,8 +12,8 @@ export function blogCategoryName(item:BlogCategoryInfo|undefined,locale:string='
 export const BLOG_LOCALES=['en','ja','zh-CN','ko'] as const;
 export type BlogLocale=typeof BLOG_LOCALES[number];
 export type BlogCategory=string;
-export type BlogBlock={id:string;type:'paragraph'|'heading'|'quote'|'list'|'table'|'image'|'divider';
- text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;caption?:string;align?:'left'|'center'|'right';font_size?:number;image_width?:number;table_border_width?:number;table_border_color?:string;table_border_style?:'solid'|'dashed'|'dotted'|'none';table_col_widths?:number[];table_row_heights?:number[]};
+export type BlogBlock={id:string;type:'paragraph'|'heading'|'quote'|'list'|'table'|'image'|'restaurant'|'divider';
+ text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;restaurant_id?:string;caption?:string;align?:'left'|'center'|'right';font_size?:number;image_width?:number;table_border_width?:number;table_border_color?:string;table_border_style?:'solid'|'dashed'|'dotted'|'none';table_col_widths?:number[];table_row_heights?:number[]};
 export type BlogTranslation={title:string;excerpt:string;seo_title:string;seo_description:string;blocks:BlogBlock[]};
 export type BlogDraft={
  category:BlogCategory;tags:string[];related_restaurant_ids:string[];
@@ -48,9 +48,9 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
   const blocks:BlogBlock[]=[];
   let total=0;
   for(const original of entry.blocks){
-   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','caption','align','font_size','image_width','table_border_width','table_border_color','table_border_style','table_col_widths','table_row_heights'])||
+   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','restaurant_id','caption','align','font_size','image_width','table_border_width','table_border_color','table_border_style','table_col_widths','table_row_heights'])||
     typeof original.id!=='string'||!/^[a-z0-9-]{3,64}$/.test(original.id)||
-    !['paragraph','heading','quote','list','table','image','divider'].includes(String(original.type)))
+    !['paragraph','heading','quote','list','table','image','restaurant','divider'].includes(String(original.type)))
      return null;
    const kind=original.type as BlogBlock['type'];
    const block:BlogBlock={id:original.id,type:kind};
@@ -105,6 +105,9 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
      const rows=original.rows as string[][];
      if(rows.some(r=>r.length!==rows[0].length))return null;
      block.rows=rows;total+=rows.flat().join('').length;
+   }else if(kind==='restaurant'){
+     if(!isUuid(original.restaurant_id))return null;
+     block.restaurant_id=original.restaurant_id as string;
    }else if(kind==='image'){
      if(!(original.image_id===''||isUuid(original.image_id))||
         !text(original.caption,250))return null;
