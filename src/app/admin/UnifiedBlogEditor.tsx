@@ -7,7 +7,10 @@ type ApprovedImage={id:string;alt_text:string;rights_status:string;image_url:str
 type Props={locale:string;articleId:string;translation:BlogTranslation;images:ApprovedImage[];onChange:(patch:Partial<BlogTranslation>)=>void;onChooseFile:(file:File)=>void};
 
 const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,char=>(({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' } as Record<string,string>)[char]||char));
-const textHtml=(value:string)=>escapeHtml(value).replace(/\[([^\]\n]{1,120})\]\((https:\/\/[^\s)&lt;&gt;]{5,500})\)/g,(_match,label,url)=>'<a href="'+url+'" target="_blank" rel="noopener noreferrer sponsored nofollow">'+label+'</a>').replace(/\n/g,'<br>');
+const textHtml=(value:string)=>value.split(/(\[[^\]\n]{1,120}\]\(https:\/\/[^\s)<>]{5,500}\))/g).map(part=>{
+ const match=/^\[([^\]\n]+)\]\((https:\/\/[^\s)<>]+)\)$/.exec(part);
+ return match?'<a href="'+escapeHtml(match[2])+'" target="_blank" rel="noopener noreferrer sponsored nofollow">'+escapeHtml(match[1])+'</a>':escapeHtml(part).replace(/\n/g,'<br>');
+}).join('');
 const inlineText=(node:Node):string=>{
  if(node.nodeType===Node.TEXT_NODE)return node.textContent||'';
  if(!(node instanceof HTMLElement))return '';
@@ -16,7 +19,7 @@ const inlineText=(node:Node):string=>{
   const url=node.getAttribute('href')||'';
   return /^https:\/\/[^\s)<>]{5,500}$/.test(url)?'['+content.replace(/[\[\]]/g,'')+']('+url+')':content;
  }
- if(node.tagName==='BR')return '\\n';
+ if(node.tagName==='BR')return '\n';
  if(node.tagName==='STRONG'||node.tagName==='B')return '**'+content+'**';
  if(node.tagName==='EM'||node.tagName==='I')return '*'+content+'*';
  return content;
