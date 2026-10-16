@@ -30,7 +30,7 @@ const newBlock=(type:BlogBlock['type']):BlogBlock=>{
 async function api(url:string,init:RequestInit={}):Promise<any>{
  const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...init});
  const data=await response.json().catch(()=>({error:'invalid_response'}));
- if(!response.ok)throw Error(data.error||('HTTP '+response.status));
+ if(!response.ok)throw Error([data.error,data.reason].filter(Boolean).join(' · ')||('HTTP '+response.status));
  return data;
 }
 const json=(url:string,body:unknown,method='POST')=>api(url,{

@@ -55,32 +55,52 @@ export async function POST(req:NextRequest,{params}:Ctx){
  }catch{return respond({error:'image_decode_failed'},400)}
  const pool=getPool();if(!pool)return respond({error:'database_unavailable'},503);
  const photoId=randomUUID(),key='media/blog/'+photoId+'.webp';
- const client=await pool.connect();let uploaded=false;
+ let client;
+ try{client=await pool.connect()}catch{return respond({error:'blog_database_connection_failed'},503)}
+ let uploaded=false;
+ let stage:'begin'|'post'|'count'|'storage'|'media_record'|'audit'|'commit'='begin';
  try{
   await client.query('BEGIN');
+  stage='post';
   const post=await client.query('SELECT id FROM whateato_blog_posts WHERE id=$1 FOR UPDATE',[id]);
   if(!post.rowCount){await client.query('ROLLBACK');return respond({error:'post_not_found'},404)}
+  stage='count';
   const count=await client.query<{n:number}>(`
     SELECT count(*)::int AS n FROM whateato_blog_media WHERE post_id=$1`,[id]);
   if(count.rows[0].n>=30){
     await client.query('ROLLBACK');return respond({error:'max_30_blog_images'},409);
   }
+  stage='storage';
   await savePhoto(key,data);uploaded=true;
+  stage='media_record';
   await client.query(`
     INSERT INTO whateato_blog_media(id,post_id,storage_key,media_role,alt_text,
      source_url,rights_reference,file_bytes,width,height,created_by,rights_status,approved_by,approved_at)
     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'approved',$11,now())`,[
     photoId,id,key,role,alt.trim(),'','',data.length,width,height,staff.accountId
   ]);
+  stage='audit';
   await client.query(`
     INSERT INTO whateato_blog_audit(post_id,actor_id,action)
     VALUES($1,$2,'image_uploaded')`,[id,staff.accountId]);
+  stage='commit';
   await client.query('COMMIT');
   return respond({id:photoId,media_role:role,rights_status:'approved',
     image_url:'/api/v1/owner/blog/images/'+photoId,width,height},201);
- }catch{
+ }catch(e){
+  console.error('[blog-media] upload failed', {stage,code:(e as NodeJS.ErrnoException).code||'unknown'});
   await client.query('ROLLBACK').catch(()=>{});
   if(uploaded)await deletePhoto(key).catch(()=>{});
-  return respond({error:'blog_image_upload_unavailable'},503);
+  const code=(e as NodeJS.ErrnoException).code;
+  const reason=stage==='storage'?
+   (code==='EACCES'||code==='EPERM'?'media_directory_permission_denied':
+    code==='ENOENT'?'media_directory_not_found':
+    code==='EROFS'?'media_directory_read_only':
+    code==='ENOSPC'?'media_disk_full':
+    e instanceof Error&&e.message==='local_media_directory_symlink_not_allowed'?'media_directory_path_mismatch':
+    'media_file_write_failed'):
+   stage==='media_record'||stage==='audit'?'media_database_write_failed':
+   stage==='commit'?'media_database_commit_failed':'media_database_request_failed';
+  return respond({error:'blog_image_upload_unavailable',reason,stage},503);
  }finally{client.release()}
 }
