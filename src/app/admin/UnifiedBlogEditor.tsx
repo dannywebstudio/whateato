@@ -1,5 +1,7 @@
 'use client';
-import {useEffect,useRef,useState,type DragEvent,type MouseEvent} from 'react';
+import {createElement,useEffect,useRef,useState,type DragEvent,type MouseEvent} from 'react';
+import {createRoot,type Root} from 'react-dom/client';
+import InlineBlogRestaurantCard from '@/components/InlineBlogRestaurantCard';
 import type {BlogBlock,BlogTranslation} from '@/lib/blog-model';
 import styles from './blog-editor.module.css';
 
@@ -40,7 +42,7 @@ const render=(translation:BlogTranslation,images:ApprovedImage[])=>
       (image?'<img src="'+escapeHtml(image.image_url)+'" alt="'+escapeHtml(image.alt_text)+'"/>':'<p>이미지 선택 또는 승인 필요</p>')+
       '<figcaption>'+escapeHtml(block.caption||'')+'</figcaption></figure>';
    }
-   if(block.type==='restaurant')return '<div class="we-card we-card-search restaurant-card" contenteditable="false" data-restaurant-id="'+escapeHtml(block.restaurant_id||'')+'"><div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>식당 카드 불러오는 중…</h3></div><div class="we-card-actions"><a href="/map?focus='+escapeHtml(block.restaurant_id||'')+'">지도에서 보기</a><a href="/restaurant/'+escapeHtml(block.restaurant_id||'')+'">자세히 보기 ↗</a></div></div></div>';
+   if(block.type==='restaurant')return '<div class="restaurant-inline-edit" contenteditable="false" data-restaurant-id="'+escapeHtml(block.restaurant_id||'')+'"></div>';
    if(block.type==='divider')return '<hr/>';
    if(block.type==='table'){
     const bw=block.table_border_width??1,bc=block.table_border_color||'#dae6df',bs=block.table_border_style||'solid';
@@ -88,6 +90,14 @@ function serialize(root:HTMLElement):{blocks:BlogBlock[]}{
 
 export default function UnifiedBlogEditor({locale,articleId,translation,images,onChange,onChooseFile,restaurantQuery,onRestaurantQuery,restaurantMatches,onRestaurantSearch,onRestaurantInsert}:Props){
  const ref=useRef<HTMLDivElement>(null);
+ const cardRoots=useRef(new Map<HTMLElement,Root>());
+ const mountCard=(node:HTMLElement)=>{
+  const id=node.dataset.restaurantId;
+  if(!id||cardRoots.current.has(node))return;
+  const root=createRoot(node);cardRoots.current.set(node,root);
+  root.render(createElement(InlineBlogRestaurantCard,{id,locale}));
+ };
+ const mountCards=()=>ref.current?.querySelectorAll<HTMLElement>('[data-restaurant-id]').forEach(mountCard);
  const pick=useRef<HTMLInputElement>(null);
  const [font,setFont]=useState('sans');
  const [textColor,setTextColor]=useState('#168454');
@@ -149,7 +159,9 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   if(!ref.current)return;
   // Preserve caret during typing. Rehydrate only when changing article/language.
   if(recent.current?.articleId===articleId&&recent.current?.locale===locale)return;
+  cardRoots.current.forEach(root=>root.unmount());cardRoots.current.clear();
   ref.current.innerHTML=render(translation,images);
+  mountCards();
   chooseFigure(null);
   recent.current={articleId,locale};
  },[articleId,locale,translation,images]);
@@ -272,22 +284,9 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(caret);
   lastCaret.current=caret.cloneRange();
  };
- const insertRestaurant=async(item:RestaurantMatch)=>{
-  const card=document.createElement('div');card.className='we-card we-card-search restaurant-card';card.contentEditable='false';card.dataset.restaurantId=item.id;
-  card.innerHTML='<div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>'+escapeHtml(item.name_ko)+'</h3></div><div class="we-card-information">'+escapeHtml(item.road_address_ko||'')+'</div><div class="we-card-actions"><a href="/map?focus='+encodeURIComponent(item.id)+'">지도에서 보기</a><a href="/restaurant/'+encodeURIComponent(item.id)+'?hl='+encodeURIComponent(locale)+'">자세히 보기 ↗</a></div></div>';
-  putNode(card);onRestaurantInsert(item.id);sync();setNote('음식카드를 본문에 삽입했어.');
-  try{
-   const response=await fetch('/api/v1/restaurants/'+encodeURIComponent(item.id)+'?hl='+encodeURIComponent(locale));
-   if(!response.ok)return;
-   const data=await response.json();const r=data.restaurant;
-   if(!r||!ref.current?.contains(card))return;
-   const image=data.images?.[0]?.url;
-   const visual=card.querySelector('.we-card-visual');
-   if(visual&&image)visual.innerHTML='<img src="'+escapeHtml(image)+'" alt="'+escapeHtml(r.name||item.name_ko)+'" loading="lazy"/>';
-   const heading=card.querySelector('h3');if(heading)heading.textContent=r.name||item.name_ko;
-   const info=card.querySelector('.we-card-information');if(info)info.textContent=[data.menus?.[0]?.name,r.address].filter(Boolean).join(' · ');
-   card.style.setProperty('--cuisine-accent',r.card_accent_color||'#16845b');
-  }catch{/* The linked card remains usable when its live preview is unavailable. */}
+ const insertRestaurant=(item:RestaurantMatch)=>{
+  const card=document.createElement('div');card.className='restaurant-inline-edit';card.contentEditable='false';card.dataset.restaurantId=item.id;
+  putNode(card);mountCard(card);onRestaurantInsert(item.id);sync();setNote('음식카드를 본문에 삽입했어.');
  };
  const previewFile=(file:File)=>{
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024){setNote('JPG/PNG/WebP 8MB 이하만 지원해.');return}
