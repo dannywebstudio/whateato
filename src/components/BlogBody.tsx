@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react';
 import type {BlogBlock} from '@/lib/blog-model';
+import InlineBlogRestaurantCard from '@/components/InlineBlogRestaurantCard';
 import styles from '@/app/blog/blog.module.css';
 /** Inline formatting parser for editorial plain text. HTML is never interpreted. */
 export function InlineBlogText({value}:{value:string}){
@@ -19,9 +20,10 @@ export function InlineBlogText({value}:{value:string}){
   return <span key={index}>{part}</span>;
  })}</>;
 }
-export function BlogBody({blocks,preview=false}:{blocks:BlogBlock[];preview?:boolean}){
+export function BlogBody({blocks,preview=false,locale='ko'}:{blocks:BlogBlock[];preview?:boolean;locale?:string}){
  const nodes:ReactNode[]=blocks.map(b=>{
   const style={textAlign:b.align||'left',fontSize:b.font_size?b.font_size+'px':undefined} as const;
+  if(b.type==='restaurant'&&b.restaurant_id)return <div key={b.id} className={styles.inlineRestaurantCard}><InlineBlogRestaurantCard id={b.restaurant_id} locale={locale}/></div>;
   if(b.type==='heading'){
    return b.level===3?<h3 key={b.id} style={style}><InlineBlogText value={b.text||''}/></h3>:
     <h2 key={b.id} style={style}><InlineBlogText value={b.text||''}/></h2>;
