@@ -207,7 +207,9 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         window.clearTimeout(timeout);
         setBasemapFailed(false);
         if(focusCenterRef.current)m.jumpTo({center:focusCenterRef.current,zoom:FOCUS_ZOOM});
-        void load(m);
+        // Deep-linked restaurants have a dedicated nearest-neighbor request.
+        // Avoid an unrelated initial Seoul viewport marker query before it resolves.
+        if(!focusId||focusCenterRef.current)void load(m);
       };
       // At street-level zoom, prefer showing the actual venue name even in
       // dense restaurant areas. At zoom 14–15, keep collision avoidance.
