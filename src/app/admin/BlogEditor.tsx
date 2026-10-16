@@ -98,14 +98,16 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
   }catch(e){error(e)}finally{setBusy(false)}
  };
  const deleteDraft=async(post:BlogRow)=>{
-  if(post.state==='published')return;
   if(!owner){setMessage('초안 삭제는 Owner만 가능해.');return}
-  if(!window.confirm('초안 '+post.slug+'와 첨부 사진을 영구 삭제할까?'))return;
+  const published=post.state==='published';
+  const label=published?'발행된 게시글':'초안';
+  if(!window.confirm(label+' '+post.slug+'와 첨부 사진을 영구 삭제할까? 발행된 URL도 사라지고 복구할 수 없어.'))return;
+  if(published&&window.prompt('발행된 글을 영구 삭제하려면 DELETE를 입력해.')!=='DELETE')return;
   setBusy(true);
   try{
-   await api('/api/v1/owner/blog/'+post.id,{method:'DELETE'});
+   await api('/api/v1/owner/blog/'+post.id,{method:'DELETE',headers:{'x-whateato-confirm-delete':post.id}});
    if(current?.id===post.id){setCurrent(null);setDirty(false)}
-   await refresh();setMessage('초안을 삭제했어.');
+   await refresh();setMessage(label+'을 삭제했어.');
   }catch(e){error(e)}finally{setBusy(false)}
  };
  const create=async()=>{
@@ -226,6 +228,14 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
    await open(current.id);setMessage('사진 상태를 변경했어. 발행 내용이 바뀌면 다시 발행해.');
   }catch(e){error(e)}finally{setBusy(false)}
  };
+ const deleteLibraryImage=async(image:BlogImage)=>{
+  if(!current||!owner)return;
+  if(JSON.stringify(draft.translations).includes(image.id))throw Error('현재 편집 중인 글에서 이 사진을 먼저 제거하고 초안을 저장해 줘.');
+  const articleId=current.id;
+  await api('/api/v1/owner/blog/'+articleId+'/media/'+image.id,{method:'DELETE',headers:{'x-whateato-confirm-delete':image.id}});
+  setCurrent(previous=>previous?.id===articleId?{...previous,images:previous.images.filter(item=>item.id!==image.id)}:previous);
+  setMessage('사용되지 않는 사진을 라이브러리에서 삭제했어.');
+ };
  const applyInline=(marker:'bold'|'italic'|'link')=>{
   const area=document.activeElement;
   if(!(area instanceof HTMLTextAreaElement))return;
@@ -267,9 +277,10 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
        <button className={styles.postPick} data-selected={p.id===current?.id} onClick={()=>void open(p.id)}>
         <strong>{p.title||p.slug}</strong><small>{p.state==='published'?'공개 중':p.state==='review_requested'?'승인 대기':'초안'} · {p.slug}</small>
        </button>
-       {owner&&p.state==='draft'&&<button type="button" className={styles.postDelete} disabled={busy}
-         onClick={()=>void deleteDraft(p)} aria-label={p.slug+' 초안 삭제'}>삭제</button>}
+       {owner&&<button type="button" className={styles.postDelete} disabled={busy}
+         onClick={()=>void deleteDraft(p)} aria-label={p.slug+' 영구 삭제'}>삭제</button>}
       </div>)}</div>
+    {current&&<div className={styles.sidebarMedia}><BlogMediaLibrary images={current.images} disabled={!owner||busy} onUpload={async image=>{await upload(image)}} onDelete={deleteLibraryImage}/></div>}
    </aside>
    <section className={styles.mainPanel}>
     {!current?<div className={styles.blank}>왼쪽에서 기존 글을 선택하거나 새 글을 생성해.</div>:<>
@@ -383,7 +394,6 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
         onChange={patch=>updateTranslation(patch)}
         onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');void upload(incoming).catch(()=>{})}}/>}
      </section>
-      <BlogMediaLibrary images={current.images} disabled={!owner} onUpload={async image=>{await upload(image)}}/>
      </div>
     </>}
    </section>

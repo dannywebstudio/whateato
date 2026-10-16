@@ -83,7 +83,7 @@ export async function PUT(req:NextRequest,{params}:Ctx){
  }finally{client.release()}
 }
 
-/** Delete only never-published drafts. Live/published posts cannot be removed from the quick list. */
+/** Owner-confirmed permanent removal of blog posts, including publications and private media. */
 export async function DELETE(req:NextRequest,{params}:Ctx){
  const staff=await currentStaff();
  if(!staff||!hasPermission(staff,'publish'))return respond({error:'owner_required'},403);
@@ -97,10 +97,14 @@ export async function DELETE(req:NextRequest,{params}:Ctx){
    FROM whateato_blog_posts p LEFT JOIN whateato_blog_publications u ON u.post_id=p.id
    WHERE p.id=$1 FOR UPDATE OF p`,[id]);
   if(!row.rowCount){await client.query('ROLLBACK');return respond({error:'post_not_found'},404)}
-  if(row.rows[0].published_revision!==null){await client.query('ROLLBACK');return respond({error:'published_posts_cannot_be_deleted'},409)}
+  if(row.rows[0].published_revision!==null){
+   const confirmation=req.headers.get('x-whateato-confirm-delete');
+   if(confirmation!==id){await client.query('ROLLBACK');return respond({error:'published_post_delete_confirmation_required'},409)}
+  }
   const media=await client.query<{storage_key:string}>(`SELECT storage_key FROM whateato_blog_media WHERE post_id=$1`,[id]);
   await client.query('DELETE FROM whateato_blog_media WHERE post_id=$1',[id]);
   await client.query('DELETE FROM whateato_blog_audit WHERE post_id=$1',[id]);
+  await client.query('DELETE FROM whateato_blog_publications WHERE post_id=$1',[id]);
   await client.query('DELETE FROM whateato_blog_drafts WHERE post_id=$1',[id]);
   await client.query('DELETE FROM whateato_blog_posts WHERE id=$1',[id]);
   await client.query('COMMIT');

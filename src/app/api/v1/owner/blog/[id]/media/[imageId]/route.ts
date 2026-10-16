@@ -50,3 +50,44 @@ export async function PATCH(req:NextRequest,{params}:Ctx){
   return respond({error:'image_approval_unavailable'},503)
  }finally{client.release()}
 }
+
+/** Delete only unused images. Never break drafts or already published articles. */
+export async function DELETE(req:NextRequest,{params}:Ctx){
+ const staff=await currentStaff();
+ if(!staff||!hasPermission(staff,'publish'))return respond({error:'owner_required'},403);
+ if(!safeSameOrigin(req))return respond({error:'cross_site_request'},403);
+ const {id,imageId}=await params;
+ if(!isUuid(id)||!isUuid(imageId))return respond({error:'invalid_id'},400);
+ if(req.headers.get('x-whateato-confirm-delete')!==imageId)
+  return respond({error:'image_delete_confirmation_required'},409);
+ const pool=getPool();if(!pool)return respond({error:'database_unavailable'},503);
+ const client=await pool.connect();
+ let key:string|null=null;
+ try{
+  await client.query('BEGIN');
+  const found=await client.query<{storage_key:string}>(`
+   SELECT storage_key FROM whateato_blog_media WHERE id=$1 AND post_id=$2 FOR UPDATE`,[imageId,id]);
+  if(!found.rowCount){await client.query('ROLLBACK');return respond({error:'image_not_found'},404)}
+  const used=await client.query(`
+   SELECT EXISTS(
+    SELECT 1 FROM whateato_blog_drafts WHERE post_id=$1 AND translations::text LIKE $2
+    UNION ALL
+    SELECT 1 FROM whateato_blog_publications WHERE post_id=$1 AND snapshot::text LIKE $2
+   ) AS referenced`,[id,'%'+imageId+'%']);
+  if(used.rows[0]?.referenced){
+   await client.query('ROLLBACK');
+   return respond({error:'image_used_in_article_remove_from_body_first'},409);
+  }
+  await client.query('DELETE FROM whateato_blog_media WHERE id=$1 AND post_id=$2',[imageId,id]);
+  await client.query('COMMIT');
+  key=found.rows[0].storage_key;
+ }catch{
+  await client.query('ROLLBACK').catch(()=>{});
+  return respond({error:'image_delete_unavailable'},503);
+ }finally{client.release()}
+ if(key){
+  const {deletePhoto}=await import('@/lib/cms-object-storage');
+  await deletePhoto(key).catch(()=>{});
+ }
+ return respond({deleted:true});
+}
