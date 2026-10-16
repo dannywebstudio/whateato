@@ -82,3 +82,34 @@ export async function PUT(req:NextRequest,{params}:Ctx){
   return respond({error:'blog_save_unavailable'},503)
  }finally{client.release()}
 }
+
+/** Delete only never-published drafts. Live/published posts cannot be removed from the quick list. */
+export async function DELETE(req:NextRequest,{params}:Ctx){
+ const staff=await currentStaff();
+ if(!staff||!hasPermission(staff,'publish'))return respond({error:'owner_required'},403);
+ if(!safeSameOrigin(req))return respond({error:'cross_site_request'},403);
+ const {id}=await params;if(!isUuid(id))return respond({error:'invalid_id'},400);
+ const pool=getPool();if(!pool)return respond({error:'database_unavailable'},503);
+ const client=await pool.connect();
+ try{
+  await client.query('BEGIN');
+  const row=await client.query(`SELECT p.id,u.revision AS published_revision
+   FROM whateato_blog_posts p LEFT JOIN whateato_blog_publications u ON u.post_id=p.id
+   WHERE p.id=$1 FOR UPDATE OF p`,[id]);
+  if(!row.rowCount){await client.query('ROLLBACK');return respond({error:'post_not_found'},404)}
+  if(row.rows[0].published_revision!==null){await client.query('ROLLBACK');return respond({error:'published_posts_cannot_be_deleted'},409)}
+  const media=await client.query<{storage_key:string}>(`SELECT storage_key FROM whateato_blog_media WHERE post_id=$1`,[id]);
+  await client.query('DELETE FROM whateato_blog_media WHERE post_id=$1',[id]);
+  await client.query('DELETE FROM whateato_blog_audit WHERE post_id=$1',[id]);
+  await client.query('DELETE FROM whateato_blog_drafts WHERE post_id=$1',[id]);
+  await client.query('DELETE FROM whateato_blog_posts WHERE id=$1',[id]);
+  await client.query('COMMIT');
+  // Storage deletion is best effort after the committed database removal.
+  const {deletePhoto}=await import('@/lib/cms-object-storage');
+  await Promise.all(media.rows.map(m=>deletePhoto(m.storage_key).catch(()=>{})));
+  return respond({deleted:true});
+ }catch{
+  await client.query('ROLLBACK').catch(()=>{});
+  return respond({error:'blog_delete_unavailable'},503);
+ }finally{client.release()}
+}
