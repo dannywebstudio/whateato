@@ -7,8 +7,8 @@ const words={
  ja:{view:'写真を拡大',close:'閉じる',previous:'前の写真',next:'次の写真'},
  'zh-CN':{view:'放大照片',close:'关闭',previous:'上一张',next:'下一张'}
 } as const;
-export default function PhotoLightbox({photos,initialIndex=0,locale='en',mode='thumbnail',onOpen}:{
- photos:Photo[];initialIndex?:number;locale?:string;mode?:'thumbnail'|'gallery';onOpen?:()=>Promise<Photo[]>
+export default function PhotoLightbox({photos,initialIndex=0,locale='en',mode='thumbnail',restaurantId}:{
+ photos:Photo[];initialIndex?:number;locale?:string;mode?:'thumbnail'|'gallery';restaurantId?:string
 }){
  const t=words[(locale in words?locale:'en') as keyof typeof words];
  const [open,setOpen]=useState(false);
@@ -26,9 +26,13 @@ export default function PhotoLightbox({photos,initialIndex=0,locale='en',mode='t
  if(!photos.length)return null;
  const launch=async()=>{
   setActive(photos);setIndex(initialIndex);setOpen(true);
-  if(!onOpen)return;
+  if(!restaurantId)return;
   setLoading(true);
-  try{const more=await onOpen();if(more.length){setActive(more);setIndex(Math.min(initialIndex,more.length-1))}}finally{setLoading(false)}
+  try{
+   const response=await fetch('/api/restaurants/'+encodeURIComponent(restaurantId)+'/gallery',{cache:'no-store'});
+   if(response.ok){const data=await response.json();const more:Array<Photo>=Array.isArray(data.images)?data.images:[];
+    if(more.length){setActive(more);setIndex(Math.min(initialIndex,more.length-1))}}
+  }catch{}finally{setLoading(false)}
  };
  // Review photographs open a separate browser page for native enlarged viewing.
  if(mode==='thumbnail')return <a href={photos[initialIndex].url} target="_blank" rel="noopener noreferrer"
