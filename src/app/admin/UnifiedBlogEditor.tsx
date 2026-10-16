@@ -4,7 +4,8 @@ import type {BlogBlock,BlogTranslation} from '@/lib/blog-model';
 import styles from './blog-editor.module.css';
 
 type ApprovedImage={id:string;alt_text:string;rights_status:string;image_url:string};
-type Props={locale:string;articleId:string;translation:BlogTranslation;images:ApprovedImage[];onChange:(patch:Partial<BlogTranslation>)=>void;onChooseFile:(file:File)=>void};
+type RestaurantMatch={id:string;name_ko:string;road_address_ko:string|null};
+type Props={locale:string;articleId:string;translation:BlogTranslation;images:ApprovedImage[];onChange:(patch:Partial<BlogTranslation>)=>void;onChooseFile:(file:File)=>void;restaurantQuery:string;onRestaurantQuery:(value:string)=>void;restaurantMatches:RestaurantMatch[];onRestaurantSearch:()=>void;onRestaurantInsert:(id:string)=>void};
 
 const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,char=>(({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' } as Record<string,string>)[char]||char));
 const textHtml=(value:string)=>value.split(/(\[[^\]\n]{1,120}\]\(https:\/\/[^\s)<>]{5,500}\))/g).map(part=>{
@@ -39,6 +40,7 @@ const render=(translation:BlogTranslation,images:ApprovedImage[])=>
       (image?'<img src="'+escapeHtml(image.image_url)+'" alt="'+escapeHtml(image.alt_text)+'"/>':'<p>이미지 선택 또는 승인 필요</p>')+
       '<figcaption>'+escapeHtml(block.caption||'')+'</figcaption></figure>';
    }
+   if(block.type==='restaurant')return '<div class="we-card we-card-search restaurant-card" contenteditable="false" data-restaurant-id="'+escapeHtml(block.restaurant_id||'')+'"><div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>식당 카드 불러오는 중…</h3></div><div class="we-card-actions"><a href="/map?restaurant='+escapeHtml(block.restaurant_id||'')+'">지도에서 보기</a><a href="/restaurant/'+escapeHtml(block.restaurant_id||'')+'">자세히 보기 ↗</a></div></div></div>';
    if(block.type==='divider')return '<hr/>';
    if(block.type==='table'){
     const bw=block.table_border_width??1,bc=block.table_border_color||'#dae6df',bs=block.table_border_style||'solid';
@@ -64,6 +66,7 @@ function serialize(root:HTMLElement):{blocks:BlogBlock[]}{
   else if(name==='blockquote')add('quote',{...style,text:inlineText(node).slice(0,8000)});
   else if(name==='ul'||name==='ol')add('list',{...style,items:Array.from(node.querySelectorAll(':scope > li')).map(li=>inlineText(li).slice(0,450)).slice(0,30)});
   else if(name==='figure')add('image',{align,image_width:Number(node.getAttribute('data-width'))||100,image_id:node.getAttribute('data-image-id')||'',caption:(node.querySelector('figcaption')?.textContent||'').slice(0,250)});
+  else if(node.hasAttribute('data-restaurant-id'))add('restaurant',{restaurant_id:node.getAttribute('data-restaurant-id')||''});
   else if(name==='hr')add('divider');
   else if(name==='table'){
    const rows=Array.from(node.querySelectorAll('tr')).slice(0,20).map(tr=>Array.from(tr.querySelectorAll('td,th')).slice(0,6).map(cell=>inlineText(cell).slice(0,240)));
@@ -83,7 +86,7 @@ function serialize(root:HTMLElement):{blocks:BlogBlock[]}{
  return {blocks:blocks.slice(0,80)};
 }
 
-export default function UnifiedBlogEditor({locale,articleId,translation,images,onChange,onChooseFile}:Props){
+export default function UnifiedBlogEditor({locale,articleId,translation,images,onChange,onChooseFile,restaurantQuery,onRestaurantQuery,restaurantMatches,onRestaurantSearch,onRestaurantInsert}:Props){
  const ref=useRef<HTMLDivElement>(null);
  const pick=useRef<HTMLInputElement>(null);
  const [font,setFont]=useState('sans');
@@ -269,6 +272,23 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(caret);
   lastCaret.current=caret.cloneRange();
  };
+ const insertRestaurant=async(item:RestaurantMatch)=>{
+  const card=document.createElement('div');card.className='we-card we-card-search restaurant-card';card.contentEditable='false';card.dataset.restaurantId=item.id;
+  card.innerHTML='<div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>'+escapeHtml(item.name_ko)+'</h3></div><div class="we-card-information">'+escapeHtml(item.road_address_ko||'')+'</div><div class="we-card-actions"><a href="/map?restaurant='+encodeURIComponent(item.id)+'">지도에서 보기</a><a href="/restaurant/'+encodeURIComponent(item.id)+'?hl='+encodeURIComponent(locale)+'">자세히 보기 ↗</a></div></div>';
+  putNode(card);onRestaurantInsert(item.id);sync();setNote('음식카드를 본문에 삽입했어.');
+  try{
+   const response=await fetch('/api/v1/restaurants/'+encodeURIComponent(item.id)+'?hl='+encodeURIComponent(locale));
+   if(!response.ok)return;
+   const data=await response.json();const r=data.restaurant;
+   if(!r||!ref.current?.contains(card))return;
+   const image=data.images?.[0]?.url;
+   const visual=card.querySelector('.we-card-visual');
+   if(visual&&image)visual.innerHTML='<img src="'+escapeHtml(image)+'" alt="'+escapeHtml(r.name||item.name_ko)+'" loading="lazy"/>';
+   const heading=card.querySelector('h3');if(heading)heading.textContent=r.name||item.name_ko;
+   const info=card.querySelector('.we-card-information');if(info)info.textContent=[data.menus?.[0]?.name,r.address].filter(Boolean).join(' · ');
+   card.style.setProperty('--cuisine-accent',r.card_accent_color||'#16845b');
+  }catch{/* The linked card remains usable when its live preview is unavailable. */}
+ };
  const previewFile=(file:File)=>{
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024){setNote('JPG/PNG/WebP 8MB 이하만 지원해.');return}
   const figure=document.createElement('figure');figure.contentEditable='false';figure.dataset.pending='true';figure.className='inlinePhoto';figure.dataset.width=String(imageSize);figure.style.width=imageSize+'%';
@@ -345,6 +365,11 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
     <label>선 종류 <select value={tableStyle} onChange={e=>setTableStyle(e.target.value as typeof tableStyle)}><option value="solid">실선</option><option value="dashed">파선</option><option value="dotted">점선</option><option value="none">없음</option></select></label>
     <button type="button" disabled={!selectedTable} onClick={()=>modifyTable('border')}>스타일 적용</button>
     {(['insert-row','insert-col','delete-row','delete-col'] as const).map((v,i)=><button type="button" key={v} disabled={!selectedTable} onClick={()=>modifyTable(v)}>{['행 추가','열 추가','행 삭제','열 삭제'][i]}</button>)}
+   </div>
+   <div className={styles.toolGroup}><strong>음식카드 추가</strong>
+    <input aria-label="음식카드 상호명 검색" placeholder="상호명 검색" value={restaurantQuery} onChange={e=>onRestaurantQuery(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();onRestaurantSearch()}}}/>
+    <button type="button" onClick={onRestaurantSearch}>식당 찾기</button>
+    {restaurantMatches.slice(0,8).map(item=><button type="button" key={item.id} title={item.road_address_ko||''} onClick={()=>void insertRestaurant(item)}>+ {item.name_ko}</button>)}
    </div>
    <div className={styles.toolGroup}><strong>사진</strong>
     <button type="button" onClick={()=>pick.current?.click()}>사진 업로드</button>
