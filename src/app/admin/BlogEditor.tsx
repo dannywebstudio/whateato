@@ -186,8 +186,20 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
   }
  };
  const searchRestaurant=async()=>{
-  try{const r=await api('/api/v1/owner/catalog?q='+encodeURIComponent(restaurantQuery));
-   setRestaurantMatches(r.items||[])}catch(e){error(e)}
+  try{
+   // Only public venues that the Map focus endpoint can actually display.
+   const result=await api('/api/v1/restaurants?q='+encodeURIComponent(restaurantQuery)+'&hl='+encodeURIComponent(locale)+'&limit=30');
+   const candidates=(result.items||[]) as {id:string;name_ko:string;name:string;address_ko:string|null;address:string|null}[];
+   const checked=await Promise.all(candidates.map(async item=>{
+    try{
+     const response=await fetch('/api/v1/map/focus?id='+encodeURIComponent(item.id)+'&hl='+encodeURIComponent(locale),{cache:'no-store'});
+     if(!response.ok)return null;
+     const data=await response.json();
+     return data.focus_id===item.id&&data.items?.[0]?.id===item.id?{id:item.id,name_ko:item.name||item.name_ko,road_address_ko:item.address||item.address_ko}:null;
+    }catch{return null}
+   }));
+   setRestaurantMatches(checked.filter((item):item is {id:string;name_ko:string;road_address_ko:string|null}=>item!==null).slice(0,12));
+  }catch(e){setRestaurantMatches([]);error(e)}
  };
  const upload=async(incoming?:File)=>{
   const chosenFile=incoming||file;
