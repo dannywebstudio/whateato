@@ -73,6 +73,13 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  const [note,setNote]=useState('');
  const [imageSize,setImageSize]=useState(100);
  const selectedFigure=useRef<HTMLElement|null>(null);
+ const [selectedPhoto,setSelectedPhoto]=useState(false);
+ const chooseFigure=(figure:HTMLElement|null)=>{
+  selectedFigure.current?.removeAttribute('data-selected');
+  selectedFigure.current=figure;
+  if(figure){figure.dataset.selected='true';setImageSize(Number(figure.dataset.width)||100)}
+  setSelectedPhoto(Boolean(figure));
+ };
  const recent=useRef<{articleId:string;locale:string}|null>(null);
  const lastCaret=useRef<Range|null>(null);
  useEffect(()=>{
@@ -94,7 +101,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    const caption=pending.querySelector('figcaption');
    if(caption)caption.textContent='';
    sync();
-   setNote('사진을 본문 위치에 연결했어. 사용권 승인 후 공개할 수 있어.');
+   setNote('');
   };
   window.addEventListener('whateato-blog-uploaded',onUploaded);
   return ()=>window.removeEventListener('whateato-blog-uploaded',onUploaded);
@@ -108,6 +115,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   // Preserve caret during typing. Rehydrate only when changing article/language.
   if(recent.current?.articleId===articleId&&recent.current?.locale===locale)return;
   ref.current.innerHTML=render(translation,images);
+  chooseFigure(null);
   recent.current={articleId,locale};
  },[articleId,locale,translation,images]);
  const sync=()=>{
@@ -171,9 +179,9 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   const figure=document.createElement('figure');figure.contentEditable='false';figure.dataset.pending='true';figure.className='inlinePhoto';figure.dataset.width=String(imageSize);figure.style.width=imageSize+'%';
   const img=document.createElement('img');img.src=URL.createObjectURL(file);img.alt=file.name;
   img.onload=()=>URL.revokeObjectURL(img.src);
-  const caption=document.createElement('figcaption');caption.textContent='업로드 중 · '+file.name;
-  figure.append(img,caption);putNode(figure);onChooseFile(file);
-  setNote('사진 미리보기가 본문에 삽입됐어. 저장 전에 아래에서 출처와 사용권을 확인하고 업로드해.');
+  const caption=document.createElement('figcaption');caption.textContent='';
+  figure.append(img,caption);putNode(figure);chooseFigure(figure);onChooseFile(file);
+  setNote('');
  };
  const applyAlign=(align:'left'|'center'|'right')=>{
   const selected=lastCaret.current?.startContainer;
@@ -189,7 +197,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   const selected=lastCaret.current?.startContainer;
   const figure=(selected instanceof HTMLElement?selected:selected?.parentElement)?.closest('figure') as HTMLElement|null;
   const target=selectedFigure.current&&ref.current?.contains(selectedFigure.current)?selectedFigure.current:figure&&ref.current?.contains(figure)?figure:null;
-  if(target){target.dataset.width=String(imageSize);target.style.width=imageSize+'%';target.style.maxWidth='100%';sync();setNote('사진 크기를 '+imageSize+'%로 변경했어.');}
+  if(target){chooseFigure(target);target.dataset.width=String(imageSize);target.style.width=imageSize+'%';target.style.maxWidth='100%';sync();setNote('');}
   else setNote('크기를 변경할 이미지를 클릭해 주세요.');
  };
  const insertImage=(id:string)=>{
@@ -235,7 +243,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>applyAlign('right')}>오른쪽</button>
    <label>글자 크기 <select defaultValue="16" onChange={e=>applySize(Number(e.target.value))}>{[12,14,16,18,20,24,28,32,40].map(v=><option key={v} value={v}>{v}px</option>)}</select></label>
    <label>사진 크기 <select value={imageSize} onChange={e=>setImageSize(Number(e.target.value))}>{[25,40,50,60,75,90,100].map(v=><option key={v} value={v}>{v}%</option>)}</select></label>
-   <button type="button" onClick={resizeImage}>사진 크기 적용</button>
+   <button type="button" disabled={!selectedPhoto} onClick={resizeImage}>선택한 사진 크기 적용</button>
    <input ref={pick} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>{const file=e.target.files?.[0];if(file)previewFile(file);e.target.value=''}}/>
    <select aria-label="승인된 사진 삽입" value={imageChoice} onChange={e=>{setImageChoice(e.target.value);if(e.target.value)insertImage(e.target.value)}}>
     <option value="">사진 위치에 삽입…</option>
@@ -243,7 +251,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    </select>
   </div>
   {note&&<p className={styles.editorNotice} role="status">{note}</p>}
-  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onKeyUp={rememberCaret} onMouseUp={rememberCaret} onClick={e=>{const node=e.target as HTMLElement;const figure=node.closest('figure');if(figure&&ref.current?.contains(figure)){selectedFigure.current=figure as HTMLElement;setImageSize(Number(figure.getAttribute('data-width'))||100)}}} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
-  <p className={styles.editorHint}>사진을 클릭한 뒤 크기를 선택하면 크기를 조절할 수 있어. 사진은 문단 사이에 자유롭게 배치돼.</p>
+  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onKeyUp={rememberCaret} onMouseUp={rememberCaret} onClick={e=>{const node=e.target as HTMLElement;const figure=node.closest('figure');chooseFigure(figure&&ref.current?.contains(figure)?figure as HTMLElement:null)}} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
+  <p className={styles.editorHint}>사진을 클릭하면 선택 테두리가 나타나고, 해당 사진의 크기만 조절할 수 있어. 사진은 문단 사이에 자유롭게 배치돼.</p>
  </div>;
 }
