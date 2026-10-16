@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
-import VerifiedRestaurantPhoto from '@/components/VerifiedRestaurantPhoto';
+import PhotoLightbox from '@/components/PhotoLightbox';
 import s from './RestaurantPhotoGallery.module.css';
 type Photo={id:string;alt_ko:string|null;url:string};
 const copy={
@@ -36,7 +36,7 @@ export default function RestaurantPhotoGallery({images,name,locale}:{images:Phot
    <div className={s.viewport}>
      <div className={s.track} style={{transform:`translateX(-${index*100/visible}%)`}}>
        {images.map((photo,i)=><div className={s.slide} key={photo.id}>
-         <VerifiedRestaurantPhoto image={photo} restaurantName={name} variant="detail" priority={i===0}/>
+         <PhotoLightbox photos={images.map(img=>({url:img.url,alt:img.alt_ko||name}))} initialIndex={i} locale={locale} mode="gallery"/>
        </div>)}
      </div>
    </div>
