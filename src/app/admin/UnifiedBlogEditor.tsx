@@ -103,8 +103,15 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    sync();
    setNote('');
   };
+  const onFailed=(event:Event)=>{
+   const message=(event as CustomEvent<{message:string}>).detail?.message||'저장되지 않았어';
+   const pending=ref.current?.querySelector('figure[data-pending]');
+   if(pending){pending.remove();sync()}
+   setNote('사진 업로드 실패: '+message);
+  };
+  window.addEventListener('whateato-blog-upload-failed',onFailed);
   window.addEventListener('whateato-blog-uploaded',onUploaded);
-  return ()=>window.removeEventListener('whateato-blog-uploaded',onUploaded);
+  return ()=>{window.removeEventListener('whateato-blog-uploaded',onUploaded);window.removeEventListener('whateato-blog-upload-failed',onFailed)};
  },[onChange]);
  const rememberCaret=()=>{
   const selection=window.getSelection();
