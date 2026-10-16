@@ -10,8 +10,9 @@ export default function RatingPair({editorial,visitor,locale='ko',compact=false}
 }){
  const t=labels[(locale in labels?locale:'en') as Locale];
  const valid=(v:number|null|undefined)=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=5;
- const scores=[valid(editorial)?{title:t.editorial,value:editorial!}:null,
-  valid(visitor)?{title:t.visitor,value:visitor!}:null].filter((x):x is {title:string;value:number}=>x!==null);
+ const scores:{title:string;value:number}[]=[];
+ if(valid(editorial))scores.push({title:t.editorial,value:editorial as number});
+ if(valid(visitor))scores.push({title:t.visitor,value:visitor as number});
  if(!scores.length)return <span>{t.pending}</span>;
  return <span style={{display:'inline-flex',flexWrap:'wrap',gap:compact?'4px 9px':'8px 15px',alignItems:'center'}}>
   {scores.map(score=><span key={score.title} style={{whiteSpace:'nowrap',fontSize:compact?11:13}}>
