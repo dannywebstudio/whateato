@@ -81,6 +81,23 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   link.href='https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap';
   document.head.appendChild(link);
  },[]);
+ useEffect(()=>{
+  const onUploaded=(event:Event)=>{
+   const detail=(event as CustomEvent<{id:string;url:string}>).detail;
+   if(!detail?.id||!ref.current)return;
+   const pending=ref.current.querySelector('figure[data-pending]') as HTMLElement|null;
+   if(!pending)return;
+   pending.removeAttribute('data-pending');pending.dataset.imageId=detail.id;pending.dataset.width='100';
+   const img=pending.querySelector('img');
+   if(img)img.src=detail.url;
+   const caption=pending.querySelector('figcaption');
+   if(caption)caption.textContent='사용권 승인 대기';
+   sync();
+   setNote('사진을 본문 위치에 연결했어. 사용권 승인 후 공개할 수 있어.');
+  };
+  window.addEventListener('whateato-blog-uploaded',onUploaded);
+  return ()=>window.removeEventListener('whateato-blog-uploaded',onUploaded);
+ },[onChange]);
  const rememberCaret=()=>{
   const selection=window.getSelection();
   if(selection?.rangeCount&&ref.current?.contains(selection.anchorNode))lastCaret.current=selection.getRangeAt(0).cloneRange();
