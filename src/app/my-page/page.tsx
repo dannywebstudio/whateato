@@ -51,7 +51,7 @@ export default async function MyPage({searchParams}:{searchParams:Promise<{hl?:s
   <header className={styles.heading}>
    <div><span className={styles.eyebrow}>MY WHATEATO</span><h1>My Page</h1><p className={styles.intro}>{t.intro}</p></div>
    <div className={styles.actions}>
-    <Link href="/account" className={styles.accountLink}>{t.account}</Link>
+    <Link href={'/account?hl='+encodeURIComponent(locale)} className={styles.accountLink}>{t.account}</Link>
     <form action={logout}><button type="submit" className={styles.logout}>{t.logout}</button></form>
    </div>
   </header>
