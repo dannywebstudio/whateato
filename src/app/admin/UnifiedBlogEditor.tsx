@@ -53,6 +53,18 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  const [imageChoice,setImageChoice]=useState('');
  const [note,setNote]=useState('');
  const recent=useRef<{articleId:string;locale:string}|null>(null);
+ const lastCaret=useRef<Range|null>(null);
+ useEffect(()=>{
+  const id='whateato-cms-free-fonts';
+  if(document.getElementById(id))return;
+  const link=document.createElement('link');link.id=id;link.rel='stylesheet';
+  link.href='https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap';
+  document.head.appendChild(link);
+ },[]);
+ const rememberCaret=()=>{
+  const selection=window.getSelection();
+  if(selection?.rangeCount&&ref.current?.contains(selection.anchorNode))lastCaret.current=selection.getRangeAt(0).cloneRange();
+ };
  useEffect(()=>{
   if(!ref.current)return;
   // Preserve caret during typing. Rehydrate only when changing article/language.
@@ -84,10 +96,10 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   const caption=document.createElement('figcaption');caption.textContent=image.alt_text;
   figure.append(img,caption);
   const selection=window.getSelection();
-  if(selection?.rangeCount&&ref.current?.contains(selection.anchorNode)){
-   const range=selection.getRangeAt(0);range.deleteContents();range.insertNode(figure);
+  if(lastCaret.current&&ref.current?.contains(lastCaret.current.commonAncestorContainer)){
+   const range=lastCaret.current;range.deleteContents();range.insertNode(figure);
    const p=document.createElement('p');p.append(document.createElement('br'));figure.after(p);
-   range.setStart(p,0);range.collapse(true);selection.removeAllRanges();selection.addRange(range);
+   range.setStart(p,0);range.collapse(true);selection?.removeAllRanges();selection?.addRange(range);lastCaret.current=range.cloneRange();
   }else ref.current?.append(figure);
   setImageChoice('');sync();
  };
@@ -116,7 +128,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    </select>
   </div>
   {note&&<p className={styles.editorNotice} role="status">{note}</p>}
-  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={sync} onBlur={sync} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
+  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onKeyUp={rememberCaret} onMouseUp={rememberCaret} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
   <p className={styles.editorHint}>첫 줄에 글 제목을 쓰고 이어서 본문을 작성해. 글자를 선택한 뒤 위 도구를 누르면 서식이 적용돼. 사진은 업로드·권리 승인 후 원하는 커서 위치에 삽입해.</p>
  </div>;
 }
