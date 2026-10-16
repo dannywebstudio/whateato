@@ -34,13 +34,28 @@ export default function PhotoLightbox({photos,initialIndex=0,locale='en',mode='t
     if(more.length){setActive(more);setIndex(Math.min(initialIndex,more.length-1))}}
   }catch{}finally{setLoading(false)}
  };
- // Review photographs open a separate browser page for native enlarged viewing.
- if(mode==='thumbnail')return <a href={photos[initialIndex].url} target="_blank" rel="noopener noreferrer"
-  aria-label={t.view} style={{display:'inline-block',cursor:'zoom-in'}}>
-  {/* eslint-disable-next-line @next/next/no-img-element */}
-  <img src={photos[initialIndex].url} alt={photos[initialIndex].alt} loading="lazy"
-   style={{width:94,height:94,objectFit:'cover',borderRadius:6}}/>
- </a>;
+ if(mode==='thumbnail')return <>
+  <button type="button" onClick={()=>void launch()} aria-label={t.view}
+    style={{display:'inline-block',cursor:'zoom-in',padding:0,border:0,background:'transparent'}}>
+   {/* eslint-disable-next-line @next/next/no-img-element */}
+   <img src={photos[initialIndex].url} alt={photos[initialIndex].alt} loading="lazy"
+    style={{display:'block',width:94,height:94,objectFit:'cover',borderRadius:6}}/>
+  </button>
+  {open&&<div role="dialog" aria-modal="true" aria-label={t.view} onClick={()=>setOpen(false)}
+    style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(7,14,11,.88)',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+   <div onClick={e=>e.stopPropagation()} style={{position:'relative',width:'min(92vw,960px)',maxHeight:'90vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+    <button type="button" aria-label={t.close} onClick={()=>setOpen(false)}
+      style={{position:'absolute',right:0,top:0,zIndex:1,border:0,borderRadius:20,background:'#fff',color:'#172b20',fontSize:25,width:40,height:40,cursor:'pointer'}}>×</button>
+    {active.length>1&&<button type="button" aria-label={t.previous} onClick={()=>setIndex(i=>(i+active.length-1)%active.length)}
+      style={{position:'absolute',left:0,zIndex:1,border:0,background:'#0008',color:'#fff',fontSize:34,padding:'8px 12px',cursor:'pointer'}}>‹</button>}
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img src={active[index]?.url} alt={active[index]?.alt||''} style={{display:'block',maxWidth:'100%',maxHeight:'86vh',width:'auto',height:'auto',objectFit:'contain',borderRadius:8}}/>
+    {active.length>1&&<button type="button" aria-label={t.next} onClick={()=>setIndex(i=>(i+1)%active.length)}
+      style={{position:'absolute',right:0,zIndex:1,border:0,background:'#0008',color:'#fff',fontSize:34,padding:'8px 12px',cursor:'pointer'}}>›</button>}
+    <span style={{position:'absolute',bottom:5,background:'#0008',color:'#fff',fontSize:12,padding:'3px 9px',borderRadius:12}}>{index+1} / {active.length}</span>
+   </div>
+  </div>}
+ </>;
  return <>
   <button type="button" onClick={()=>void launch()} aria-label={t.view}
    style={{border:0,padding:0,cursor:'zoom-in',width:'100%',height:'100%',background:'transparent'}}>
