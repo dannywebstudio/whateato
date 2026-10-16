@@ -181,3 +181,33 @@
 .we-map-popup-state.is-preparing{color:#935e11}
 .we-map-popup a{font-size:12px;font-weight:750;text-align:center;color:#fff!important;background:#13805b;border-radius:7px;text-decoration:none;padding:8px 12px}
 .we-map-popup a:hover{background:#0e6949}
+
+/* Embedded article/CMS cards: same Map card appearance, exactly one compact row.
+   The Map directory uses four stretch rows; that rule must not enlarge a single embed. */
+.whateato-inline-map-card.map-explore-cards{
+ display:grid;
+ grid-template-columns:minmax(0,1fr);
+ grid-template-rows:135px;
+ gap:0;
+ align-content:start;
+ width:100%;
+ max-width:100%;
+ min-height:0;
+}
+.whateato-inline-map-card.map-explore-cards .we-card.we-card-map{
+ height:135px;
+ min-height:135px;
+ max-height:135px;
+ grid-template-columns:116px minmax(0,1fr);
+ overflow:hidden;
+}
+.whateato-inline-map-card .we-card-map .we-card-visual{min-height:0;height:135px}
+.whateato-inline-map-card .we-card-map .we-card-body{min-height:0}
+@media(max-width:620px){
+ .whateato-inline-map-card.map-explore-cards{grid-template-rows:minmax(145px,auto)}
+ .whateato-inline-map-card.map-explore-cards .we-card.we-card-map{
+  height:auto;min-height:145px;max-height:none;
+  grid-template-columns:100px minmax(0,1fr)
+ }
+ .whateato-inline-map-card .we-card-map .we-card-visual{height:100%;min-height:145px}
+}
