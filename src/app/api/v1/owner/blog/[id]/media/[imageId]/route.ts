@@ -79,8 +79,6 @@ export async function DELETE(req:NextRequest,{params}:Ctx){
    return respond({error:'image_used_in_article_remove_from_body_first'},409);
   }
   await client.query('DELETE FROM whateato_blog_media WHERE id=$1 AND post_id=$2',[imageId,id]);
-  await client.query(`INSERT INTO whateato_blog_audit(post_id,actor_id,action)
-   VALUES($1,$2,'image_deleted')`,[id,staff.accountId]);
   await client.query('COMMIT');
   key=found.rows[0].storage_key;
  }catch{
