@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import {seoPublicEnabled} from '@/lib/public-seo';
 import {currentStaff,hasPermission} from '@/lib/owner-cms-auth';
-import {notFound} from 'next/navigation';
+import {notFound,redirect} from 'next/navigation';
 import type {Metadata} from 'next';
 import {findPublishedBlog,relatedBlogRestaurants} from '@/lib/blog-public';
 import {getBlogCategories,blogCategoryName} from '@/lib/blog-categories';
@@ -20,11 +20,11 @@ export async function generateMetadata({params,searchParams}:Ctx):Promise<Metada
   title:t.seo_title||published.title,
   description:t.seo_description||published.excerpt,
   alternates:{
-   canonical:'/blog/'+slug+(published.locale==='en'?'':'?hl='+encodeURIComponent(published.locale)),
+   canonical:published.locale==='ja'?'/ja/blog/'+slug:'/blog/'+slug+(published.locale==='en'?'':'?hl='+encodeURIComponent(published.locale)),
    languages:{
     ...Object.fromEntries(BLOG_REQUIRED_LOCALES.filter(l=>
       Boolean(published.draft.translations[l]?.title)).map(l=>
-      [l,'/blog/'+slug+(l==='en'?'':'?hl='+encodeURIComponent(l))])),
+      [l,l==='ja'?'/ja/blog/'+slug:'/blog/'+slug+(l==='en'?'':'?hl='+encodeURIComponent(l))])),
     'en-US':'/blog/'+slug,
     'x-default':'/blog/'+slug
    }
@@ -55,7 +55,7 @@ export default async function BlogStory({params,searchParams}:Ctx){
   author:{'@type':'Organization',name:'WhatEatO Editorial'},
   publisher:{'@type':'Organization',name:'WhatEatO'},
   mainEntityOfPage:(process.env.NEXT_PUBLIC_SITE_URL||'https://whateato.com').replace(/\/$/,'')
-    +'/blog/'+slug,
+    +(published.locale==='ja'?'/ja/blog/':'/blog/')+slug,
   ...(published.cover_image_id?{image:[(process.env.NEXT_PUBLIC_SITE_URL||
     'https://whateato.com').replace(/\/$/,'')+'/api/blog/images/'+published.cover_image_id]}:{})
  };
@@ -79,7 +79,7 @@ export default async function BlogStory({params,searchParams}:Ctx){
      <nav className={styles.languageSwitch} aria-label="Article language">
       {BLOG_REQUIRED_LOCALES.map(l=><Link key={l}
        aria-current={published.locale===l?'page':undefined}
-       href={'/blog/'+slug+(l==='en'?'':'?hl='+encodeURIComponent(l))}>
+       href={l==='ja'?'/ja/blog/'+slug:'/blog/'+slug+(l==='en'?'':'?hl='+encodeURIComponent(l))}>
        {BLOG_LOCALE_LABELS[l]}
       </Link>)}
      </nav>
