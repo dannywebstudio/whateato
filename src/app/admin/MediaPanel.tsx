@@ -75,5 +75,4 @@ export default function MediaPanel({selected,owner,busy,image,setImage,rights,se
              try{await post('/api/v1/owner/media/'+i.id,{decision:'hide'},'PATCH');await select(selected.restaurant.id)}catch(e){inform(e)}
            })()}>비공개</button>}
        </div>)}</div>
-     </>
    </section>);}
