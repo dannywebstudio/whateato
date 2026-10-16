@@ -173,7 +173,10 @@ export default function BlogEditor({owner}:{owner:boolean}){
    form.set('rights_confirmation','yes');
    const data=await api('/api/v1/owner/blog/'+current.id+'/media',{method:'POST',body:form});
    setFile(null);setAlt('');setSource('');setRightsRef('');setRights(false);
-   await open(current.id);
+   setCurrent(p=>p?{...p,images:[...p.images,{id:data.id,media_role:imageRole,
+     alt_text:alt||file.name,rights_status:'pending',image_url:data.image_url,
+     width:data.width,height:data.height}]}:p);
+   window.dispatchEvent(new CustomEvent('whateato-blog-uploaded',{detail:{id:data.id,url:data.image_url}}));
    setMessage('사진 업로드 완료 · 게시 전에 Owner가 사진 권리를 승인해야 해. ('+data.id+')');
   }catch(e){error(e)}finally{setBusy(false)}
  };
@@ -283,6 +286,9 @@ export default function BlogEditor({owner}:{owner:boolean}){
        {readiness.find(item=>item.locale===l)?.ready?' ✓':''}</button>)}
      </div>
      <div className={styles.details}>
+      <label>포스팅 제목 (블로그 목록·상세에 표시)
+       <input value={translation.title} maxLength={140}
+        onChange={e=>updateTranslation({title:e.target.value})} placeholder="독자가 보게 될 글 제목을 입력해"/></label>
       <label>짧은 소개 (글 목록·검색에 표시) <textarea value={translation.excerpt}
         maxLength={320} rows={3} onChange={e=>updateTranslation({excerpt:e.target.value})}/></label>
       <div className={styles.twoCols}>
