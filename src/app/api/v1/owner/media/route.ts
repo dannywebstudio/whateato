@@ -20,16 +20,21 @@ export async function POST(req:NextRequest){
  try{input=await req.formData()}catch{return respond({error:'invalid_multipart'},400)}
  const file=input.get('file'),id=input.get('restaurant_id');
  const source=input.get('source_reference'),permission=input.get('rights_reference');
+ const origin=input.get('photo_origin');
+ const direct=origin==='owner_original';
+ const safeReference=(v:FormDataEntryValue|null)=>typeof v==='string'&&/^https:\/\/\S{5,695}$/.test(v);
  const position=Number(input.get('position')||0);
  const role=input.get('photo_role');
  if(!(file instanceof File)||file.size<64||file.size>8*1024*1024||
    !['image/jpeg','image/png','image/webp'].includes(file.type)||
    typeof id!=='string'||!isUuid(id)||
-   typeof source!=='string'||!/^https:\/\/\S{5,695}$/.test(source)||
-   typeof permission!=='string'||!/^https:\/\/\S{5,695}$/.test(permission)||
+   !['owner_original','external_licensed'].includes(String(origin))||
+   (!direct&&(!safeReference(source)||!safeReference(permission)))||
    input.get('rights_confirmation')!=='yes'||!['cover','gallery'].includes(String(role))||
    !Number.isInteger(position)||position<0||position>100)
    return respond({error:'invalid_image_metadata_or_rights'},400);
+ const sourceRecord=direct?'owner_direct_upload':String(source);
+ const rightsRecord=direct?'owner_attested_original_photo_rights':String(permission);
  const pool=getPool();if(!pool)return respond({error:'database_not_configured'},503);
  let bytes:Buffer,meta:sharp.OutputInfo;
  try{
@@ -52,7 +57,7 @@ export async function POST(req:NextRequest){
       (business_status='unknown' AND publication_status='draft' AND EXISTS (
         SELECT 1 FROM whateato_cms_restaurant_origins o WHERE o.restaurant_id=restaurants.id)))`,[id]);
    if(!exists.rowCount)return respond({error:'restaurant_not_publishable'},409);
-   await savePhoto(key,bytes);
+   try{await savePhoto(key,bytes)}catch{return respond({error:'photo_file_write_failed'},503)}
    try{
      await pool.query(`
        WITH image AS(
@@ -62,10 +67,10 @@ export async function POST(req:NextRequest){
        )
        INSERT INTO whateato_admin_media_uploads(image_id,storage_provider,width,height,file_bytes,mime_type)
        SELECT id,'s3_compatible',$8,$9,$10,'image/webp' FROM image`,
-       [photoId,id,key,file.name.slice(0,120),source,permission,position,meta.width,meta.height,bytes.length,role]);
-   }catch(error){
+       [photoId,id,key,file.name.slice(0,120),sourceRecord,rightsRecord,position,meta.width,meta.height,bytes.length,role]);
+   }catch{
      await deletePhoto(key).catch(()=>{});
-     throw error;
+     return respond({error:'photo_metadata_database_write_failed'},503);
    }
    return respond({image_id:photoId,state:'pending',photo_role:role,width:meta.width,height:meta.height,bytes:bytes.length},201);
  }catch{return respond({error:'photo_storage_unavailable'},503)}
