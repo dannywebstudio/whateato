@@ -202,6 +202,36 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
    }
    return result;
  };
+ const importRestaurantLocaleJson=async(file:File)=>{
+  if(!selected)throw Error('먼저 식당을 신규 등록하거나 기존 식당을 선택해.');
+  if(file.size>24000)throw Error('JSON 파일은 24KB 이하여야 해.');
+  let sourceData:unknown;
+  try{sourceData=JSON.parse(await file.text())}catch{throw Error('JSON 파일 형식을 확인해.')}
+  if(!sourceData||typeof sourceData!=='object'||Array.isArray(sourceData))throw Error('최상위 JSON 객체가 필요해.');
+  const jsonData=sourceData as Record<string,unknown>;
+  const data=jsonData.locales&&typeof jsonData.locales==='object'&&!Array.isArray(jsonData.locales)?jsonData.locales as Record<string,unknown>:jsonData;
+  const expected=['ko','en','ja','zh-CN'] as const;
+  if(Object.keys(data).length!==4||!expected.every(k=>Object.hasOwn(data,k)))throw Error('ko, en, ja, zh-CN 네 언어를 모두 포함해야 해.');
+  const items:Item[]=[];
+  for(const language of expected){
+   const v=data[language];
+   if(!v||typeof v!=='object'||Array.isArray(v))throw Error(language+' 소개 객체가 없어.');
+   const fields=v as Record<string,unknown>;
+   const display=fields.display_name,short=fields.short_description,long=fields.full_description,notes=fields.source_notes;
+   if(typeof display!=='string'||display.trim().length<1||display.trim().length>45||
+      typeof short!=='string'||short.trim().length<15||short.trim().length>150||
+      (long!==undefined&&(typeof long!=='string'||long.length>1200))||
+      typeof notes!=='string'||notes.trim().length<3||notes.length>700)
+      throw Error(language+' 필수 필드(display_name, short_description, source_notes) 또는 글자 수 확인이 필요해.');
+   items.push({source_key:'restaurant-i18n-'+crypto.randomUUID(),restaurant_id:selected.restaurant.id,kind:'localization',
+    payload:{locale:language,display_name:display.trim(),short_description:short.trim(),
+       full_description:typeof long==='string'?long.trim()||null:null,source_notes:notes.trim()}});
+  }
+  if(!window.confirm('식당 '+selected.restaurant.name_ko+'의 4개 언어 소개를 검수 대기 배치로 등록할까? 실제 공개는 승인 후에만 진행돼.'))return;
+  setBusy(true);
+  try{await makeBatch(items,'4-language restaurant intro '+selected.restaurant.name_ko);setTab('batches')}
+  finally{setBusy(false)}
+ };
  const createRestaurant=async()=>{
    setBusy(true);
    try{
@@ -350,7 +380,7 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
    {notice&&<div className={styles.status} role="status">{notice}</div>}
    {tab==='blog'&&owner&&<StorageProbe/>}
    {tab==='blog'&&edit&&<BlogEditor owner={owner} initialSlug={initialBlogSlug}/>}
-   {tab==='restaurants'&&edit&&<RestaurantPanel owner={owner} busy={busy} q={q} matches={matches} selected={selected} cursor={cursor} creating={creating} newVenue={newVenue} publicEvidence={publicEvidence} locale={locale} displayName={displayName} intro={intro} full={full} source={source} menus={menus} chosenTags={chosenTags} tagEvidence={tagEvidence} days={days} hoursEvidence={hoursEvidence} address={address} addressProof={addressProof} publishNew={publishNew} photoRole={photoRole} image={image} rights={rights} imageEvidence={imageEvidence} rightsEvidence={rightsEvidence} imagePosition={imagePosition} imageResult={imageResult} batchTitle={batchTitle} edit={edit} setQ={setQ} setCreating={setCreating} setNewVenue={setNewVenue} setPublicEvidence={setPublicEvidence} setLocale={setLocale} setDisplayName={setDisplayName} setIntro={setIntro} setFull={setFull} setSource={setSource} setMenus={setMenus} setChosenTags={setChosenTags} setTagEvidence={setTagEvidence} setDays={setDays} setHoursEvidence={setHoursEvidence} setAddress={setAddress} setAddressProof={setAddressProof} setPublishNew={setPublishNew} setPhotoRole={setPhotoRole} setImage={setImage} setRights={setRights} setImageEvidence={setImageEvidence} setRightsEvidence={setRightsEvidence} setImagePosition={setImagePosition} setBusy={setBusy} setBatchTitle={setBatchTitle} search={search} select={select} createRestaurant={createRestaurant} changePublicApproval={changePublicApproval} save={save} stageVisibility={stageVisibility} inform={inform} uploadPhoto={uploadPhoto}/>}
+   {tab==='restaurants'&&edit&&<RestaurantPanel owner={owner} busy={busy} q={q} matches={matches} selected={selected} cursor={cursor} creating={creating} newVenue={newVenue} publicEvidence={publicEvidence} locale={locale} displayName={displayName} intro={intro} full={full} source={source} menus={menus} chosenTags={chosenTags} tagEvidence={tagEvidence} days={days} hoursEvidence={hoursEvidence} address={address} addressProof={addressProof} publishNew={publishNew} photoRole={photoRole} image={image} rights={rights} imageEvidence={imageEvidence} rightsEvidence={rightsEvidence} imagePosition={imagePosition} imageResult={imageResult} batchTitle={batchTitle} edit={edit} setQ={setQ} setCreating={setCreating} setNewVenue={setNewVenue} setPublicEvidence={setPublicEvidence} setLocale={setLocale} setDisplayName={setDisplayName} setIntro={setIntro} setFull={setFull} setSource={setSource} setMenus={setMenus} setChosenTags={setChosenTags} setTagEvidence={setTagEvidence} setDays={setDays} setHoursEvidence={setHoursEvidence} setAddress={setAddress} setAddressProof={setAddressProof} setPublishNew={setPublishNew} setPhotoRole={setPhotoRole} setImage={setImage} setRights={setRights} setImageEvidence={setImageEvidence} setRightsEvidence={setRightsEvidence} setImagePosition={setImagePosition} setBusy={setBusy} setBatchTitle={setBatchTitle} search={search} select={select} createRestaurant={createRestaurant} importRestaurantLocaleJson={importRestaurantLocaleJson} changePublicApproval={changePublicApproval} save={save} stageVisibility={stageVisibility} inform={inform} uploadPhoto={uploadPhoto}/>}
    {tab==='batches'&&edit&&<BatchPanel owner={owner} busy={busy} batches={batches} batchId={batchId} setBatchId={setBatchId} currentBatch={currentBatch} batchTitle={batchTitle} setBatchTitle={setBatchTitle} bulkFile={bulkFile} setBulkFile={setBulkFile} setNotice={setNotice} loadBatches={loadBatches} loadBatch={loadBatch} batchAction={batchAction} importFile={importFile} setBusy={setBusy} inform={inform}/>}
    {tab==='reviews'&&moderate&&<ReviewPanel owner={owner} reviews={reviews} reviewStatus={reviewStatus} setReviewStatus={setReviewStatus} reason={reason} setReason={setReason} photosInspected={photosInspected} setPhotosInspected={setPhotosInspected} deletingReviewId={deletingReviewId} loadReviews={loadReviews} reviewAction={reviewAction} deleteReview={deleteReview}/>} 
    
