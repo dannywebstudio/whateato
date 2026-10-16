@@ -11,25 +11,15 @@ import {weekdays,emptyDays,tags,locales,timeToMin,minToTime,blankMenu} from './m
 import {json,post} from './modules/client';
 import {ownerApi} from './modules/owner-api';
 import {useCmsQueues} from './modules/use-cms-queues';
+import {useRestaurantEditorState} from './modules/use-restaurant-editor-state';
 import {parseBatchLines} from './modules/batches';
 import {MAX_CMS_IMAGE_BYTES,mediaRoleLabel} from './modules/media';
 
 export default function AdminConsole({role}:{role:Role}){
  const [tab,setTab]=useState<Tab>(role==='moderator'?'reviews':'restaurants');
  const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);
+ const {q,setQ,matches,setMatches,cursor,setCursor,selected,setSelected,publicEvidence,setPublicEvidence,locale,setLocale,displayName,setDisplayName,intro,setIntro,full,setFull,source,setSource,menus,setMenus,chosenTags,setChosenTags,tagEvidence,setTagEvidence,days,setDays,hoursEvidence,setHoursEvidence,image,setImage,rights,setRights,photoRole,setPhotoRole,creating,setCreating,newVenue,setNewVenue,address,setAddress,addressProof,setAddressProof,publishNew,setPublishNew,imageEvidence,setImageEvidence,rightsEvidence,setRightsEvidence,imagePosition,setImagePosition,imageResult,setImageResult}=useRestaurantEditorState();
  const [readiness,setReadiness]=useState<Record<string,string|boolean>|null>(null);
- const [q,setQ]=useState('');const [matches,setMatches]=useState<Place[]>([]);
- const [cursor,setCursor]=useState<string|null>(null);
- const [selected,setSelected]=useState<Detail|null>(null);
- const [publicEvidence,setPublicEvidence]=useState('');
- const [locale,setLocale]=useState<typeof locales[number]>('en');
- const [displayName,setDisplayName]=useState('');const [intro,setIntro]=useState('');
- const [full,setFull]=useState('');const [source,setSource]=useState('');
- const [menus,setMenus]=useState<Menu[]>([blankMenu()]);
- const [chosenTags,setChosenTags]=useState<string[]>([]);
- const [tagEvidence,setTagEvidence]=useState('');
- const [days,setDays]=useState<Day[]>(emptyDays());
- const [hoursEvidence,setHoursEvidence]=useState('');
  const [batchTitle,setBatchTitle]=useState('');const [batchId,setBatchId]=useState('');
 
  const [bulkFile,setBulkFile]=useState<File|null>(null);const [imported,setImported]=useState(0);
@@ -38,17 +28,6 @@ export default function AdminConsole({role}:{role:Role}){
  const [photosInspected,setPhotosInspected]=useState<Record<string,boolean>>({});
  const [reviewStatus,setReviewStatus]=useState<'pending'|'published'|'rejected'>('pending');
  const [reason,setReason]=useState('spam');
- const [image,setImage]=useState<File|null>(null);const [rights,setRights]=useState(false);
- const [photoRole,setPhotoRole]=useState<'cover'|'gallery'>('cover');
- const [creating,setCreating]=useState(false);
- const [newVenue,setNewVenue]=useState({name_ko:'',road_address_ko:'',lot_address_ko:'',
-   region_sido:'',region_sigungu:'',region_dong:'',latitude:'',longitude:'',source_url:''});
- const [address,setAddress]=useState({road_address_ko:'',lot_address_ko:'',
-   region_sido:'',region_sigungu:'',region_dong:'',latitude:'',longitude:''});
- const [addressProof,setAddressProof]=useState('');
- const [publishNew,setPublishNew]=useState(false);
- const [imageEvidence,setImageEvidence]=useState('');const [rightsEvidence,setRightsEvidence]=useState('');const [imagePosition,setImagePosition]=useState(0);
- const [imageResult,setImageResult]=useState('');
  const edit=role!=='moderator';const owner=role==='owner';const moderate=role!=='editor';
  const inform=(e:unknown)=>setNotice(e instanceof Error?e.message:String(e));
  const {batches,currentBatch,reviews,loadBatches,loadBatch,loadReviews}=useCmsQueues(reviewStatus,setBatchId,inform);
