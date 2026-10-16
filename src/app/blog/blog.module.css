@@ -120,3 +120,6 @@
  .cover{margin-bottom:24px}.cover img{border-radius:11px}
 }
 
+
+.ownerEditButton{display:inline-flex;align-items:center;justify-content:center;margin-top:16px;padding:9px 17px;border:1px solid #16875b;border-radius:9px;color:#116a47;background:#f4fbf6;font-size:13px;font-weight:750;text-decoration:none}
+.ownerEditButton:hover,.ownerEditButton:focus-visible{background:#16875b;color:white}
