@@ -373,11 +373,6 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
       <BlogMediaLibrary images={current.images} disabled={!owner} onUpload={async image=>{await upload(image)}}/>
      </div>
     </>}
-         {m.rights_status==='approved'&&<button onClick={()=>void inspectImage(m.id,'hide')}>공개 차단</button>}
-        </div>}
-      </div>)}</div>
-     </section>
-    </>}
    </section>
   </div>
  </div>;
