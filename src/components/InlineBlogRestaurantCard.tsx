@@ -19,7 +19,7 @@ export default function InlineBlogRestaurantCard({id,locale='ko'}:{id:string;loc
  const r=detail.restaurant;
  return <RestaurantExperienceCard name={r.name} address={r.address} description={r.short_description}
   menu={detail.menus[0]?.name} href={'/restaurant/'+id+'?hl='+encodeURIComponent(locale)}
-  mapHref={'/map?restaurant='+encodeURIComponent(id)}
+  mapHref={'/map?focus='+encodeURIComponent(id)}
   locale={locale} category={r.category_code} accentColor={r.card_accent_color}
   editorialRating={r.editorial_score} restaurantId={id}
   tags={detail.tags.map(t=>t.label)} imageUrl={detail.images[0]?.url||null}/>;
