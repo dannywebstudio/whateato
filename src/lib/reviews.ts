@@ -24,13 +24,13 @@ export function publicInsight(
     return '일부 승인된 이용자 리뷰에서 직원 응대에 관한 불만이 언급됐습니다.';
   return '일부 승인된 이용자 리뷰에서 직원 응대에 관한 긍정적 의견이 언급됐습니다.';
 }
-export async function getPublicReviews(restaurantId:string){
+export async function getPublicReviews(restaurantId:string,locale='ko'){
   if(!validUuid(restaurantId))return [];
   const pool=getPool();
   if(!pool)return [];
   const result=await pool.query<PublicReview>(`
     SELECT r.id::text,round((${reviewScoreSql})::numeric,1)::float8 AS rating,
-      r.body,r.created_at::text,
+      COALESCE(NULLIF(tr.bodies->>$2,''),r.body) AS body,r.created_at::text,
       CASE WHEN s.review_id IS NULL THEN NULL ELSE jsonb_build_object(
         'taste',s.taste,'service',s.service,'tourist_friendliness',s.tourist_friendliness,
         'value_for_money',s.value_for_money,'cleanliness',s.cleanliness) END AS categories,
@@ -41,8 +41,9 @@ export async function getPublicReviews(restaurantId:string){
           AND p.moderation_state='approved'),'[]'::jsonb) AS photos
     FROM whateato_user_reviews r
     LEFT JOIN whateato_review_category_scores s ON s.review_id=r.id
+    LEFT JOIN whateato_review_translations tr ON tr.review_id=r.id
     WHERE r.restaurant_id=$1 AND r.moderation_status='published'
-    ORDER BY r.created_at DESC LIMIT 20`,[restaurantId]);
+    ORDER BY r.created_at DESC LIMIT 20`,[restaurantId,locale]);
   return result.rows;
 }
 export async function getLicensedReviewInsights(restaurantId:string){
