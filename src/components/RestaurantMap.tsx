@@ -31,7 +31,8 @@ const fallbackIframe='https://www.openstreetmap.org/export/embed.html?bbox=126.9
 const markerSource='whateato-approved-restaurants';
 const markerLayer='whateato-location-markers';
 const markerNameLayer='whateato-location-labels';
-const NAME_MIN_ZOOM=14; // maximum zoom 18 minus four zoom-out steps
+const NAME_MIN_ZOOM=14;
+const FOCUS_ZOOM=17; // maximum zoom 18 minus four zoom-out steps
 const selectedLayer='whateato-selected-location';
 const clusterLayer='whateato-location-clusters';
 const clusterLabel='whateato-cluster-count';
@@ -136,7 +137,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
     let styleReady=false;
     const timeout=window.setTimeout(()=>{
       if(!cancelled&&!styleReady){setBasemapFailed(true);setState('error')}
-    },12000);
+    },18000);
     setBasemapFailed(false);
     setState('loading');
     let instance:MapLibreMap|null=null;
@@ -150,7 +151,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
       instance=new Map({
         container:host.current,
         style:styleUrl,
-        center:[126.982,37.571],zoom:13.3,
+        center:focusCenterRef.current||[126.982,37.571],zoom:focusCenterRef.current?FOCUS_ZOOM:14.6,
         minZoom:8,maxZoom:18,
         attributionControl:false,
         cooperativeGestures:true
@@ -168,7 +169,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
       const onLoad=()=>{
         if(!m.getSource(markerSource)){
           m.addSource(markerSource,{type:'geojson',data:emptyData,cluster:true,
-            clusterMaxZoom:13,clusterRadius:48});
+            clusterMaxZoom:13,clusterRadius:38});
           m.addLayer({id:clusterLayer,type:'circle',source:markerSource,
             filter:['has','point_count'],
             paint:{'circle-color':'#188a64','circle-radius':['step',['get','point_count'],17,15,23,50,30],
@@ -180,7 +181,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
           });
           m.addLayer({id:markerLayer,type:'circle',source:markerSource,
             filter:['!',['has','point_count']],
-            paint:{'circle-radius':8,'circle-color':['coalesce',['get','pinColor'],'#697887'],'circle-stroke-color':'#ffffff','circle-stroke-width':2}
+            paint:{'circle-radius':10,'circle-color':['coalesce',['get','pinColor'],'#697887'],'circle-stroke-color':'#ffffff','circle-stroke-width':2}
           });
           // Show venue names from zoom 14 (max zoom 18, four steps out).
           // Hide cluster labels and allow name labels to be clicked like pins.
@@ -205,8 +206,10 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         syncNameVisibility();
         window.clearTimeout(timeout);
         setBasemapFailed(false);
-        if(focusCenterRef.current)m.jumpTo({center:focusCenterRef.current,zoom:15});
-        void load(m);
+        if(focusCenterRef.current)m.jumpTo({center:focusCenterRef.current,zoom:FOCUS_ZOOM});
+        // Deep-linked restaurants have a dedicated nearest-neighbor request.
+        // Avoid an unrelated initial Seoul viewport marker query before it resolves.
+        if(!focusId||focusCenterRef.current)void load(m);
       };
       // At street-level zoom, prefer showing the actual venue name even in
       // dense restaurant areas. At zoom 14–15, keep collision avoidance.
@@ -224,6 +227,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         setSelected(id);
         const coords=feature?.geometry?.type==='Point'?feature.geometry.coordinates:null;
         if(!Array.isArray(coords)||coords.length<2||!Number.isFinite(coords[0])||!Number.isFinite(coords[1]))return;
+        m.easeTo({center:[coords[0],coords[1]],zoom:Math.max(m.getZoom(),FOCUS_ZOOM),duration:350});
         currentPopup?.remove();
         const activeLocale=queryRef.current.locale;
         const details=activeLocale==='ko'?'상세 보기':activeLocale==='ja'?'詳しく見る':activeLocale==='zh-CN'?'查看详情':'View details';
@@ -255,8 +259,8 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         const why=String(event.error?.message||'map_resource_error')
           .replace(/key=[^\s&]+/gi,'key=[REDACTED]').slice(0,180);
         console.warn('WHATEATO_MAP_RENDER_ERROR '+why);
-        // A missing icon/glyph should not blank a successfully loaded basemap.
-        if(!styleReady){setBasemapFailed(true);setState('error')}
+        // A transient glyph/tile error must not replace a usable interactive map.
+        // Only the actual style-load timeout or WebGL loss activates the fallback.
       };
       const onContextLost=()=>{setBasemapFailed(true);setState('error')};
       m.on('load',onLoad);
@@ -368,7 +372,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
     if(!basemapFailed&&map.current){
       map.current.flyTo({
         center:[place.longitude,place.latitude],
-        zoom:Math.max(map.current.getZoom(),15),
+        zoom:Math.max(map.current.getZoom(),FOCUS_ZOOM),
         duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:380
       });
     }
@@ -379,8 +383,8 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
   };
   const pick=visibleItems.find(x=>x.id===selected)||null;
   const fallbackSource=pick?new URLSearchParams({
-    bbox:[pick.longitude-0.019,pick.latitude-0.013,pick.longitude+0.019,
-      pick.latitude+0.013].map(x=>x.toFixed(6)).join(','),
+    bbox:[pick.longitude-0.0035,pick.latitude-0.0025,pick.longitude+0.0035,
+      pick.latitude+0.0025].map(x=>x.toFixed(6)).join(','),
     layer:'mapnik',
     marker:pick.latitude.toFixed(6)+','+pick.longitude.toFixed(6)
   }).toString():null;
