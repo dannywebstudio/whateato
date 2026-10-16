@@ -28,7 +28,7 @@ export default async function MapPage({searchParams}:{
     'zh-CN':{title:'在地图上找餐厅',back:'← 返回搜索'}
   } as const;
   const t=labels[locale];
-  return <main className="content" style={{maxWidth:1320}}>
+  return <><link rel="preconnect" href="https://tiles.openfreemap.org" crossOrigin="anonymous"/><main className="content" style={{maxWidth:1320}}>
     <h1>{t.title}</h1>
     <SearchBoxSynced target="map" initial={q} initialFilters={filter?filter.split(','):[]} initialLocale={locale}/>
     <RestaurantMap q={focusId?'':q} filter={focusId?'':filter} locale={locale} focusId={focusId}/>
@@ -36,5 +36,5 @@ export default async function MapPage({searchParams}:{
     <Link className="simple-link" href={'/search?'+new URLSearchParams({
       ...(q?{q}:{}),...(filter?{f:filter}:{}),hl:locale
     }).toString()}>{t.back}</Link>
-  </main>;
+  </main></>;
 }
