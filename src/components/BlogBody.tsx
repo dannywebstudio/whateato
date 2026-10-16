@@ -3,13 +3,16 @@ import type {BlogBlock} from '@/lib/blog-model';
 import styles from '@/app/blog/blog.module.css';
 /** Inline formatting parser for editorial plain text. HTML is never interpreted. */
 export function InlineBlogText({value}:{value:string}){
- const pattern=/(\*\*[^*\n]{1,500}\*\*|\*[^*\n]{1,500}\*|\[[^\]\n]{1,120}\]\(https:\/\/[^\s)<>]{5,500}\))/g;
+ const pattern=/(\*\*[^*\n]{1,500}\*\*|\*[^*\n]{1,500}\*|\+\+[^+\n]{1,500}\+\+|\{color:#[0-9a-fA-F]{6}\|[^{}\n]{1,500}\}|\[[^\]\n]{1,120}\]\(https:\/\/[^\s)<>]{5,500}\))/g;
  const chunks=value.split(pattern);
  return <>{chunks.map((part,index)=>{
   if(part.startsWith('**')&&part.endsWith('**'))
    return <strong key={index}>{part.slice(2,-2)}</strong>;
   if(part.startsWith('*')&&part.endsWith('*'))
    return <em key={index}>{part.slice(1,-1)}</em>;
+  if(part.startsWith('++')&&part.endsWith('++'))return <u key={index}>{part.slice(2,-2)}</u>;
+  const colored=/^\{color:(#[0-9a-fA-F]{6})\|([^{}]+)\}$/.exec(part);
+  if(colored)return <span key={index} style={{color:colored[1]}}>{colored[2]}</span>;
   const link=/^\[([^\]]+)\]\((https:\/\/[^\s)<>]+)\)$/.exec(part);
   if(link)return <a key={index} href={link[2]} target="_blank" rel="noopener noreferrer nofollow">
    {link[1]} <span aria-hidden="true">↗</span></a>;
@@ -28,10 +31,10 @@ export function BlogBody({blocks,preview=false}:{blocks:BlogBlock[];preview?:boo
   if(b.type==='list')return <ul key={b.id} style={style}>{(b.items||[]).map((s,i)=>
    <li key={i}><InlineBlogText value={s}/></li>)}</ul>;
   if(b.type==='table')return <div className={styles.tableScroll} key={b.id} style={style}>
-   <table><thead><tr>{(b.rows?.[0]||[]).map((s,i)=>
-     <th scope="col" key={i}><InlineBlogText value={s}/></th>)}</tr></thead>
-   <tbody>{(b.rows||[]).slice(1).map((r,i)=><tr key={i}>
-     {r.map((s,j)=><td key={j}><InlineBlogText value={s}/></td>)}
+   <table style={{borderCollapse:'collapse',tableLayout:b.table_col_widths?.length?'fixed':undefined,width:b.table_col_widths?.length?'max-content':undefined}}>{b.table_col_widths&&<colgroup>{b.table_col_widths.map((w,i)=><col key={i} style={{width:w+'px'}}/>)}</colgroup>}<thead><tr>{(b.rows?.[0]||[]).map((s,i)=>
+     <th scope="col" key={i} style={{border:(b.table_border_width??1)+'px '+(b.table_border_style||'solid')+' '+(b.table_border_color||'#dae6df'),height:b.table_row_heights?.[0]+'px'}}><InlineBlogText value={s}/></th>)}</tr></thead>
+   <tbody>{(b.rows||[]).slice(1).map((r,i)=><tr key={i} style={{height:b.table_row_heights?.[i+1]+'px'}}>
+     {r.map((s,j)=><td key={j} style={{border:(b.table_border_width??1)+'px '+(b.table_border_style||'solid')+' '+(b.table_border_color||'#dae6df')}}><InlineBlogText value={s}/></td>)}
    </tr>)}</tbody></table></div>;
   if(b.type==='image'&&b.image_id)return <figure key={b.id} className={styles.inlineFigure} style={{...style,width:(b.image_width||100)+'%',maxWidth:'100%',marginLeft:b.align==='right'?'auto':b.align==='center'?'auto':0,marginRight:b.align==='left'?0:'auto'}}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
