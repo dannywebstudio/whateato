@@ -20,7 +20,7 @@ export async function POST(req:NextRequest){
  try{input=await req.formData()}catch{return respond({error:'invalid_multipart'},400)}
  const file=input.get('file'),id=input.get('restaurant_id');
  const source=input.get('source_reference'),permission=input.get('rights_reference');
- const origin=input.get('photo_origin');
+ const origin=input.get('photo_origin')||'external_licensed';
  const direct=origin==='owner_original';
  const safeReference=(v:FormDataEntryValue|null)=>typeof v==='string'&&/^https:\/\/\S{5,695}$/.test(v);
  const position=Number(input.get('position')||0);
