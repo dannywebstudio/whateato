@@ -4,7 +4,7 @@ export type Place={id:string;name_ko:string;region_sigungu:string|null;road_addr
 export type Detail={
  restaurant:Place&{lot_address_ko:string|null;category_code:string|null;
   region_sido:string|null;region_dong:string|null;latitude:number|null;longitude:number|null;
-  cms_origin:boolean;cms_source_url:string|null;business_status:string;public_approved:boolean};
+  cms_origin:boolean;cms_source_url:string|null;business_status:string;public_approved:boolean;card_accent_color:string|null};
  locales:{locale:string;display_name:string;short_description:string|null;full_description:string|null;source_notes:string|null}[];
  menus:{id:string;menu_key:string;position:number;price_krw:number|null;locale:string|null;name:string|null;description:string|null;publication_state:string}[];
  tags:{tag_code:string;verification_state:string;evidence_ref:string|null}[];
