@@ -24,6 +24,7 @@ export default function BlogCategoryManager({items,onChanged,owner}:{
  const [editing,setEditing]=useState<Shape|null>(null);
  const [message,setMessage]=useState('');
  const [busy,setBusy]=useState(false);
+ const [expanded,setExpanded]=useState(false);
  const roots=items.filter(x=>!x.parent_slug).sort((a,b)=>a.position-b.position||a.slug.localeCompare(b.slug));
  const order=[...roots.flatMap(x=>[x,...items.filter(v=>v.parent_slug===x.slug)
     .sort((a,b)=>a.position-b.position||a.slug.localeCompare(b.slug))])];
@@ -62,9 +63,10 @@ export default function BlogCategoryManager({items,onChanged,owner}:{
   <header className={styles.categoryManagerHeading}>
    <div><h3>카테고리 관리</h3>
     <p>대분류와 하위 분류 추가 · 이름 수정 · 노출 순서 · 비활성화</p></div>
-   <span>{items.filter(x=>x.is_active).length}개 사용 중</span>
+   <div className={styles.categoryControls}><span>{items.filter(x=>x.is_active).length}개 사용 중</span><button type="button" className={styles.categoryToggle} aria-expanded={expanded} aria-controls="blog-category-editor" onClick={()=>setExpanded(x=>!x)}>{expanded?'접기 ↑':'카테고리 관리 펼치기 ↓'}</button></div>
   </header>
   {message&&<p className={styles.notification} role="status">{message}</p>}
+  {expanded&&<div id="blog-category-editor">
   <div className={styles.categoryItems}>
    {order.map(item=><div key={item.slug} className={styles.categoryItem}
      data-nested={Boolean(item.parent_slug)} data-inactive={!item.is_active}>
@@ -119,5 +121,6 @@ export default function BlogCategoryManager({items,onChanged,owner}:{
      삭제 대신 비활성화하며, 하위 분류가 있는 대분류는 하위 분류를 먼저 정리해야 비활성화할 수 있어.</p>
    </div>
   </>}
+  </div>}
  </section>;
 }
