@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import {seoPublicEnabled} from '@/lib/public-seo';
 import {currentStaff,hasPermission} from '@/lib/owner-cms-auth';
-import {notFound,redirect} from 'next/navigation';
+import {notFound} from 'next/navigation';
 import type {Metadata} from 'next';
 import {findPublishedBlog,relatedBlogRestaurants} from '@/lib/blog-public';
 import {getBlogCategories,blogCategoryName} from '@/lib/blog-categories';
