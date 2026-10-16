@@ -174,17 +174,19 @@ export default function BlogEditor({owner}:{owner:boolean}){
   try{const r=await api('/api/v1/owner/catalog?q='+encodeURIComponent(restaurantQuery));
    setRestaurantMatches(r.items||[])}catch(e){error(e)}
  };
- const upload=async()=>{
-  if(!current||!file){setMessage('사진을 먼저 선택해.');return}
+ const upload=async(incoming?:File)=>{
+  const chosenFile=incoming||file;
+  const chosenRole=incoming?'inline':imageRole;
+  if(!current||!chosenFile){setMessage('사진을 먼저 선택해.');return}
   setBusy(true);
   try{
    const form=new FormData();
-   form.set('file',file);form.set('media_role',imageRole);form.set('alt_text',(alt.trim().length>=3?alt.trim():file.name.slice(0,170)).padEnd(3,'_'));
+   form.set('file',chosenFile);form.set('media_role',chosenRole);form.set('alt_text',(alt.trim().length>=3?alt.trim():chosenFile.name.slice(0,170)).padEnd(3,'_'));
 
    const data=await api('/api/v1/owner/blog/'+current.id+'/media',{method:'POST',body:form});
    setFile(null);setAlt('');setSource('');setRightsRef('');setRights(false);
-   setCurrent(p=>p?{...p,images:[...p.images,{id:data.id,media_role:imageRole,
-     alt_text:alt||file.name,rights_status:'pending',image_url:data.image_url,
+   setCurrent(p=>p?{...p,images:[...p.images,{id:data.id,media_role:chosenRole,
+     alt_text:alt||chosenFile.name,rights_status:'pending',image_url:data.image_url,
      width:data.width,height:data.height}]}:p);
    window.dispatchEvent(new CustomEvent('whateato-blog-uploaded',{detail:{id:data.id,url:data.image_url}}));
    setMessage('사진 업로드 완료 · 본문 위치에 연결됐어. ('+data.id+')');
@@ -352,7 +354,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
        <UnifiedBlogEditor key={current.id+locale} articleId={current.id} locale={locale}
         translation={translation} images={current.images}
         onChange={patch=>updateTranslation(patch)}
-        onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');setMessage('본문용 사진이 선택됐어. 아래 사진 업로드 버튼을 눌러 저장해.')}}/>}
+        onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');void upload(incoming)}}/>}
      </section>
      <section className={styles.mediaPanel}>
       <h4>블로그 사진 관리</h4>
