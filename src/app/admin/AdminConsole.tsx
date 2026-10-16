@@ -10,6 +10,7 @@ import type {Role,Tab,Place,Detail,Batch,Review,Day,Menu,Item} from './modules/t
 import {weekdays,emptyDays,tags,locales,timeToMin,minToTime,blankMenu} from './modules/restaurants';
 import {json,post} from './modules/client';
 import {ownerApi} from './modules/owner-api';
+import {useCmsQueues} from './modules/use-cms-queues';
 import {parseBatchLines} from './modules/batches';
 import {MAX_CMS_IMAGE_BYTES,mediaRoleLabel} from './modules/media';
 
@@ -30,10 +31,9 @@ export default function AdminConsole({role}:{role:Role}){
  const [days,setDays]=useState<Day[]>(emptyDays());
  const [hoursEvidence,setHoursEvidence]=useState('');
  const [batchTitle,setBatchTitle]=useState('');const [batchId,setBatchId]=useState('');
- const [batches,setBatches]=useState<Batch[]>([]);
- const [currentBatch,setCurrentBatch]=useState<any>(null);
+
  const [bulkFile,setBulkFile]=useState<File|null>(null);const [imported,setImported]=useState(0);
- const [reviews,setReviews]=useState<Review[]>([]);
+
  const [deletingReviewId,setDeletingReviewId]=useState<string|null>(null);
  const [photosInspected,setPhotosInspected]=useState<Record<string,boolean>>({});
  const [reviewStatus,setReviewStatus]=useState<'pending'|'published'|'rejected'>('pending');
@@ -51,6 +51,7 @@ export default function AdminConsole({role}:{role:Role}){
  const [imageResult,setImageResult]=useState('');
  const edit=role!=='moderator';const owner=role==='owner';const moderate=role!=='editor';
  const inform=(e:unknown)=>setNotice(e instanceof Error?e.message:String(e));
+ const {batches,currentBatch,reviews,loadBatches,loadBatch,loadReviews}=useCmsQueues(reviewStatus,setBatchId,inform);
  const search=useCallback(async(after?:string)=>{
    try{
     const result=await ownerApi.searchRestaurants(q,after);
@@ -119,9 +120,7 @@ export default function AdminConsole({role}:{role:Role}){
      description:x.description||'',evidence:'',featured:i===0
    })):[blankMenu()]);
  },[locale,selected]);
- const loadBatches=async()=>{try{const r=await ownerApi.listBatches();setBatches(r.items)}catch(e){inform(e)}};
- const loadBatch=async(id:string)=>{try{const r=await ownerApi.getBatch(id);setCurrentBatch(r);setBatchId(id)}catch(e){inform(e)}};
- const loadReviews=async()=>{try{const r=await ownerApi.listReviews(reviewStatus);setReviews(r.items)}catch(e){inform(e)}};
+
  useEffect(()=>{if(tab==='batches'&&edit)void loadBatches();if(tab==='reviews'&&moderate)void loadReviews()},[tab,edit,moderate,reviewStatus]);
  const makeBatch=async(items:Item[],title:string)=>{
    if(!items.length)throw Error('등록할 항목이 없어.');
