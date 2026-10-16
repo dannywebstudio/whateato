@@ -13,7 +13,7 @@ export const BLOG_LOCALES=['en','ja','zh-CN','ko'] as const;
 export type BlogLocale=typeof BLOG_LOCALES[number];
 export type BlogCategory=string;
 export type BlogBlock={id:string;type:'paragraph'|'heading'|'quote'|'list'|'table'|'image'|'divider';
- text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;caption?:string};
+ text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;caption?:string;align?:'left'|'center'|'right';font_size?:number;image_width?:number};
 export type BlogTranslation={title:string;excerpt:string;seo_title:string;seo_description:string;blocks:BlogBlock[]};
 export type BlogDraft={
  category:BlogCategory;tags:string[];related_restaurant_ids:string[];
@@ -48,12 +48,24 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
   const blocks:BlogBlock[]=[];
   let total=0;
   for(const original of entry.blocks){
-   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','caption'])||
+   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','caption','align','font_size','image_width'])||
     typeof original.id!=='string'||!/^[a-z0-9-]{3,64}$/.test(original.id)||
     !['paragraph','heading','quote','list','table','image','divider'].includes(String(original.type)))
      return null;
    const kind=original.type as BlogBlock['type'];
    const block:BlogBlock={id:original.id,type:kind};
+   if(original.align!==undefined){
+    if(!['left','center','right'].includes(String(original.align)))return null;
+    block.align=original.align as BlogBlock['align'];
+   }
+   if(original.font_size!==undefined){
+    if(!Number.isInteger(original.font_size)||Number(original.font_size)<12||Number(original.font_size)>40)return null;
+    block.font_size=Number(original.font_size);
+   }
+   if(original.image_width!==undefined){
+    if(kind!=='image'||!Number.isInteger(original.image_width)||Number(original.image_width)<20||Number(original.image_width)>100)return null;
+    block.image_width=Number(original.image_width);
+   }
    if(['paragraph','heading','quote'].includes(kind)){
      if(!text(original.text,8000)||typeof original.text!=='string')return null;
      block.text=original.text;total+=original.text.length;
