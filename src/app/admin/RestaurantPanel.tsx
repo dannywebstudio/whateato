@@ -2,6 +2,7 @@
 import {useEffect,useState,type Dispatch,type SetStateAction} from 'react';
 import type {Place,Detail,Menu,Day} from './modules/types';
 import {tags,locales,weekdays,blankMenu} from './modules/restaurants';
+import {cuisineColor} from '@/lib/cuisine-palette';
 import MediaPanel from './MediaPanel';
 import styles from './admin.module.css';
 type Locale=typeof locales[number];
@@ -77,7 +78,7 @@ type Props={owner:boolean;
 export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,creating,newVenue,publicEvidence,locale,displayName,intro,full,source,menus,chosenTags,tagEvidence,days,hoursEvidence,address,addressProof,publishNew,photoRole,photoOrigin,setPhotoOrigin,image,rights,imageEvidence,rightsEvidence,imagePosition,imageResult,batchTitle,edit,setQ,setCreating,setNewVenue,setPublicEvidence,setLocale,setDisplayName,setIntro,setFull,setSource,setMenus,setChosenTags,setTagEvidence,setDays,setHoursEvidence,setAddress,setAddressProof,setPublishNew,setPhotoRole,setImage,setRights,setImageEvidence,setRightsEvidence,setImagePosition,setBusy,setBatchTitle,search,select,createRestaurant,importRestaurantLocaleJson,changePublicApproval,save,stageVisibility,inform,uploadPhoto}:Props){
  const [accent,setAccent]=useState('#16845b');
  const [accentSaving,setAccentSaving]=useState(false);
- useEffect(()=>{setAccent(selected?.restaurant.card_accent_color||'#16845b')},[selected?.restaurant.id,selected?.restaurant.card_accent_color]);
+ useEffect(()=>{setAccent(selected?.restaurant.card_accent_color||cuisineColor(selected?.restaurant.category_code))},[selected?.restaurant.id,selected?.restaurant.card_accent_color]);
  const saveAccent=async(color:string|null)=>{
   if(!selected||!owner)return;
   setAccentSaving(true);
