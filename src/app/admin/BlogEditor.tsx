@@ -37,7 +37,7 @@ const json=(url:string,body:unknown,method='POST')=>api(url,{
 });
 const safeSlug=(s:string)=>s.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,90);
 
-export default function BlogEditor({owner}:{owner:boolean}){
+export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initialSlug?:string}){
  const [posts,setPosts]=useState<BlogRow[]>([]);
  const [categories,setCategories]=useState<BlogCategoryInfo[]>([]);
  const [current,setCurrent]=useState<Detail|null>(null);
@@ -56,6 +56,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
  const [rights,setRights]=useState(false);
  const [showPublished,setShowPublished]=useState(false);
  const editorRef=useRef<HTMLDivElement|null>(null);
+ const didAutoOpen=useRef(false);
  const translation=draft.translations[locale]||blankLocale();
  const readiness=BLOG_REQUIRED_LOCALES.map(lang=>({
   locale:lang,...blogLocaleReadiness(draft,lang)
@@ -72,6 +73,17 @@ export default function BlogEditor({owner}:{owner:boolean}){
   setPosts(data.items||[]);
  },[]);
  useEffect(()=>{void refresh().catch(error);void refreshCategories().catch(error)},[refresh,refreshCategories]);
+ useEffect(()=>{
+  if(didAutoOpen.current||!initialSlug)return;
+  didAutoOpen.current=true;
+  void api('/api/v1/owner/blog?q='+encodeURIComponent(initialSlug))
+   .then(data=>{
+    const match=(data.items as BlogRow[]).find(post=>post.slug===initialSlug);
+    if(!match){setMessage('편집할 글을 찾지 못했어.');return}
+    setShowPublished(true);
+    void open(match.id,true);
+   }).catch(error);
+ },[initialSlug]);
  const open=async(id:string,ignoreDirty=false)=>{
   if(dirty&&!ignoreDirty&&!window.confirm('저장되지 않은 수정 사항이 있어. 이동할까?'))return;
   setBusy(true);setMessage('');
