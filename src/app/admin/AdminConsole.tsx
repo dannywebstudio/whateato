@@ -41,6 +41,7 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
  const [reason,setReason]=useState('spam');
  const [image,setImage]=useState<File|null>(null);const [rights,setRights]=useState(false);
  const [photoRole,setPhotoRole]=useState<'cover'|'gallery'>('cover');
+ const [photoOrigin,setPhotoOrigin]=useState<'owner_original'|'external_licensed'>('owner_original');
  const [creating,setCreating]=useState(false);
  const [newVenue,setNewVenue]=useState({name_ko:'',road_address_ko:'',lot_address_ko:'',
    region_sido:'',region_sigungu:'',region_dong:'',latitude:'',longitude:'',source_url:''});
@@ -350,10 +351,13 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
  const loadBatchSafe=(id:string)=>ownerApi.getBatch(id);
  const uploadPhoto=async()=>{
    if(!selected||!image)throw Error('식당과 사진을 선택해.');
-   if(!rights)throw Error('사진 사용 권한을 확인해.');
+   if(!rights)throw Error('사진의 사용 권한 확인을 체크해.');
+   if(photoOrigin==='external_licensed'&&(!/^https:\/\//.test(imageEvidence)||!/^https:\/\//.test(rightsEvidence)))
+    throw Error('외부 사진은 원본 출처와 사용권 증빙 HTTPS URL이 모두 필요해.');
    if(image.size>MAX_CMS_IMAGE_BYTES)throw Error('8MB 이하 이미지만 업로드할 수 있어.');
    const form=new FormData();
    form.set('restaurant_id',selected.restaurant.id);
+   form.set('photo_origin',photoOrigin);
    form.set('file',image);form.set('source_reference',imageEvidence);
    form.set('rights_confirmation',rights?'yes':'no');form.set('rights_reference',rightsEvidence);
    form.set('position',String(photoRole==='cover'?0:imagePosition));
@@ -391,7 +395,7 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
    {notice&&<div className={styles.status} role="status">{notice}</div>}
    {tab==='blog'&&owner&&<StorageProbe/>}
    {tab==='blog'&&edit&&<BlogEditor owner={owner} initialSlug={initialBlogSlug}/>}
-   {tab==='restaurants'&&edit&&<RestaurantPanel owner={owner} busy={busy} q={q} matches={matches} selected={selected} cursor={cursor} creating={creating} newVenue={newVenue} publicEvidence={publicEvidence} locale={locale} displayName={displayName} intro={intro} full={full} source={source} menus={menus} chosenTags={chosenTags} tagEvidence={tagEvidence} days={days} hoursEvidence={hoursEvidence} address={address} addressProof={addressProof} publishNew={publishNew} photoRole={photoRole} image={image} rights={rights} imageEvidence={imageEvidence} rightsEvidence={rightsEvidence} imagePosition={imagePosition} imageResult={imageResult} batchTitle={batchTitle} edit={edit} setQ={setQ} setCreating={setCreating} setNewVenue={setNewVenue} setPublicEvidence={setPublicEvidence} setLocale={setLocale} setDisplayName={setDisplayName} setIntro={setIntro} setFull={setFull} setSource={setSource} setMenus={setMenus} setChosenTags={setChosenTags} setTagEvidence={setTagEvidence} setDays={setDays} setHoursEvidence={setHoursEvidence} setAddress={setAddress} setAddressProof={setAddressProof} setPublishNew={setPublishNew} setPhotoRole={setPhotoRole} setImage={setImage} setRights={setRights} setImageEvidence={setImageEvidence} setRightsEvidence={setRightsEvidence} setImagePosition={setImagePosition} setBusy={setBusy} setBatchTitle={setBatchTitle} search={search} select={select} createRestaurant={createRestaurant} importRestaurantLocaleJson={importRestaurantLocaleJson} changePublicApproval={changePublicApproval} save={save} stageVisibility={stageVisibility} inform={inform} uploadPhoto={uploadPhoto}/>}
+   {tab==='restaurants'&&edit&&<RestaurantPanel owner={owner} busy={busy} q={q} matches={matches} selected={selected} cursor={cursor} creating={creating} newVenue={newVenue} publicEvidence={publicEvidence} locale={locale} displayName={displayName} intro={intro} full={full} source={source} menus={menus} chosenTags={chosenTags} tagEvidence={tagEvidence} days={days} hoursEvidence={hoursEvidence} address={address} addressProof={addressProof} publishNew={publishNew} photoRole={photoRole} photoOrigin={photoOrigin} setPhotoOrigin={setPhotoOrigin} image={image} rights={rights} imageEvidence={imageEvidence} rightsEvidence={rightsEvidence} imagePosition={imagePosition} imageResult={imageResult} batchTitle={batchTitle} edit={edit} setQ={setQ} setCreating={setCreating} setNewVenue={setNewVenue} setPublicEvidence={setPublicEvidence} setLocale={setLocale} setDisplayName={setDisplayName} setIntro={setIntro} setFull={setFull} setSource={setSource} setMenus={setMenus} setChosenTags={setChosenTags} setTagEvidence={setTagEvidence} setDays={setDays} setHoursEvidence={setHoursEvidence} setAddress={setAddress} setAddressProof={setAddressProof} setPublishNew={setPublishNew} setPhotoRole={setPhotoRole} setImage={setImage} setRights={setRights} setImageEvidence={setImageEvidence} setRightsEvidence={setRightsEvidence} setImagePosition={setImagePosition} setBusy={setBusy} setBatchTitle={setBatchTitle} search={search} select={select} createRestaurant={createRestaurant} importRestaurantLocaleJson={importRestaurantLocaleJson} changePublicApproval={changePublicApproval} save={save} stageVisibility={stageVisibility} inform={inform} uploadPhoto={uploadPhoto}/>}
    {tab==='batches'&&edit&&<BatchPanel owner={owner} busy={busy} batches={batches} batchId={batchId} setBatchId={setBatchId} currentBatch={currentBatch} batchTitle={batchTitle} setBatchTitle={setBatchTitle} bulkFile={bulkFile} setBulkFile={setBulkFile} setNotice={setNotice} loadBatches={loadBatches} loadBatch={loadBatch} batchAction={batchAction} importFile={importFile} setBusy={setBusy} inform={inform}/>}
    {tab==='reviews'&&moderate&&<ReviewPanel owner={owner} reviews={reviews} reviewStatus={reviewStatus} setReviewStatus={setReviewStatus} reason={reason} setReason={setReason} photosInspected={photosInspected} setPhotosInspected={setPhotosInspected} deletingReviewId={deletingReviewId} loadReviews={loadReviews} reviewAction={reviewAction} deleteReview={deleteReview}/>} 
    
