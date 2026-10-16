@@ -213,11 +213,15 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
   const expected=['ko','en','ja','zh-CN'] as const;
   if(Object.keys(data).length!==4||!expected.every(k=>Object.hasOwn(data,k)))throw Error('ko, en, ja, zh-CN 네 언어를 모두 포함해야 해.');
   const items:Item[]=[];
+  const addresses:Record<string,string>={};
   for(const language of expected){
    const v=data[language];
    if(!v||typeof v!=='object'||Array.isArray(v))throw Error(language+' 소개 객체가 없어.');
    const fields=v as Record<string,unknown>;
-   const display=fields.display_name,short=fields.short_description,long=fields.full_description,notes=fields.source_notes;
+   const display=fields.display_name,short=fields.short_description,long=fields.full_description,notes=fields.source_notes,localizedAddress=fields.address;
+   if(typeof localizedAddress!=='string'||localizedAddress.trim().length<9||localizedAddress.trim().length>250)
+    throw Error(language+' 주소(address)는 9~250자로 입력해야 해.');
+   addresses[language]=localizedAddress.trim();
    if(typeof display!=='string'||display.trim().length<1||display.trim().length>45||
       typeof short!=='string'||short.trim().length<15||short.trim().length>150||
       (long!==undefined&&(typeof long!=='string'||long.length>1200))||
@@ -227,9 +231,16 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
     payload:{locale:language,display_name:display.trim(),short_description:short.trim(),
        full_description:typeof long==='string'?long.trim()||null:null,source_notes:notes.trim()}});
   }
-  if(!window.confirm('식당 '+selected.restaurant.name_ko+'의 4개 언어 소개를 검수 대기 배치로 등록할까? 실제 공개는 승인 후에만 진행돼.'))return;
+  if(!owner)throw Error('4개 언어 주소의 직접 검증·등록은 Owner만 가능해.');
+  if(!window.confirm('식당 '+selected.restaurant.name_ko+'의 4개 언어 소개를 검수 배치에 등록하고, 확인한 언어별 주소를 즉시 갱신할까? 원본 한국 주소·좌표는 유지돼.'))return;
   setBusy(true);
-  try{await makeBatch(items,'4-language restaurant intro '+selected.restaurant.name_ko);setTab('batches')}
+  try{
+   await makeBatch(items,'4-language restaurant name and intro '+selected.restaurant.name_ko);
+   await post('/api/v1/owner/catalog/'+selected.restaurant.id+'/localized-addresses',{
+    confirm_restaurant_id:selected.restaurant.id,addresses,source_note:'Owner verified JSON import / '+selected.restaurant.name_ko});
+   setNotice('4개 언어 이름·소개 검수 배치 등록 및 표시 주소 적용 완료. 원본 주소와 좌표는 그대로야.');
+   setTab('batches');
+  }
   finally{setBusy(false)}
  };
  const createRestaurant=async()=>{
