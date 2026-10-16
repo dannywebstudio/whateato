@@ -88,7 +88,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    if(!detail?.id||!ref.current)return;
    const pending=ref.current.querySelector('figure[data-pending]') as HTMLElement|null;
    if(!pending)return;
-   pending.removeAttribute('data-pending');pending.dataset.imageId=detail.id;pending.dataset.width='100';
+   pending.removeAttribute('data-pending');pending.dataset.imageId=detail.id;pending.dataset.width=pending.dataset.width||'100';
    const img=pending.querySelector('img');
    if(img)img.src=detail.url;
    const caption=pending.querySelector('figcaption');
