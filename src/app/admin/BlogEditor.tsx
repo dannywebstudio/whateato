@@ -368,30 +368,17 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
        <label>태그 (쉼표 구분, 최대 8개)<input value={tagsText} onChange={e=>{
          setTagsText(e.target.value);setDirty(true)}} placeholder="seoul, korean-bbq, solo-dining"/></label>
       </div>
-      <div className={styles.relatedPicker}>
-       <h4>관련 식당 연결 (최대 8곳)</h4>
-       <div className={styles.searchRow}><input placeholder="상호명 검색" value={restaurantQuery}
-          onChange={e=>setRestaurantQuery(e.target.value)}/>
-        <button className={styles.smallButton} onClick={()=>void searchRestaurant()}>식당 찾기</button></div>
-       <div className={styles.relatedResults}>
-        {restaurantMatches.slice(0,8).map(r=><button className={styles.smallButton}
-          key={r.id} disabled={draft.related_restaurant_ids.includes(r.id)||draft.related_restaurant_ids.length>=8}
-          onClick={()=>update({related_restaurant_ids:[...draft.related_restaurant_ids,r.id]})}>
-          + {r.name_ko} · {r.road_address_ko||'주소 미확인'}</button>)}
-       </div>
-       <div className={styles.relatedResults}>{draft.related_restaurant_ids.map(id=>
-        <button className={styles.selectedRelated} key={id} onClick={()=>
-          update({related_restaurant_ids:draft.related_restaurant_ids.filter(v=>v!==id)})}>
-          {restaurantMatches.find(r=>r.id===id)?.name_ko||id} ×</button>)}</div>
-      </div>
      </div>
      <div className={styles.blogWritingLayout}>
      <section className={styles.blockArea}>
       <div className={styles.editorSubhead}><h4>통합 글쓰기</h4><button className={styles.smallButton} onClick={()=>setPreview(x=>!x)}>{preview?'편집 화면':'미리보기'}</button></div>
-      {preview?<BlogBody blocks={translation.blocks} preview/>:
+      {preview?<BlogBody blocks={translation.blocks} locale={locale} preview/>:
        <UnifiedBlogEditor key={current.id+locale} articleId={current.id} locale={locale}
         translation={translation} images={current.images}
         onChange={patch=>updateTranslation(patch)}
+        restaurantQuery={restaurantQuery} onRestaurantQuery={setRestaurantQuery}
+        restaurantMatches={restaurantMatches} onRestaurantSearch={()=>void searchRestaurant()}
+        onRestaurantInsert={id=>{if(!draft.related_restaurant_ids.includes(id)&&draft.related_restaurant_ids.length<8)update({related_restaurant_ids:[...draft.related_restaurant_ids,id]})}}
         onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');void upload(incoming).catch(()=>{})}}/>}
      </section>
      </div>

@@ -255,3 +255,9 @@
 .unifiedCanvas td{min-width:45px;min-height:25px;position:relative}
 .unifiedCanvas table:focus-within{outline:2px solid #c5e8d0;outline-offset:3px}
 @media(max-width:620px){.unifiedToolbar{position:static;max-height:none}.toolGroup>strong{width:100%;border:0}}
+
+/* Inline restaurant blocks are the actual public card, not a detached picker preview. */
+.unifiedCanvas :global(.restaurant-inline-edit){max-width:100%;margin:20px 0;user-select:none;cursor:default}
+.unifiedCanvas :global(.restaurant-inline-edit .we-card){max-width:100%;width:100%;text-align:left}
+.unifiedCanvas :global(.restaurant-inline-edit a){pointer-events:auto}
+.unifiedCanvas :global(.restaurant-inline-edit:focus-within){outline:2px solid #168454;outline-offset:3px;border-radius:12px}

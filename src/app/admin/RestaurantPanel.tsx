@@ -2,7 +2,7 @@
 import {useEffect,useState,type Dispatch,type SetStateAction} from 'react';
 import type {Place,Detail,Menu,Day} from './modules/types';
 import {tags,locales,weekdays,blankMenu} from './modules/restaurants';
-import {cuisineColor} from '@/lib/cuisine-palette';
+import {cuisineColor,cuisinePalette} from '@/lib/cuisine-palette';
 import MediaPanel from './MediaPanel';
 import styles from './admin.module.css';
 type Locale=typeof locales[number];
@@ -235,7 +235,12 @@ export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,cr
          {owner&&<div className={styles.panel}>
           <h3>검색·지도 카드 강조선 색상</h3>
           <p className={styles.note}>이 식당 카드의 왼쪽 강조선 색상을 직접 설정해. 기본 음식점 유형 색상으로 되돌릴 수도 있어.</p>
-          <label className={styles.field}>카드 색상 <input type="color" value={accent} onChange={e=>setAccent(e.target.value)}/></label>
+          <div role="group" aria-label="음식 종류별 기본 색상" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))',gap:8,margin:'14px 0'}}>
+           {Object.entries(cuisinePalette).map(([key,item])=><button type="button" key={key} aria-pressed={accent.toLowerCase()===item.color.toLowerCase()} onClick={()=>setAccent(item.color)} style={{border:accent.toLowerCase()===item.color.toLowerCase()?'2px solid #1e6147':'1px solid #dce6df',borderRadius:10,background:'#fff',padding:'10px 8px',display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontWeight:650,color:'#243b32'}}><span aria-hidden="true" style={{background:item.color,width:20,height:20,borderRadius:6,flexShrink:0}}/>{item.label}</button>)}
+          </div>
+          <details style={{margin:'12px 0'}}><summary style={{cursor:'pointer',fontWeight:650}}>직접 색상 설정 · 커스텀</summary>
+           <label className={styles.field}>커스텀 카드 색상 <input type="color" value={accent} onChange={e=>setAccent(e.target.value)}/></label>
+          </details>
           <div style={{borderLeft:'5px solid '+accent,padding:'8px 12px',margin:'8px 0',background:'#f6faf8',borderRadius:6}}>{selected.restaurant.name_ko} · 카드 미리보기</div>
           <div className={styles.actions}><button type="button" className={styles.button} disabled={accentSaving||busy} onClick={()=>void saveAccent(accent)}>색상 저장</button>
            <button type="button" className={styles.button+' '+styles.secondary} disabled={accentSaving||busy} onClick={()=>void saveAccent(null)}>유형별 기본 색으로 초기화</button></div>
