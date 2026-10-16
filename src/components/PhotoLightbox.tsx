@@ -60,11 +60,11 @@ export default function PhotoLightbox({photos,initialIndex=0,locale='en',mode='t
   <button type="button" onClick={()=>void launch()} aria-label={t.view}
    style={{border:0,padding:0,cursor:'zoom-in',width:'100%',height:'100%',background:'transparent'}}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
-   <img src={photos[0].url} alt={photos[0].alt} loading="lazy"
+   <img src={photos[initialIndex].url} alt={photos[initialIndex].alt} loading="lazy"
     style={{display:'block',width:'100%',height:'100%',objectFit:'cover'}}/>
   </button>
   {open&&<div role="dialog" aria-modal="true" aria-label={t.view}
-    onClick={()=>setOpen(false)} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(7,14,11,.92)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
+    onClick={()=>setOpen(false)} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(7,14,11,.92)',display:'flex',alignItems:'center',justifyContent:'center',padding:4}}>
     <button type="button" onClick={()=>setOpen(false)} aria-label={t.close}
      style={{position:'absolute',right:22,top:20,color:'white',background:'transparent',border:0,fontSize:32,cursor:'pointer'}}>×</button>
     {active.length>1&&<button type="button" aria-label={t.previous}
@@ -72,7 +72,7 @@ export default function PhotoLightbox({photos,initialIndex=0,locale='en',mode='t
      style={{position:'absolute',left:15,top:'50%',fontSize:38,color:'white',background:'#0006',border:0,borderRadius:8,cursor:'pointer'}}>‹</button>}
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={active[index]?.url} alt={active[index]?.alt||''} onClick={event=>event.stopPropagation()}
-      style={{maxWidth:'90vw',maxHeight:'84vh',objectFit:'contain'}}/>
+      style={{display:'block',width:'100%',height:'100%',maxWidth:'calc(100vw - 92px)',maxHeight:'calc(100dvh - 55px)',objectFit:'contain'}}/>
     {active.length>1&&<button type="button" aria-label={t.next}
      onClick={event=>{event.stopPropagation();setIndex(i=>(i+1)%active.length)}}
      style={{position:'absolute',right:15,top:'50%',fontSize:38,color:'white',background:'#0006',border:0,borderRadius:8,cursor:'pointer'}}>›</button>}
