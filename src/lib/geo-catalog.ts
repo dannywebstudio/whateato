@@ -1,4 +1,5 @@
 import {getPool} from '@/lib/db';
+import {reviewScoreSql} from '@/lib/review-categories';
 import {triageABPublicWhere,triageDisplayCategorySql} from '@/lib/triage-ab-gate';
 import {getOpeningHours,type OpeningHours} from '@/lib/opening-hours';
 import {escapeLike,normalizeLocale,normalizeTags,normalizeText,type Locale} from '@/lib/platform-v1';
@@ -10,7 +11,7 @@ export type GeoMarker={
   id:string;name:string;name_ko:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;
   latitude:number;longitude:number;distance_km?:number;
   category_code:string|null;region_sigungu:string|null;
-  editorial_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;
+  editorial_score:number|null;visitor_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;
 };
 export type GeoEnvelope={south:number;west:number;north:number;east:number};
 export type GeoCatalogResponse={
@@ -186,9 +187,19 @@ export async function getGeoCatalog(input:QueryParams & {
       q,'%'+escapeLike(q)+'%',filters,limit+1];
   const res=await db.query<GeoMarker>(sql,params);
   const selected=res.rows.slice(0,limit);
-  const opening=await getOpeningHours(db,selected.map(r=>r.id));
+  const ids=selected.map(r=>r.id);
+  const [opening,visitorResult]=await Promise.all([
+    getOpeningHours(db,ids),
+    ids.length?db.query<{restaurant_id:string;visitor_score:number}>(`
+      SELECT r.restaurant_id::text,round(avg(${reviewScoreSql})::numeric,1)::float8 AS visitor_score
+      FROM whateato_user_reviews r
+      LEFT JOIN whateato_review_category_scores s ON s.review_id=r.id
+      WHERE r.restaurant_id=ANY($1::uuid[]) AND r.moderation_status='published'
+      GROUP BY r.restaurant_id`,[ids]):Promise.resolve({rows:[] as {restaurant_id:string;visitor_score:number}[]})
+  ]);
+  const visitor=new Map(visitorResult.rows.map(x=>[x.restaurant_id,x.visitor_score]));
   const items=selected.map(r=>({
-    ...r,opening_hours:opening[r.id]||null,...(nearby?{distance_km:Number(r.distance_km)}:{}),
+    ...r,visitor_score:visitor.get(r.id)??null,opening_hours:opening[r.id]||null,...(nearby?{distance_km:Number(r.distance_km)}:{}),
   }));
   return {
     mode:input.mode,locale,bounds,filters,q,items,limit,
