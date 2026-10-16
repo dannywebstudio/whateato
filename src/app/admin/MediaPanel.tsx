@@ -66,7 +66,7 @@ export default function MediaPanel({selected,owner,busy,image,setImage,rights,se
      {imageResult&&<p role="status" className={styles.note}>{imageResult}</p>}
      <h3>등록된 사진 <span className={styles.small}>{selected.images.length}장</span></h3>
        <div className={styles.cardList}>{selected.images.map(i=><div key={i.id} className={styles.row}>
-         <span style={{display:'inline-flex',alignItems:'center',gap:9,flexWrap:'wrap'}}>{i.url&&/* eslint-disable-next-line @next/next/no-img-element */<img src={i.url} alt="등록 사진" loading="lazy" style={{width:64,height:54,objectFit:'cover',borderRadius:5}}/>}<span className={styles.code}>{i.cms_photo_role==='cover'?'카드 대표사진':'상세페이지 사진'} · {i.id} · {i.rights_status} · {i.publication_state}</span></span>
+         <span style={{display:'inline-flex',alignItems:'center',gap:9,flexWrap:'wrap'}}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={'/api/v1/owner/media/'+i.id+'/preview'} alt="등록 사진" loading="lazy" style={{width:64,height:54,objectFit:'cover',borderRadius:5}}/>}<span className={styles.code}>{i.cms_photo_role==='cover'?'카드 대표사진':'상세페이지 사진'} · {i.id} · {i.rights_status} · {i.publication_state}</span></span>
          {owner&&i.rights_status==='pending'&&<>
            <button className={styles.button+' '+styles.secondary} onClick={()=>void(async()=>{
              if(!window.confirm('원본과 사용권 증빙을 검수했어? 승인 후 공개돼.'))return;
