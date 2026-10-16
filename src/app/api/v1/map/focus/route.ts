@@ -31,7 +31,7 @@ export async function GET(req:NextRequest){
    address_ko:venue.road_address_ko||venue.lot_address_ko,
    short_description:venue.short_description,main_menu:detail.menus[0]?.name||null,
    latitude:lat,longitude:lon,distance_km:0,category_code:venue.category_code,
-   region_sigungu:venue.region_sigungu,editorial_score:venue.editorial_score,
+   region_sigungu:venue.region_sigungu,editorial_score:venue.editorial_score,visitor_score:venue.ratings.whateato?.rating??null,
    tags:detail.tags,opening_hours:venue.opening_hours
   };
   return NextResponse.json({focus_id:id,center:[lon,lat],
