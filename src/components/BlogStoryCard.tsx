@@ -10,7 +10,7 @@ type BlogStory={
 export default function BlogStoryCard({story,locale,categoryLabel}:{
  story:BlogStory;locale:string;categoryLabel:string;
 }){
- return <Link className={styles.card} href={'/blog/'+encodeURIComponent(story.slug)+'?hl='+encodeURIComponent(locale)}>
+ return <Link className={styles.card} href={locale==='ja'?'/ja/blog/'+encodeURIComponent(story.slug):'/blog/'+encodeURIComponent(story.slug)+(locale==='en'?'':'?hl='+encodeURIComponent(locale))}>
   <div className={styles.cardImage}>
    {story.cover_image_id?
     // Only the already-approved blog cover is delivered by the existing protected image API.
