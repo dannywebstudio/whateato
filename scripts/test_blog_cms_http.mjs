@@ -203,8 +203,15 @@ for(const [lang,title,heading] of versions){
   'localized page must not fallback to English '+lang);
  assert.ok(body.includes('aria-label="Article language"'),'All 4 article language links must render');
  assert.ok(new RegExp('hreflang="'+lang+'"','i').test(body),'Locale-specific hreflang must render');
- assert.ok(body.includes('/blog/what-to-eat-in-seoul-ci?hl='+lang),
-  'Localized canonical URL should keep the locale');
+ assert.ok(body.includes(lang==='ja'?'/ja/blog/what-to-eat-in-seoul-ci':'/blog/what-to-eat-in-seoul-ci?hl='+lang),
+  'Localized canonical should point to the indexed locale URL');
+ if(lang==='ja'){
+  const japanese=await fetch(base+'/ja/blog/what-to-eat-in-seoul-ci');
+  assert.equal(japanese.status,200,'Japanese standalone page must exist');
+  const japaneseHtml=await japanese.text();
+  assert.ok(japaneseHtml.includes(title)&&japaneseHtml.includes(heading));
+  assert.ok(japaneseHtml.includes('/ja/blog/what-to-eat-in-seoul-ci'));
+ }
 }
 const publishingDB=new pg.Client({connectionString:process.env.DATABASE_URL});
 await publishingDB.connect();
