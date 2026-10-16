@@ -159,7 +159,7 @@ export default async function RestaurantDetail({params,searchParams}:Params){
           ] as const).filter(([key])=>rev.categories?.[key]!=null).map(([key,label])=>
             <span key={key}>{label[locale]} ★ {rev.categories?.[key]}</span>)}
         </div>}
-        <p style={{whiteSpace:'pre-line'}}>{rev.body}</p>
+        <p style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',wordBreak:'break-word',maxWidth:'100%',minWidth:0}}>{rev.body}</p>
         {rev.photos.length>0&&<div className={reviewStyles.publicReviewPhotos}>
           {rev.photos.map((photo,index)=>
             // eslint-disable-next-line @next/next/no-img-element
