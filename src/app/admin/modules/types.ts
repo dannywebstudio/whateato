@@ -15,3 +15,6 @@ export type Batch={id:string;title:string;state:string;total:number;applied:numb
 export type Review={id:string;restaurant_id:string;restaurant_name:string;rating:number;body:string;created_at:string;
   categories:Record<string,number|null>|null;photos:{id:string;url:string;status:string}[]};
 export type Day={weekday:number;closed:boolean;open:string;close:string;breakStart:string;breakEnd:string};
+
+export type Menu=ReturnType<typeof import('./restaurants').blankMenu>;
+export type Item={source_key:string;restaurant_id:string;kind:string;payload:Record<string,unknown>};
