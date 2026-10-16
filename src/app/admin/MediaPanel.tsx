@@ -77,6 +77,14 @@ export default function MediaPanel({selected,owner,busy,image,setImage,rights,se
              try{await post('/api/v1/owner/media/'+i.id,{decision:'reject'},'PATCH');await select(selected.restaurant.id)}catch(e){inform(e)}
            })()}>거절</button>
          </>}
+         {owner&&<button className={styles.button+' '+styles.danger} disabled={busy||uploading}
+           onClick={()=>void(async()=>{
+             if(!window.confirm('사진을 영구 삭제할까? 게시 중인 경우 상세페이지·카드에서도 즉시 사라지며 복구할 수 없어.'))return;
+             try{const response=await fetch('/api/v1/owner/media/'+i.id+'/delete',{method:'DELETE',credentials:'same-origin',headers:{'x-whateato-confirm-delete':i.id}});
+               const result=await response.json();if(!response.ok)throw Error(result.error||'image_delete_failed');
+               await select(selected.restaurant.id);if(result.warning)inform(Error(result.warning));
+             }catch(e){inform(e)}
+           })()}>영구 삭제</button>}
          {owner&&i.publication_state==='published'&&<button className={styles.button+' '+styles.danger}
            onClick={()=>void(async()=>{
              if(!window.confirm('게시된 이미지를 즉시 비공개 처리할까?'))return;
