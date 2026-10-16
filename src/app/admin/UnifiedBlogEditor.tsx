@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useRef,useState,type DragEvent} from 'react';
+import {useEffect,useRef,useState,type DragEvent,type MouseEvent} from 'react';
 import type {BlogBlock,BlogTranslation} from '@/lib/blog-model';
 import styles from './blog-editor.module.css';
 
@@ -9,7 +9,7 @@ type Props={locale:string;articleId:string;translation:BlogTranslation;images:Ap
 const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,char=>(({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' } as Record<string,string>)[char]||char));
 const textHtml=(value:string)=>value.split(/(\[[^\]\n]{1,120}\]\(https:\/\/[^\s)<>]{5,500}\))/g).map(part=>{
  const match=/^\[([^\]\n]+)\]\((https:\/\/[^\s)<>]+)\)$/.exec(part);
- return match?'<a href="'+escapeHtml(match[2])+'" target="_blank" rel="noopener noreferrer sponsored nofollow">'+escapeHtml(match[1])+'</a>':escapeHtml(part).replace(/\n/g,'<br>');
+ return match?'<a href="'+escapeHtml(match[2])+'" target="_blank" rel="noopener noreferrer sponsored nofollow">'+escapeHtml(match[1])+'</a>':escapeHtml(part).replace(/\+\+([^+\n]{1,500})\+\+/g,'<u>$1</u>').replace(/\{color:(#[0-9a-fA-F]{6})\|([^{}\n]{1,500})\}/g,'<span data-text-color="$1" style="color:$1">$2</span>').replace(/\n/g,'<br>');
 }).join('');
 const inlineText=(node:Node):string=>{
  if(node.nodeType===Node.TEXT_NODE)return node.textContent||'';
@@ -20,6 +20,8 @@ const inlineText=(node:Node):string=>{
   return /^https:\/\/[^\s)<>]{5,500}$/.test(url)?'['+content.replace(/[\[\]]/g,'')+']('+url+')':content;
  }
  if(node.tagName==='BR')return '\n';
+ if(node.tagName==='U')return '++'+content+'++';
+ if(node.tagName==='SPAN'&&/^#[0-9a-fA-F]{6}$/.test(node.dataset.textColor||''))return '{color:'+node.dataset.textColor+'|'+content+'}';
  if(node.tagName==='STRONG'||node.tagName==='B')return '**'+content+'**';
  if(node.tagName==='EM'||node.tagName==='I')return '*'+content+'*';
  return content;
@@ -38,7 +40,13 @@ const render=(translation:BlogTranslation,images:ApprovedImage[])=>
       '<figcaption>'+escapeHtml(block.caption||'')+'</figcaption></figure>';
    }
    if(block.type==='divider')return '<hr/>';
-   if(block.type==='table')return '<table'+attrs+'><tbody>'+(block.rows||[]).map(row=>'<tr>'+row.map(cell=>'<td>'+textHtml(cell)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+   if(block.type==='table'){
+    const bw=block.table_border_width??1,bc=block.table_border_color||'#dae6df',bs=block.table_border_style||'solid';
+    const tableAttrs=' data-border-width="'+bw+'" data-border-color="'+bc+'" data-border-style="'+bs+'"';
+    const cols=(block.table_col_widths||[]).map(w=>'<col style="width:'+w+'px" data-width="'+w+'"/>').join('');
+    const rows=(block.rows||[]).map((row,i)=>'<tr data-height="'+(block.table_row_heights?.[i]||0)+'" style="height:'+(block.table_row_heights?.[i]||'auto')+(block.table_row_heights?.[i]?'px':'')+'">'+row.map(cell=>'<td style="border:'+bw+'px '+bs+' '+bc+'">'+textHtml(cell)+'</td>').join('')+'</tr>').join('');
+    return '<table'+attrs+tableAttrs+' style="border-collapse:collapse;table-layout:fixed;width:max-content"><colgroup>'+cols+'</colgroup><tbody>'+rows+'</tbody></table>';
+   }
    return '<p'+attrs+'>'+value+'</p>';
   }).join('');
 
@@ -59,7 +67,17 @@ function serialize(root:HTMLElement):{blocks:BlogBlock[]}{
   else if(name==='hr')add('divider');
   else if(name==='table'){
    const rows=Array.from(node.querySelectorAll('tr')).slice(0,20).map(tr=>Array.from(tr.querySelectorAll('td,th')).slice(0,6).map(cell=>inlineText(cell).slice(0,240)));
-   if(rows.length&&rows.every(row=>row.length===rows[0].length&&row.length>=2))add('table',{...style,rows});
+   if(rows.length&&rows.every(row=>row.length===rows[0].length&&row.length>=2)){
+    const width=Number(node.getAttribute('data-border-width'));
+    const color=node.getAttribute('data-border-color')||'#dae6df';
+    const borderStyle=node.getAttribute('data-border-style')||'solid';
+    const widths=Array.from(node.querySelectorAll('col')).map(c=>Number(c.getAttribute('data-width'))).filter(v=>v>=45&&v<=1200);
+    const heights=Array.from(node.querySelectorAll('tr')).map(r=>Number(r.getAttribute('data-height'))||40);
+    add('table',{...style,rows,table_border_width:Number.isInteger(width)&&width>=0&&width<=8?width:1,
+     table_border_color:/^#[0-9a-fA-F]{6}$/.test(color)?color:'#dae6df',
+     table_border_style:['solid','dashed','dotted','none'].includes(borderStyle)?borderStyle as BlogBlock['table_border_style']:'solid',
+     table_col_widths:widths.length===rows[0].length?widths:undefined,table_row_heights:heights});
+   }
   }else if(name!=='h1')add('paragraph',{...style,text:inlineText(node).slice(0,8000)});
  }
  return {blocks:blocks.slice(0,80)};
@@ -69,6 +87,13 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  const ref=useRef<HTMLDivElement>(null);
  const pick=useRef<HTMLInputElement>(null);
  const [font,setFont]=useState('sans');
+ const [textColor,setTextColor]=useState('#168454');
+ const [tableWidth,setTableWidth]=useState(1);
+ const [tableColor,setTableColor]=useState('#dae6df');
+ const [tableStyle,setTableStyle]=useState<'solid'|'dashed'|'dotted'|'none'>('solid');
+ const [selectedTable,setSelectedTable]=useState(false);
+ const activeTable=useRef<HTMLTableElement|null>(null);
+ const resizeState=useRef<{axis:'col'|'row';index:number;start:number;initial:number;table:HTMLTableElement}|null>(null);
  const [imageChoice,setImageChoice]=useState('');
  const [note,setNote]=useState('');
  const [imageSize,setImageSize]=useState(100);
@@ -138,6 +163,67 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   else document.execCommand('formatBlock',false,tag);
   sync();
  };
+ const applyTextStyle=(kind:'underline'|'color')=>{
+  const range=lastCaret.current;
+  if(!range||range.collapsed||!ref.current?.contains(range.commonAncestorContainer)){setNote('먼저 꾸밀 글자를 마우스로 선택해 주세요.');return}
+  const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(range);
+  const span=document.createElement(kind==='underline'?'u':'span');
+  if(kind==='color'){span.style.color=textColor;span.dataset.textColor=textColor}
+  try{range.surroundContents(span)}catch{
+   const frag=range.extractContents();span.appendChild(frag);range.insertNode(span);
+  }
+  sync();setNote('');
+ };
+ const chooseTable=(table:HTMLTableElement|null)=>{
+  activeTable.current=table;setSelectedTable(Boolean(table));
+  if(table){setTableWidth(Number(table.dataset.borderWidth)||1);setTableColor(table.dataset.borderColor||'#dae6df');setTableStyle((table.dataset.borderStyle as 'solid'|'dashed'|'dotted'|'none')||'solid')}
+ };
+ const modifyTable=(change:'border'|'delete-row'|'delete-col'|'insert-row'|'insert-col')=>{
+  const table=activeTable.current;if(!table||!ref.current?.contains(table)){setNote('먼저 표의 셀을 클릭해 주세요.');return}
+  if(change==='border'){
+   table.dataset.borderWidth=String(tableWidth);table.dataset.borderColor=tableColor;table.dataset.borderStyle=tableStyle;
+   table.querySelectorAll('td,th').forEach(cell=>{(cell as HTMLElement).style.border=tableWidth+'px '+tableStyle+' '+tableColor});
+  }else{
+   const selected=(lastCaret.current?.startContainer instanceof Element?lastCaret.current.startContainer:lastCaret.current?.startContainer.parentElement)?.closest('td,th');
+   const row=(selected?.closest('tr')||table.rows[0]) as HTMLTableRowElement;
+   const ri=row.rowIndex,ci=selected?(selected as HTMLTableCellElement).cellIndex:0;
+   if(change==='delete-row'){if(table.rows.length<=1){setNote('표에는 한 행 이상 필요해.');return}table.deleteRow(ri)}
+   if(change==='insert-row'){const newRow=table.insertRow(ri+1);for(let k=0;k<table.rows[0].cells.length;k++)newRow.insertCell().textContent=''}
+   if(change==='delete-col'){if(table.rows[0].cells.length<=2){setNote('표에는 두 열 이상 필요해.');return}Array.from(table.rows).forEach(r=>r.deleteCell(ci));table.querySelectorAll('col').item(ci)?.remove()}
+   if(change==='insert-col'){if(table.rows[0].cells.length>=6){setNote('표는 최대 6열이야.');return}Array.from(table.rows).forEach(r=>r.insertCell(ci+1).textContent='');const col=document.createElement('col');col.dataset.width='120';col.style.width='120px';table.querySelector('colgroup')?.append(col)}
+  }
+  sync();
+ };
+ const onTableMouseDown=(event:MouseEvent<HTMLDivElement>)=>{
+  const target=event.target;if(!(target instanceof HTMLElement))return;
+  const cell=target.closest('td,th') as HTMLTableCellElement|null;
+  if(!cell||!ref.current?.contains(cell))return;
+  const rect=cell.getBoundingClientRect(),edge=7;
+  const axis=Math.abs(event.clientX-rect.right)<=edge?'col':Math.abs(event.clientY-rect.bottom)<=edge?'row':null;
+  if(!axis)return;
+  const table=cell.closest('table') as HTMLTableElement|null;if(!table)return;
+  event.preventDefault();
+  const index=axis==='col'?cell.cellIndex:cell.parentElement instanceof HTMLTableRowElement?cell.parentElement.rowIndex:0;
+  resizeState.current={axis,index,start:axis==='col'?event.clientX:event.clientY,initial:axis==='col'?cell.offsetWidth:cell.offsetHeight,table};
+ };
+ const onResizeMove=(event:React.MouseEvent<HTMLDivElement>)=>{
+  const state=resizeState.current;
+  if(state){
+   const value=Math.max(state.axis==='col'?45:25,Math.min(state.axis==='col'?1200:600,Math.round(state.initial+(state.axis==='col'?event.clientX:event.clientY)-state.start)));
+   if(state.axis==='col'){
+    let group=state.table.querySelector('colgroup');if(!group){group=document.createElement('colgroup');state.table.prepend(group)}
+    while(group.children.length<state.table.rows[0].cells.length)group.append(document.createElement('col'));
+    const col=group.children[state.index] as HTMLElement;col.style.width=value+'px';col.dataset.width=String(value);
+   }else{const row=state.table.rows[state.index];if(row){row.style.height=value+'px';row.dataset.height=String(value)}}
+   return;
+  }
+  const target=event.target;if(!(target instanceof HTMLElement))return;
+  const cell=target.closest('td,th') as HTMLTableCellElement|null;
+  if(!cell){ref.current?.style.removeProperty('cursor');return}
+  const rect=cell.getBoundingClientRect();
+  if(ref.current)ref.current.style.cursor=Math.abs(event.clientX-rect.right)<=7?'col-resize':Math.abs(event.clientY-rect.bottom)<=7?'row-resize':'text';
+ };
+ const finishResize=()=>{if(resizeState.current){resizeState.current=null;sync()}};
  const insertLink=()=>{
   const range=lastCaret.current;
   if(!range||range.collapsed||!ref.current?.contains(range.commonAncestorContainer)){
@@ -168,7 +254,9 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
    const tr=table.insertRow();
    for(let j=0;j<c;j++){const td=tr.insertCell();td.textContent=i===0?'항목':'';}
   }
-  putNode(table);sync();
+  const cg=document.createElement('colgroup');for(let j=0;j<c;j++){const col=document.createElement('col');col.dataset.width='140';col.style.width='140px';cg.append(col)}table.prepend(cg);
+  table.dataset.borderWidth='1';table.dataset.borderColor='#dae6df';table.dataset.borderStyle='solid';table.style.tableLayout='fixed';table.style.width='max-content';
+  putNode(table);chooseTable(table);sync();
  };
  const putNode=(node:HTMLElement)=>{
   const range=lastCaret.current;
@@ -234,34 +322,40 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  };
  return <div className={styles.unifiedWrap}>
   <div className={styles.unifiedToolbar} role="toolbar" aria-label="글 작성 도구">
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('p')}>본문</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('h2')}>제목</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('h3')}>소제목</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('insertUnorderedList')}>목록</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('blockquote')}>인용</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('bold')}>굵게</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('italic')}>기울임</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={insertLink}>링크 / 제휴 링크</button>
-   <label className={styles.fontSelect}>글꼴 <select value={font} onChange={e=>setFont(e.target.value)}>
-    <option value="sans">Noto Sans KR</option><option value="serif">Noto Serif KR</option>
-    <option value="nanum">나눔고딕</option><option value="myeongjo">나눔명조</option>
-   </select></label>
-   <button type="button" onClick={()=>pick.current?.click()}>사진 업로드</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={insertTable}>표 삽입</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>applyAlign('left')}>왼쪽</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>applyAlign('center')}>가운데</button>
-   <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>applyAlign('right')}>오른쪽</button>
-   <label>글자 크기 <select defaultValue="16" onChange={e=>applySize(Number(e.target.value))}>{[12,14,16,18,20,24,28,32,40].map(v=><option key={v} value={v}>{v}px</option>)}</select></label>
-   <label>사진 크기 <select value={imageSize} onChange={e=>setImageSize(Number(e.target.value))}>{[25,40,50,60,75,90,100].map(v=><option key={v} value={v}>{v}%</option>)}</select></label>
-   <button type="button" disabled={!selectedPhoto} onClick={resizeImage}>선택한 사진 크기 적용</button>
-   <input ref={pick} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>{const file=e.target.files?.[0];if(file)previewFile(file);e.target.value=''}}/>
-   <select aria-label="승인된 사진 삽입" value={imageChoice} onChange={e=>{setImageChoice(e.target.value);if(e.target.value)insertImage(e.target.value)}}>
-    <option value="">사진 위치에 삽입…</option>
-    {images.filter(image=>image.rights_status==='approved').map(image=><option value={image.id} key={image.id}>{image.alt_text||image.id}</option>)}
-   </select>
+   <div className={styles.toolGroup}><strong>문단</strong>
+    {(['p','h2','h3','insertUnorderedList','blockquote'] as const).map((t,i)=><button key={t} type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format(t)}>{['본문','제목','소제목','목록','인용'][i]}</button>)}
+   </div>
+   <div className={styles.toolGroup}><strong>글자 꾸미기</strong>
+    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('bold')}><b>B</b></button>
+    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>format('italic')}><i>I</i></button>
+    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>applyTextStyle('underline')}><u>U</u></button>
+    <label>색상 <input type="color" value={textColor} onChange={e=>setTextColor(e.target.value)}/></label>
+    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>applyTextStyle('color')}>색 적용</button>
+    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={insertLink}>링크</button>
+    <label>글자 크기 <select defaultValue="16" onChange={e=>applySize(Number(e.target.value))}>{[12,14,16,18,20,24,28,32,40].map(v=><option key={v} value={v}>{v}px</option>)}</select></label>
+   </div>
+   <div className={styles.toolGroup}><strong>정렬·글꼴</strong>
+    {(['left','center','right'] as const).map((v,i)=><button key={v} type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>applyAlign(v)}>{['왼쪽','가운데','오른쪽'][i]}</button>)}
+    <label>글꼴 <select value={font} onChange={e=>setFont(e.target.value)}><option value="sans">Noto Sans KR</option><option value="serif">Noto Serif KR</option><option value="nanum">나눔고딕</option><option value="myeongjo">나눔명조</option></select></label>
+   </div>
+   <div className={styles.toolGroup}><strong>표 편집</strong>
+    <button type="button" onMouseDown={e=>e.preventDefault()} onClick={insertTable}>표 삽입</button>
+    <label>선 굵기 <select value={tableWidth} onChange={e=>setTableWidth(Number(e.target.value))}>{[0,1,2,3,4,6,8].map(v=><option key={v} value={v}>{v}px</option>)}</select></label>
+    <label>선 색 <input type="color" value={tableColor} onChange={e=>setTableColor(e.target.value)}/></label>
+    <label>선 종류 <select value={tableStyle} onChange={e=>setTableStyle(e.target.value as typeof tableStyle)}><option value="solid">실선</option><option value="dashed">파선</option><option value="dotted">점선</option><option value="none">없음</option></select></label>
+    <button type="button" disabled={!selectedTable} onClick={()=>modifyTable('border')}>스타일 적용</button>
+    {(['insert-row','insert-col','delete-row','delete-col'] as const).map((v,i)=><button type="button" key={v} disabled={!selectedTable} onClick={()=>modifyTable(v)}>{['행 추가','열 추가','행 삭제','열 삭제'][i]}</button>)}
+   </div>
+   <div className={styles.toolGroup}><strong>사진</strong>
+    <button type="button" onClick={()=>pick.current?.click()}>사진 업로드</button>
+    <label>크기 <select value={imageSize} onChange={e=>setImageSize(Number(e.target.value))}>{[25,40,50,60,75,90,100].map(v=><option key={v} value={v}>{v}%</option>)}</select></label>
+    <button type="button" disabled={!selectedPhoto} onClick={resizeImage}>사진 크기 적용</button>
+    <input ref={pick} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>{const file=e.target.files?.[0];if(file)previewFile(file);e.target.value=''}}/>
+    <select aria-label="승인된 사진 삽입" value={imageChoice} onChange={e=>{setImageChoice(e.target.value);if(e.target.value)insertImage(e.target.value)}}><option value="">사진 위치에 삽입…</option>{images.filter(image=>image.rights_status==='approved').map(image=><option key={image.id} value={image.id}>{image.alt_text||image.id}</option>)}</select>
+   </div>
   </div>
   {note&&<p className={styles.editorNotice} role="status">{note}</p>}
-  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onKeyUp={rememberCaret} onMouseUp={rememberCaret} onClick={e=>{const node=e.target as HTMLElement;const figure=node.closest('figure');chooseFigure(figure&&ref.current?.contains(figure)?figure as HTMLElement:null)}} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
+  <div ref={ref} className={styles.unifiedCanvas} data-font={font} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="제목과 본문 통합 편집" onInput={()=>{sync();rememberCaret()}} onMouseDown={onTableMouseDown} onMouseMove={onResizeMove} onMouseLeave={finishResize} onMouseUp={e=>{finishResize();rememberCaret()}} onKeyUp={rememberCaret} onClick={e=>{const node=e.target as HTMLElement;const figure=node.closest('figure');chooseFigure(figure&&ref.current?.contains(figure)?figure as HTMLElement:null);chooseTable(node.closest('table') as HTMLTableElement|null)}} onBlur={()=>{rememberCaret();sync()}} onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={handleDrop}/>
   <p className={styles.editorHint}>사진을 클릭하면 선택 테두리가 나타나고, 해당 사진의 크기만 조절할 수 있어. 사진은 문단 사이에 자유롭게 배치돼.</p>
  </div>;
 }
