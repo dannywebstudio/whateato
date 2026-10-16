@@ -40,7 +40,7 @@ const render=(translation:BlogTranslation,images:ApprovedImage[])=>
       (image?'<img src="'+escapeHtml(image.image_url)+'" alt="'+escapeHtml(image.alt_text)+'"/>':'<p>이미지 선택 또는 승인 필요</p>')+
       '<figcaption>'+escapeHtml(block.caption||'')+'</figcaption></figure>';
    }
-   if(block.type==='restaurant')return '<div class="we-card we-card-search restaurant-card" contenteditable="false" data-restaurant-id="'+escapeHtml(block.restaurant_id||'')+'"><div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>식당 카드 불러오는 중…</h3></div><div class="we-card-actions"><a href="/map?restaurant='+escapeHtml(block.restaurant_id||'')+'">지도에서 보기</a><a href="/restaurant/'+escapeHtml(block.restaurant_id||'')+'">자세히 보기 ↗</a></div></div></div>';
+   if(block.type==='restaurant')return '<div class="we-card we-card-search restaurant-card" contenteditable="false" data-restaurant-id="'+escapeHtml(block.restaurant_id||'')+'"><div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>식당 카드 불러오는 중…</h3></div><div class="we-card-actions"><a href="/map?focus='+escapeHtml(block.restaurant_id||'')+'">지도에서 보기</a><a href="/restaurant/'+escapeHtml(block.restaurant_id||'')+'">자세히 보기 ↗</a></div></div></div>';
    if(block.type==='divider')return '<hr/>';
    if(block.type==='table'){
     const bw=block.table_border_width??1,bc=block.table_border_color||'#dae6df',bs=block.table_border_style||'solid';
@@ -274,7 +274,7 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
  };
  const insertRestaurant=async(item:RestaurantMatch)=>{
   const card=document.createElement('div');card.className='we-card we-card-search restaurant-card';card.contentEditable='false';card.dataset.restaurantId=item.id;
-  card.innerHTML='<div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>'+escapeHtml(item.name_ko)+'</h3></div><div class="we-card-information">'+escapeHtml(item.road_address_ko||'')+'</div><div class="we-card-actions"><a href="/map?restaurant='+encodeURIComponent(item.id)+'">지도에서 보기</a><a href="/restaurant/'+encodeURIComponent(item.id)+'?hl='+encodeURIComponent(locale)+'">자세히 보기 ↗</a></div></div>';
+  card.innerHTML='<div class="we-card-visual"><div class="we-card-fallback">음식카드</div></div><div class="we-card-body"><div class="we-card-head"><h3>'+escapeHtml(item.name_ko)+'</h3></div><div class="we-card-information">'+escapeHtml(item.road_address_ko||'')+'</div><div class="we-card-actions"><a href="/map?focus='+encodeURIComponent(item.id)+'">지도에서 보기</a><a href="/restaurant/'+encodeURIComponent(item.id)+'?hl='+encodeURIComponent(locale)+'">자세히 보기 ↗</a></div></div>';
   putNode(card);onRestaurantInsert(item.id);sync();setNote('음식카드를 본문에 삽입했어.');
   try{
    const response=await fetch('/api/v1/restaurants/'+encodeURIComponent(item.id)+'?hl='+encodeURIComponent(locale));
