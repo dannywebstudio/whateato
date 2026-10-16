@@ -1,10 +1,29 @@
 'use client';
-import type {Dispatch,SetStateAction} from 'react';
+import {useState,type ChangeEvent,type Dispatch,type SetStateAction} from 'react';
 import type {Review} from './modules/types';
 import {reviewScoreLabel} from './modules/reviews';
 import styles from './admin.module.css';
 type Props={owner:boolean;reviews:Review[];reviewStatus:'pending'|'published'|'rejected';setReviewStatus:(value:'pending'|'published'|'rejected')=>void;reason:string;setReason:(value:string)=>void;photosInspected:Record<string,boolean>;setPhotosInspected:Dispatch<SetStateAction<Record<string,boolean>>>;deletingReviewId:string|null;loadReviews:()=>Promise<void>;reviewAction:(id:string,approve:boolean,hide?:boolean)=>Promise<void>;deleteReview:(review:Review)=>Promise<void>};
 export default function ReviewPanel({owner,reviews,reviewStatus,setReviewStatus,reason,setReason,photosInspected,setPhotosInspected,deletingReviewId,loadReviews,reviewAction,deleteReview}:Props){
+ const [importing,setImporting]=useState<string|null>(null);
+ const [translationNote,setTranslationNote]=useState<Record<string,string>>({});
+ const importReviewTexts=async(id:string,event:ChangeEvent<HTMLInputElement>)=>{
+  const file=event.target.files?.[0];event.target.value='';if(!file)return;
+  if(file.size>9000){setTranslationNote(p=>({...p,[id]:'JSON 파일은 9KB 이하여야 해.'}));return}
+  setImporting(id);
+  try{
+   const raw=await file.text();const data=JSON.parse(raw);
+   const expected=['ko','en','ja','zh-CN'];
+   if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).length!==4||
+      !expected.every(k=>typeof data[k]==='string'&&data[k].trim().length>=30&&data[k].trim().length<=1500))
+      throw Error('ko, en, ja, zh-CN 네 개 언어의 글자를 각각 30~1,500자로 입력해야 해.');
+   const response=await fetch('/api/v1/owner/reviews/'+encodeURIComponent(id)+'/translations',{
+    method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+   const result=await response.json();if(!response.ok)throw Error(result.error||'번역 저장 실패');
+   setTranslationNote(p=>({...p,[id]:'4개 언어의 리뷰 문구 저장 완료'}));
+  }catch(e){setTranslationNote(p=>({...p,[id]:e instanceof Error?e.message:'잘못된 JSON 파일'}))}
+  finally{setImporting(null)}
+ };
 return (<section className={styles.panel}>
      <div className={styles.row}><h2>방문후기 관리</h2><button className={styles.button+' '+styles.secondary} onClick={()=>void loadReviews()}>새로고침</button></div>
      <label className={styles.field}>보기<select value={reviewStatus} onChange={e=>setReviewStatus(e.target.value as typeof reviewStatus)}>
@@ -35,6 +54,13 @@ return (<section className={styles.panel}>
          </label>}
        </>}
        <div className={styles.small}>{r.created_at} · ID: {r.id}</div>
+       {owner&&<div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+         <label style={{fontSize:12,fontWeight:650}}>4개 언어 리뷰 문구 JSON 업로드
+           <input type="file" accept=".json,application/json" disabled={importing!==null}
+             onChange={e=>void importReviewTexts(r.id,e)} style={{display:'block',marginTop:5}}/>
+         </label>
+         {translationNote[r.id]&&<span role="status" style={{fontSize:12}}>{translationNote[r.id]}</span>}
+       </div>}
        <div className={styles.actions}>
          {reviewStatus==='pending'&&<><button className={styles.button} onClick={()=>void reviewAction(r.id,true)}>검토 후 승인</button>
          <button className={styles.button+' '+styles.danger} onClick={()=>void reviewAction(r.id,false)}>거절</button></>}
