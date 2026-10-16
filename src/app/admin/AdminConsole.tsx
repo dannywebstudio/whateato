@@ -349,18 +349,19 @@ export default function AdminConsole({role,initialBlogSlug='',initialTab}:{role:
    setImported(rows.length);setNotice(rows.length+'건의 데이터를 초안에 추가했어. 승인 전 검수해.');await loadBatch(batchId);
  };
  const loadBatchSafe=(id:string)=>ownerApi.getBatch(id);
- const uploadPhoto=async()=>{
-   if(!selected||!image)throw Error('식당과 사진을 선택해.');
+ const uploadPhoto=async(file?:File,position?:number)=>{
+   const chosen=file||image;
+   if(!selected||!chosen)throw Error('식당과 사진을 선택해.');
    if(!rights)throw Error('사진의 사용 권한 확인을 체크해.');
    if(photoOrigin==='external_licensed'&&(!/^https:\/\//.test(imageEvidence)||!/^https:\/\//.test(rightsEvidence)))
     throw Error('외부 사진은 원본 출처와 사용권 증빙 HTTPS URL이 모두 필요해.');
-   if(image.size>MAX_CMS_IMAGE_BYTES)throw Error('8MB 이하 이미지만 업로드할 수 있어.');
+   if(chosen.size>MAX_CMS_IMAGE_BYTES)throw Error('8MB 이하 이미지만 업로드할 수 있어.');
    const form=new FormData();
    form.set('restaurant_id',selected.restaurant.id);
    form.set('photo_origin',photoOrigin);
-   form.set('file',image);form.set('source_reference',imageEvidence);
+   form.set('file',chosen);form.set('source_reference',imageEvidence);
    form.set('rights_confirmation',rights?'yes':'no');form.set('rights_reference',rightsEvidence);
-   form.set('position',String(photoRole==='cover'?0:imagePosition));
+   form.set('position',String(photoRole==='cover'?0:position??imagePosition));
    form.set('photo_role',photoRole);
    const resp=await fetch('/api/v1/owner/media',{method:'POST',credentials:'same-origin',body:form});
    const result=await resp.json();
