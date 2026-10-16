@@ -182,12 +182,12 @@
 .we-map-popup a{font-size:12px;font-weight:750;text-align:center;color:#fff!important;background:#13805b;border-radius:7px;text-decoration:none;padding:8px 12px}
 .we-map-popup a:hover{background:#0e6949}
 
-/* Embedded article/CMS cards: same Map card appearance, exactly one compact row.
-   The Map directory uses four stretch rows; that rule must not enlarge a single embed. */
+/* Blog/CMS inline restaurant cards: preserve Map's compact horizontal design
+   but never clip content or actions when the editor font/context differs. */
 .whateato-inline-map-card.map-explore-cards{
  display:grid;
  grid-template-columns:minmax(0,1fr);
- grid-template-rows:135px;
+ grid-template-rows:auto;
  gap:0;
  align-content:start;
  width:100%;
@@ -195,19 +195,70 @@
  min-height:0;
 }
 .whateato-inline-map-card.map-explore-cards .we-card.we-card-map{
- height:135px;
- min-height:135px;
- max-height:135px;
+ height:auto;
+ min-height:145px;
+ max-height:none;
  grid-template-columns:116px minmax(0,1fr);
  overflow:hidden;
 }
-.whateato-inline-map-card .we-card-map .we-card-visual{min-height:0;height:135px}
-.whateato-inline-map-card .we-card-map .we-card-body{min-height:0}
+.whateato-inline-map-card .we-card-map .we-card-visual{height:100%;min-height:145px}
+.whateato-inline-map-card .we-card-map .we-card-body{
+ display:flex;
+ flex-direction:column;
+ min-width:0;
+ min-height:145px;
+ height:auto;
+ padding:9px 11px;
+ gap:4px;
+ overflow:visible;
+}
+.whateato-inline-map-card .we-card-map .we-card-head{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:0}
+.whateato-inline-map-card .we-card-map .we-card-head h3{font-size:15px;line-height:1.3;min-width:0}
+.whateato-inline-map-card .we-card-map .status-pill{flex-shrink:0}
+.whateato-inline-map-card .we-card-map .we-card-desc{
+ display:block;min-width:0;max-height:none;margin:0;font-size:11px;line-height:1.35;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset;
+}
+.whateato-inline-map-card .we-card-map .we-card-information{
+ display:flex;flex-direction:column;gap:3px;min-height:0;overflow:visible;
+}
+.whateato-inline-map-card .we-card-map .we-card-menu-row{
+ display:flex;align-items:center;min-height:0;height:auto;gap:5px;
+ flex-wrap:wrap;overflow:visible;
+}
+.whateato-inline-map-card .we-card-map .we-card-menu-row>p{
+ flex:0 1 auto;max-width:100%;min-width:0;margin:0;font-size:10px;line-height:1.35;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.whateato-inline-map-card .we-card-map .we-card-menu-row .we-card-tags{
+ display:flex;flex:0 1 auto;flex-wrap:wrap;gap:3px;overflow:visible;
+}
+.whateato-inline-map-card .we-card-map .we-card-menu-row .we-card-tags>span{font-size:9px;padding:2px 4px}
+.whateato-inline-map-card .we-card-map .we-card-information p{
+ min-width:0;margin:0;font-size:10px;line-height:1.35;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.whateato-inline-map-card .we-card-map .we-card-bottom{
+ display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:6px;min-height:0;margin-top:auto;padding-top:5px;
+}
+.whateato-inline-map-card .we-card-map .we-card-rating{
+ display:inline-flex;flex:0 1 auto;min-width:0;font-size:10px;line-height:1.2;
+}
+.whateato-inline-map-card .we-card-map .we-card-actions{
+ display:flex;flex:0 0 auto;align-items:center;gap:5px;
+ flex-wrap:wrap;margin-left:auto;white-space:normal;
+}
+.whateato-inline-map-card .we-card-map .we-map-button,
+.whateato-inline-map-card .we-card-map .we-card-visit{
+ display:inline-flex;align-items:center;justify-content:center;
+ padding:5px 8px;min-height:27px;font-size:10px;white-space:nowrap;
+}
 @media(max-width:620px){
- .whateato-inline-map-card.map-explore-cards{grid-template-rows:minmax(145px,auto)}
  .whateato-inline-map-card.map-explore-cards .we-card.we-card-map{
-  height:auto;min-height:145px;max-height:none;
-  grid-template-columns:100px minmax(0,1fr)
+  grid-template-columns:96px minmax(0,1fr);min-height:155px;max-height:none;
  }
- .whateato-inline-map-card .we-card-map .we-card-visual{height:100%;min-height:145px}
+ .whateato-inline-map-card .we-card-map .we-card-visual{min-height:155px}
+ .whateato-inline-map-card .we-card-map .we-card-body{min-height:155px;padding:8px 9px}
+ .whateato-inline-map-card .we-card-map .we-card-head h3{font-size:14px}
 }
