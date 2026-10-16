@@ -11,7 +11,7 @@ export type GeoMarker={
   id:string;name:string;name_ko:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;
   latitude:number;longitude:number;distance_km?:number;
   category_code:string|null;region_sigungu:string|null;
-  editorial_score:number|null;visitor_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;
+  editorial_score:number|null;visitor_score:number|null;featured_image_url:string|null;tags:CatalogTag[];opening_hours:OpeningHours|null;
 };
 export type GeoEnvelope={south:number;west:number;north:number;east:number};
 export type GeoCatalogResponse={
@@ -100,6 +100,11 @@ export async function getGeoCatalog(input:QueryParams & {
       COALESCE(l.short_description,k.short_description) AS short_description,
       (SELECT COALESCE(ml.name,kl.name) FROM restaurant_menus m LEFT JOIN restaurant_menu_localizations ml ON ml.menu_id=m.id AND ml.locale=$1 LEFT JOIN restaurant_menu_localizations kl ON kl.menu_id=m.id AND kl.locale='ko' WHERE m.restaurant_id=r.id AND m.publication_state='published' AND NULLIF(BTRIM(m.evidence_ref),'') IS NOT NULL ORDER BY m.position LIMIT 1) AS main_menu,r.latitude,r.longitude,
       ${triageDisplayCategorySql()} AS category_code,r.region_sigungu,
+      (SELECT '/api/v1/images/'||im.id::text FROM restaurant_images im
+       WHERE im.restaurant_id=r.id AND im.publication_state='published'
+         AND im.rights_status='approved' AND im.rights_verified_at IS NOT NULL
+         AND NULLIF(BTRIM(im.usage_rights_reference),'') IS NOT NULL
+       ORDER BY CASE WHEN im.cms_photo_role='cover' THEN 0 ELSE 1 END,im.position,im.id LIMIT 1) AS featured_image_url,
       CASE WHEN sc.approval_state='approved' AND sc.verified_at IS NOT NULL
         THEN sc.score::float8 ELSE NULL END AS editorial_score,
       COALESCE((SELECT json_agg(json_build_object(
