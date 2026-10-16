@@ -18,21 +18,22 @@ export function InlineBlogText({value}:{value:string}){
 }
 export function BlogBody({blocks,preview=false}:{blocks:BlogBlock[];preview?:boolean}){
  const nodes:ReactNode[]=blocks.map(b=>{
+  const style={textAlign:b.align||'left',fontSize:b.font_size?b.font_size+'px':undefined} as const;
   if(b.type==='heading'){
-   return b.level===3?<h3 key={b.id}><InlineBlogText value={b.text||''}/></h3>:
-    <h2 key={b.id}><InlineBlogText value={b.text||''}/></h2>;
+   return b.level===3?<h3 key={b.id} style={style}><InlineBlogText value={b.text||''}/></h3>:
+    <h2 key={b.id} style={style}><InlineBlogText value={b.text||''}/></h2>;
   }
-  if(b.type==='paragraph')return <p key={b.id}><InlineBlogText value={b.text||''}/></p>;
-  if(b.type==='quote')return <blockquote key={b.id}><InlineBlogText value={b.text||''}/></blockquote>;
-  if(b.type==='list')return <ul key={b.id}>{(b.items||[]).map((s,i)=>
+  if(b.type==='paragraph')return <p key={b.id} style={style}><InlineBlogText value={b.text||''}/></p>;
+  if(b.type==='quote')return <blockquote key={b.id} style={style}><InlineBlogText value={b.text||''}/></blockquote>;
+  if(b.type==='list')return <ul key={b.id} style={style}>{(b.items||[]).map((s,i)=>
    <li key={i}><InlineBlogText value={s}/></li>)}</ul>;
-  if(b.type==='table')return <div className={styles.tableScroll} key={b.id}>
+  if(b.type==='table')return <div className={styles.tableScroll} key={b.id} style={style}>
    <table><thead><tr>{(b.rows?.[0]||[]).map((s,i)=>
      <th scope="col" key={i}><InlineBlogText value={s}/></th>)}</tr></thead>
    <tbody>{(b.rows||[]).slice(1).map((r,i)=><tr key={i}>
      {r.map((s,j)=><td key={j}><InlineBlogText value={s}/></td>)}
    </tr>)}</tbody></table></div>;
-  if(b.type==='image'&&b.image_id)return <figure key={b.id} className={styles.inlineFigure}>
+  if(b.type==='image'&&b.image_id)return <figure key={b.id} className={styles.inlineFigure} style={{...style,width:(b.image_width||100)+'%',maxWidth:'100%',marginLeft:b.align==='right'?'auto':b.align==='center'?'auto':0,marginRight:b.align==='left'?0:'auto'}}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
    <img src={(preview?'/api/v1/owner/blog/images/':'/api/blog/images/')+b.image_id}
     alt={b.caption||'Editorial restaurant photograph'} loading="lazy"/>
