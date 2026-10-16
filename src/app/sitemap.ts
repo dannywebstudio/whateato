@@ -27,8 +27,8 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
  }
  const pool=getPool();if(!pool)return pages;
  try{
-  const blog=await pool.query<{slug:string;published_at:Date}>(`
-   SELECT p.slug,u.published_at FROM whateato_blog_publications u
+  const blog=await pool.query<{slug:string;published_at:Date;has_japanese:boolean}>(`
+   SELECT p.slug,u.published_at, NULLIF(BTRIM(u.snapshot->'translations'->'ja'->>'title'),'') IS NOT NULL AS has_japanese FROM whateato_blog_publications u
    JOIN whateato_blog_posts p ON p.id=u.post_id
    WHERE u.is_visible=true
      AND NULLIF(BTRIM(u.snapshot->'translations'->'en'->>'title'),'') IS NOT NULL
@@ -38,7 +38,11 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
   });
   for(const item of blog.rows){
    pages.push({url:SEO_CANONICAL_ORIGIN+'/blog/'+item.slug,
-     lastModified:item.published_at,changeFrequency:'monthly',priority:0.7});
+     lastModified:item.published_at,changeFrequency:'monthly',priority:0.7,
+     alternates:item.has_japanese?{languages:{en:SEO_CANONICAL_ORIGIN+'/blog/'+item.slug,ja:SEO_CANONICAL_ORIGIN+'/ja/blog/'+item.slug}}:undefined});
+   if(item.has_japanese)pages.push({url:SEO_CANONICAL_ORIGIN+'/ja/blog/'+item.slug,
+     lastModified:item.published_at,changeFrequency:'monthly',priority:0.7,
+     alternates:{languages:{en:SEO_CANONICAL_ORIGIN+'/blog/'+item.slug,ja:SEO_CANONICAL_ORIGIN+'/ja/blog/'+item.slug}}});
   }
  }catch{
   // Unknown, unapproved and draft articles never enter the public sitemap.
