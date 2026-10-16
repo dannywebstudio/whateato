@@ -26,7 +26,7 @@ export type RestaurantDetailInfo={
   full_description:string|null;road_address_ko:string|null;lot_address_ko:string|null;
   region_sido:string|null;region_sigungu:string|null;category_code:string|null;
   latitude:number|null;longitude:number|null;
-  editorial_score:number|null;editorial_methodology:string|null;opening_hours:OpeningHours|null;ratings:RatingDisplay;
+  card_accent_color:string|null;editorial_score:number|null;editorial_methodology:string|null;opening_hours:OpeningHours|null;ratings:RatingDisplay;
 };
 export type RestaurantMenu={
   id:string;name:string;description:string|null;price_krw:number|null;price_verified_at:string|null;
@@ -174,6 +174,7 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
   if(!pool)throw new CatalogDatabaseUnavailable();
   const row=await pool.query<RestaurantDetailInfo>(`
     SELECT r.id::text AS id,r.name_ko,
+      (SELECT accent_color FROM whateato_restaurant_card_accents WHERE restaurant_id=r.id) AS card_accent_color,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       COALESCE(l.short_description,k.short_description) AS short_description,
       COALESCE(l.full_description,k.full_description) AS full_description,
