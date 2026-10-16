@@ -3,42 +3,12 @@ import {useCallback,useEffect,useState,type ChangeEvent} from 'react';
 import styles from './admin.module.css';
 import BlogEditor from './BlogEditor';
 
-type Role='owner'|'editor'|'moderator';
-type Tab='restaurants'|'batches'|'reviews'|'blog';
-type Place={id:string;name_ko:string;region_sigungu:string|null;road_address_ko:string|null;publication_status:string};
-type Detail={
- restaurant:Place&{lot_address_ko:string|null;category_code:string|null;
-  region_sido:string|null;region_dong:string|null;latitude:number|null;longitude:number|null;
-  cms_origin:boolean;cms_source_url:string|null;business_status:string;public_approved:boolean};
- locales:{locale:string;display_name:string;short_description:string|null;full_description:string|null;source_notes:string|null}[];
- menus:{id:string;menu_key:string;position:number;price_krw:number|null;locale:string|null;name:string|null;description:string|null;publication_state:string}[];
- tags:{tag_code:string;verification_state:string;evidence_ref:string|null}[];
- hours:{weekday:number|null;start_minute:number|null;end_minute:number|null;source_url:string;publication_state:string}[];
- images:{id:string;position:number;publication_state:string;rights_status:string;cms_photo_role:'cover'|'gallery';url:string}[];
-};
-type Batch={id:string;title:string;state:string;total:number;applied:number;failed:number};
-type Review={id:string;restaurant_id:string;restaurant_name:string;rating:number;body:string;created_at:string;
-  categories:Record<string,number|null>|null;photos:{id:string;url:string;status:string}[]};
-type Day={weekday:number;closed:boolean;open:string;close:string;breakStart:string;breakEnd:string};
-const weekdays=['일','월','화','수','목','금','토'];
-const emptyDays=():Day[]=>weekdays.map((_,weekday)=>({weekday,closed:true,open:'11:00',close:'21:00',breakStart:'',breakEnd:''}));
-const tags=['date_night','bar','lunch','dinner','solo_dining','family_dining','cafe','dessert',
- 'budget_friendly','good_atmosphere','local_pick','traveler_friendly','english_menu',
- 'vegetarian_options','reservation_available','near_subway'];
-const locales=['en','ja','zh-CN','ko'] as const;
-const timeToMin=(s:string)=>{const m=/^([01]\d|2[0-3]):([0-5]\d)$/.exec(s);
- if(!m)throw Error('시간은 HH:MM 형식이어야 해.');return Number(m[1])*60+Number(m[2])};
-const minToTime=(v:number)=>String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0');
-const blankMenu=()=>({key:'',name:'',price:'',description:'',evidence:'',featured:false});
-type Menu=ReturnType<typeof blankMenu>;
-type Item={source_key:string;restaurant_id:string;kind:string;payload:Record<string,unknown>};
-async function json(url:string,init:RequestInit={}):Promise<any>{
- const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...init});
- const data=await response.json().catch(()=>({error:'invalid_response'}));
- if(!response.ok)throw Error(String(data.error||'HTTP '+response.status));
- return data;
-}
-const post=(url:string,body:unknown,method='POST')=>json(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+import type {Role,Tab,Place,Detail,Batch,Review,Day,Menu,Item} from './modules/types';
+import {weekdays,emptyDays,tags,locales,timeToMin,minToTime,blankMenu} from './modules/restaurants';
+import {json,post} from './modules/client';
+import {parseBatchLines} from './modules/batches';
+import {reviewScoreLabel} from './modules/reviews';
+import {MAX_CMS_IMAGE_BYTES,mediaRoleLabel} from './modules/media';
 
 export default function AdminConsole({role}:{role:Role}){
  const [tab,setTab]=useState<Tab>(role==='moderator'?'reviews':'restaurants');
@@ -329,7 +299,7 @@ export default function AdminConsole({role}:{role:Role}){
    const data=await loadBatchSafe(batchId);
    if(data.batch.state!=='draft')throw Error('초안 배치에만 추가할 수 있어.');
    const text=await bulkFile.text();if(text.length>8_000_000)throw Error('파일이 너무 커. 8MB 이하로 나눠서 업로드해.');
-   const rows=text.split(/\r?\n/).filter(x=>x.trim()).map(x=>JSON.parse(x));
+   const rows=parseBatchLines(text);
    if(rows.length>10000)throw Error('한 배치당 최대 10,000건이야.');
    for(let i=0;i<rows.length;i+=50)await post('/api/v1/owner/bulk/batches/'+batchId+'/items',{items:rows.slice(i,i+50)});
    setImported(rows.length);setNotice(rows.length+'건의 데이터를 초안에 추가했어. 승인 전 검수해.');await loadBatch(batchId);
@@ -338,7 +308,7 @@ export default function AdminConsole({role}:{role:Role}){
  const uploadPhoto=async()=>{
    if(!selected||!image)throw Error('식당과 사진을 선택해.');
    if(!rights)throw Error('사진 사용 권한을 확인해.');
-   if(image.size>8*1024*1024)throw Error('8MB 이하 이미지만 업로드할 수 있어.');
+   if(image.size>MAX_CMS_IMAGE_BYTES)throw Error('8MB 이하 이미지만 업로드할 수 있어.');
    const form=new FormData();
    form.set('restaurant_id',selected.restaurant.id);
    form.set('file',image);form.set('source_reference',imageEvidence);
@@ -349,7 +319,7 @@ export default function AdminConsole({role}:{role:Role}){
    const result=await resp.json();
    if(!resp.ok)throw Error(result.error||'upload_failed');
    await select(selected.restaurant.id);
-   setImageResult((photoRole==='cover'?'카드 대표사진':'상세 갤러리')+' 업로드 완료 · 검수 대기 '+result.image_id);
+   setImageResult(mediaRoleLabel(photoRole)+' 업로드 완료 · 검수 대기 '+result.image_id);
  };
  return <div>
    <header className={styles.hero}>
@@ -626,7 +596,7 @@ export default function AdminConsole({role}:{role:Role}){
        <p style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{r.body}</p>
        {r.categories&&<div className={styles.chips}>
          {Object.entries(r.categories).map(([key,score])=>
-           <span key={key} className={styles.chip}>{key.replaceAll('_',' ')} · {score===null?'N/A':score+'/5'}</span>)}
+           <span key={key} className={styles.chip}>{key.replaceAll('_',' ')} · {reviewScoreLabel(score)}</span>)}
        </div>}
        {r.photos?.length>0&&<>
          <h3>첨부 음식 사진 {r.photos.length}장</h3>
