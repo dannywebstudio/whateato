@@ -10,7 +10,7 @@ export type RestaurantSearchItem={
   id:string;name:string;name_ko:string;address_ko:string|null;address:string|null;
   category_code:string|null;region_sido:string|null;region_sigungu:string|null;short_description:string|null;
   main_menu:string|null;featured_image_metadata:FeaturedImageMetadata|null;
-  editorial_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;ratings:RatingDisplay;
+  card_accent_color:string|null;editorial_score:number|null;tags:CatalogTag[];opening_hours:OpeningHours|null;ratings:RatingDisplay;
 };
 export type RestaurantSearchInput={
   q?:unknown;region?:unknown;locale?:unknown;filters?:unknown;
@@ -55,6 +55,7 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
   if(!pool)throw new CatalogDatabaseUnavailable();
   const sql=`
     SELECT COUNT(*) OVER()::integer AS total_count,r.id::text AS id,
+      (SELECT accent_color FROM whateato_restaurant_card_accents WHERE restaurant_id=r.id) AS card_accent_color,
       COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
       COALESCE(al.display_address,NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address,${triageDisplayCategorySql()} AS category_code,r.region_sido,r.region_sigungu,
