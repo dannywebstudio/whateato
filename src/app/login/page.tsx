@@ -25,9 +25,8 @@ export default async function LoginPage({searchParams}:{searchParams:Promise<{hl
  const t=copy[locale];
  return <main className={styles.page} lang={locale}>
   <section className={styles.panel}>
-   <div className={styles.mark} aria-hidden="true"><span>W</span>hat<span>EatO</span></div>
    <span className={styles.eyebrow}>{t.eyebrow}</span>
-   <h1>{t.title}</h1>
+   <h1>{locale==='en'?'Sign in to ':locale==='zh-CN'?'登录 ':''}<span className={styles.headingLogo} aria-label="WhatEatO"><span className="brand-signature"><span className="brand-w">W</span>hat</span><span className="brand-accent">EatO</span></span>{locale==='ko'?'에 로그인':locale==='ja'?'にログイン':''}</h1>
    <p className={styles.intro}>{t.intro}</p>
    {ready?<form action={loginGoogle}>
     <input type="hidden" name="hl" value={locale}/>
