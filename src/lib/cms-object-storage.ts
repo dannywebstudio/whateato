@@ -2,7 +2,7 @@ import path from 'node:path';
 import {mkdir,readFile,writeFile,unlink,stat,realpath} from 'node:fs/promises';
 import {S3Client,PutObjectCommand,GetObjectCommand,DeleteObjectCommand,HeadObjectCommand,HeadBucketCommand} from '@aws-sdk/client-s3';
 
-const MEDIA_KEY=/^media\\/(?:cms|reviews|blog)\\/[0-9a-f-]{36}\\.webp$/;
+const MEDIA_KEY=/^media\/(?:cms|reviews|blog)\/[0-9a-f-]{36}\.webp$/;
 const MAX_BYTES=8*1024*1024;
 // A configured media directory opts into the tested persistent local storage.
 // Set WHATEATO_MEDIA_STORAGE=s3 to explicitly retain S3 for existing deployments.
