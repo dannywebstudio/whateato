@@ -185,3 +185,18 @@
 .editorHint,.editorNotice{font-size:12px;line-height:1.65;color:#667c6e;margin:3px 0 0}
 .editorNotice{color:#167249}
 @media(max-width:620px){.unifiedCanvas{min-height:360px;padding:20px 15px}.unifiedToolbar{position:static}}
+
+/* Inline photos behave as content, not bordered upload cards. */
+.unifiedCanvas figure.inlinePhoto,.unifiedCanvas figure[data-pending],.unifiedCanvas figure[data-image-id]{
+ display:block;box-sizing:border-box;border:0!important;background:transparent!important;
+ box-shadow:none!important;border-radius:0!important;padding:0!important;
+ margin:16px auto!important;text-align:inherit;max-width:100%;min-width:0;cursor:pointer;
+}
+.unifiedCanvas figure.inlinePhoto img,.unifiedCanvas figure[data-pending] img,.unifiedCanvas figure[data-image-id] img{
+ display:block;width:100%;height:auto;max-width:100%;object-fit:contain;border-radius:0;
+}
+.unifiedCanvas figure.inlinePhoto figcaption:empty,.unifiedCanvas figure[data-image-id] figcaption:empty{display:none}
+.postPickRow{display:flex;gap:7px;align-items:stretch}
+.postPickRow .postPick{flex:1}
+.postDelete{border:1px solid #ebc4c4;border-radius:9px;background:#fff;color:#a83232;cursor:pointer;padding:8px;font-size:11px;font-weight:800}
+.postDelete:disabled{opacity:.45}

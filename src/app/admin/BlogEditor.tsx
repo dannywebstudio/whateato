@@ -54,6 +54,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
  const [file,setFile]=useState<File|null>(null);const [imageRole,setImageRole]=useState<'cover'|'inline'>('cover');
  const [alt,setAlt]=useState('');const [source,setSource]=useState('');const [rightsRef,setRightsRef]=useState('');
  const [rights,setRights]=useState(false);
+ const [showPublished,setShowPublished]=useState(false);
  const editorRef=useRef<HTMLDivElement|null>(null);
  const translation=draft.translations[locale]||blankLocale();
  const readiness=BLOG_REQUIRED_LOCALES.map(lang=>({
@@ -81,6 +82,17 @@ export default function BlogEditor({owner}:{owner:boolean}){
     related_restaurant_ids:article.related_restaurant_ids||[],
     translations:article.translations||{en:blankLocale()}});
    setTagsText((article.tags||[]).join(', '));setLocale('en');setDirty(false);setPreview(false);
+  }catch(e){error(e)}finally{setBusy(false)}
+ };
+ const deleteDraft=async(post:BlogRow)=>{
+  if(post.state==='published')return;
+  if(!owner){setMessage('초안 삭제는 Owner만 가능해.');return}
+  if(!window.confirm('초안 '+post.slug+'와 첨부 사진을 영구 삭제할까?'))return;
+  setBusy(true);
+  try{
+   await api('/api/v1/owner/blog/'+post.id,{method:'DELETE'});
+   if(current?.id===post.id){setCurrent(null);setDirty(false)}
+   await refresh();setMessage('초안을 삭제했어.');
   }catch(e){error(e)}finally{setBusy(false)}
  };
  const create=async()=>{
@@ -162,21 +174,22 @@ export default function BlogEditor({owner}:{owner:boolean}){
   try{const r=await api('/api/v1/owner/catalog?q='+encodeURIComponent(restaurantQuery));
    setRestaurantMatches(r.items||[])}catch(e){error(e)}
  };
- const upload=async()=>{
-  if(!current||!file||!rights){setMessage('사진, 출처, 사용권 확인을 입력해.');return}
+ const upload=async(incoming?:File)=>{
+  const chosenFile=incoming||file;
+  const chosenRole=incoming?'inline':imageRole;
+  if(!current||!chosenFile){setMessage('사진을 먼저 선택해.');return}
   setBusy(true);
   try{
    const form=new FormData();
-   form.set('file',file);form.set('media_role',imageRole);form.set('alt_text',alt);
-   form.set('source_url',source);form.set('rights_reference',rightsRef);
-   form.set('rights_confirmation','yes');
+   form.set('file',chosenFile);form.set('media_role',chosenRole);form.set('alt_text',(alt.trim().length>=3?alt.trim():chosenFile.name.slice(0,170)).padEnd(3,'_'));
+
    const data=await api('/api/v1/owner/blog/'+current.id+'/media',{method:'POST',body:form});
    setFile(null);setAlt('');setSource('');setRightsRef('');setRights(false);
-   setCurrent(p=>p?{...p,images:[...p.images,{id:data.id,media_role:imageRole,
-     alt_text:alt||file.name,rights_status:'pending',image_url:data.image_url,
+   setCurrent(p=>p?{...p,images:[...p.images,{id:data.id,media_role:chosenRole,
+     alt_text:alt||chosenFile.name,rights_status:'pending',image_url:data.image_url,
      width:data.width,height:data.height}]}:p);
    window.dispatchEvent(new CustomEvent('whateato-blog-uploaded',{detail:{id:data.id,url:data.image_url}}));
-   setMessage('사진 업로드 완료 · 게시 전에 Owner가 사진 권리를 승인해야 해. ('+data.id+')');
+   setMessage('사진 업로드 완료 · 본문 위치에 연결됐어. ('+data.id+')');
   }catch(e){error(e)}finally{setBusy(false)}
  };
  const inspectImage=async(imageId:string,decision:'approve'|'reject'|'hide')=>{
@@ -222,12 +235,15 @@ export default function BlogEditor({owner}:{owner:boolean}){
     <h3>작성된 글</h3>
     <input value={filter} placeholder="슬러그/제목 찾기" onChange={e=>setFilter(e.target.value)}/>
     <button className={styles.smallButton} onClick={()=>void refresh().catch(error)}>목록 새로고침</button>
-    <div className={styles.postList}>{posts.filter(p=>!filter||[p.slug,p.title].join(' ').toLowerCase().includes(filter.toLowerCase()))
-     .map(p=><button key={p.id} className={styles.postPick} data-selected={p.id===current?.id}
-      onClick={()=>void open(p.id)}>
-       <strong>{p.title||p.slug}</strong>
-       <small>{p.state==='published'?'공개 중':p.state==='review_requested'?'승인 대기':'초안'} · {p.slug}</small>
-     </button>)}</div>
+    <label className={styles.check}><input type="checkbox" checked={showPublished} onChange={e=>setShowPublished(e.target.checked)}/> 발행 완료 글 표시</label>
+    <div className={styles.postList}>{posts.filter(p=>(showPublished||p.state!=='published')&&(!filter||[p.slug,p.title].join(' ').toLowerCase().includes(filter.toLowerCase())))
+      .map(p=><div className={styles.postPickRow} key={p.id}>
+       <button className={styles.postPick} data-selected={p.id===current?.id} onClick={()=>void open(p.id)}>
+        <strong>{p.title||p.slug}</strong><small>{p.state==='published'?'공개 중':p.state==='review_requested'?'승인 대기':'초안'} · {p.slug}</small>
+       </button>
+       {owner&&p.state==='draft'&&<button type="button" className={styles.postDelete} disabled={busy}
+         onClick={()=>void deleteDraft(p)} aria-label={p.slug+' 초안 삭제'}>삭제</button>}
+      </div>)}</div>
    </aside>
    <section className={styles.mainPanel}>
     {!current?<div className={styles.blank}>왼쪽에서 기존 글을 선택하거나 새 글을 생성해.</div>:<>
@@ -338,7 +354,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
        <UnifiedBlogEditor key={current.id+locale} articleId={current.id} locale={locale}
         translation={translation} images={current.images}
         onChange={patch=>updateTranslation(patch)}
-        onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');setMessage('본문용 사진을 선택했어. 아래에서 출처와 사용권을 확인하고 업로드해.')}}/>}
+        onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');void upload(incoming)}}/>}
      </section>
      <section className={styles.mediaPanel}>
       <h4>블로그 사진 관리</h4>
@@ -358,25 +374,14 @@ export default function BlogEditor({owner}:{owner:boolean}){
         <span>{file?'선택된 사진: '+file.name:'또는 아래에서 파일 선택'}</span>
       </div>
       <p>대표사진 권장 1200×810px · 본문 사진 권장 1400×1100px · JPEG/PNG/WebP 최대 8MB.
-       파일은 비공개로 올라가고 사용권 검수 후 발행할 수 있어.</p>
+       사진 권리는 업로드 전에 관리자가 직접 확인해.</p>
       <div className={styles.twoCols}>
-       <label>사진 유형<select value={imageRole}
-         onChange={e=>setImageRole(e.target.value as 'cover'|'inline')}>
-         <option value="cover">글 카드 대표사진 · 1200×810</option>
-         <option value="inline">본문 삽입 사진 · 최대 1400×1100</option></select></label>
-       <label>사진 파일<input type="file" accept="image/jpeg,image/png,image/webp"
-         onChange={(e:ChangeEvent<HTMLInputElement>)=>setFile(e.target.files?.[0]||null)}/></label>
-       <label>사진 설명(대체텍스트)<input value={alt} maxLength={180}
-         onChange={e=>setAlt(e.target.value)}/></label>
-       <label>사진 원본 출처 HTTPS<input value={source} type="url"
-         onChange={e=>setSource(e.target.value)}/></label>
-       <label>사진 게시권한 근거 HTTPS<input value={rightsRef} type="url"
-         onChange={e=>setRightsRef(e.target.value)}/></label>
+       <label>사진 유형<select value={imageRole} onChange={e=>setImageRole(e.target.value as 'cover'|'inline')}>
+        <option value="cover">글 대표사진</option><option value="inline">본문 사진</option>
+       </select></label>
+       <label>사진 선택<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e:ChangeEvent<HTMLInputElement>)=>setFile(e.target.files?.[0]||null)}/></label>
       </div>
-      <label className={styles.check}><input type="checkbox" checked={rights}
-        onChange={e=>setRights(e.target.checked)}/> 사진 사용권과 출처를 확인했어.</label>
-      <button className={styles.smallButton} disabled={busy||!file||!rights}
-       onClick={()=>void upload()}>비공개 사진 업로드</button>
+      <button className={styles.smallButton} disabled={busy||!file||!owner} onClick={()=>void upload()}>사진 바로 업로드</button>
       <div className={styles.mediaGrid}>{current.images.map(m=><div key={m.id} className={styles.mediaItem}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={m.image_url} alt={m.alt_text} loading="lazy"/>
