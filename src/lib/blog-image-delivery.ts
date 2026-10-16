@@ -28,8 +28,7 @@ export async function serveBlogImage(id:string,staffPreview=false){
     return fail('not_found',404);
    const snap=row.snapshot as {cover_image_id?:unknown;
     translations?:Record<string,{blocks?:{type?:string;image_id?:string}[]}>};
-   const approved= row.media_role==='cover'?
-     snap.cover_image_id===id:
+   const approved=snap.cover_image_id===id||
      Object.values(snap.translations||{}).some(t=>Array.isArray(t?.blocks)&&
       t.blocks.some(b=>b.type==='image'&&b.image_id===id));
    if(!approved)return fail('not_found',404);

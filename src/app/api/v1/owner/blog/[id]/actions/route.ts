@@ -93,10 +93,15 @@ export async function POST(req:NextRequest,{params}:Ctx){
         await client.query('ROLLBACK');return respond({error:'image_not_rights_approved'},409);
       }
     }
+    // The first image in the article becomes its card cover, regardless of upload role.
+    const firstImage=(['en','ko','ja','zh-CN'] as const)
+      .flatMap(locale=>draft.translations[locale]?.blocks||[])
+      .find(block=>block.type==='image'&&block.image_id)?.image_id||null;
     const cover=await client.query<{id:string}>(`
       SELECT id::text FROM whateato_blog_media
-      WHERE post_id=$1 AND media_role='cover' AND rights_status='approved'
-      ORDER BY approved_at DESC NULLS LAST,created_at DESC LIMIT 1`,[id]);
+      WHERE post_id=$1 AND rights_status='approved'
+      AND ($2::uuid IS NULL OR id=$2::uuid)
+      ORDER BY created_at ASC LIMIT 1`,[id,firstImage]);
     const snapshot={...draft,cover_image_id:cover.rows[0]?.id||null};
     await client.query(`
       INSERT INTO whateato_blog_publications

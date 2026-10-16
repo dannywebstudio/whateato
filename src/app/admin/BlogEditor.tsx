@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState,type ChangeEvent,type DragEvent} f
 import {BLOG_LOCALES,BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS,blogLocaleReadiness,publishableBlog,parseBlogDraft,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
 import BlogCategoryManager from './BlogCategoryManager';
 import UnifiedBlogEditor from './UnifiedBlogEditor';
+import BlogMediaLibrary from './BlogMediaLibrary';
 import {BlogBody} from '@/components/BlogBody';
 import styles from './blog-editor.module.css';
 
@@ -198,7 +199,7 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
    const data=await api('/api/v1/owner/blog/'+current.id+'/media',{method:'POST',body:form});
    setFile(null);setAlt('');setSource('');setRightsRef('');setRights(false);
    setCurrent(p=>p?{...p,images:[...p.images,{id:data.id,media_role:chosenRole,
-     alt_text:alt||chosenFile.name,rights_status:'pending',image_url:data.image_url,
+     alt_text:alt||chosenFile.name,rights_status:data.rights_status||'approved',image_url:data.image_url,
      width:data.width,height:data.height}]}:p);
    window.dispatchEvent(new CustomEvent('whateato-blog-uploaded',{detail:{id:data.id,url:data.image_url}}));
    setMessage('사진 업로드 완료 · 본문 위치에 연결됐어. ('+data.id+')');
@@ -360,6 +361,7 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
           {restaurantMatches.find(r=>r.id===id)?.name_ko||id} ×</button>)}</div>
       </div>
      </div>
+     <div className={styles.blogWritingLayout}>
      <section className={styles.blockArea}>
       <div className={styles.editorSubhead}><h4>통합 글쓰기</h4><button className={styles.smallButton} onClick={()=>setPreview(x=>!x)}>{preview?'편집 화면':'미리보기'}</button></div>
       {preview?<BlogBody blocks={translation.blocks} preview/>:
@@ -368,47 +370,8 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
         onChange={patch=>updateTranslation(patch)}
         onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');void upload(incoming)}}/>}
      </section>
-     <section className={styles.mediaPanel}>
-      <h4>블로그 사진 관리</h4>
-      <div className={styles.photoDrop}
-        onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}}
-        onDrop={e=>{
-          if(!e.dataTransfer.files.length)return;
-          e.preventDefault();
-          const incoming=e.dataTransfer.files[0];
-          if(!['image/jpeg','image/png','image/webp'].includes(incoming.type)){
-           setMessage('JPG, PNG 또는 WebP만 사용할 수 있어.');return;
-          }
-          setFile(incoming);setMessage('사진이 선택됐어. 사용권 출처와 설명을 입력한 뒤 업로드해.');
-        }}>
-        <span aria-hidden="true">📷</span>
-        <strong>사진을 여기로 끌어다 놓아도 돼</strong>
-        <span>{file?'선택된 사진: '+file.name:'또는 아래에서 파일 선택'}</span>
-      </div>
-      <p>대표사진 권장 1200×810px · 본문 사진 권장 1400×1100px · JPEG/PNG/WebP 최대 8MB.
-       사진 권리는 업로드 전에 관리자가 직접 확인해.</p>
-      <div className={styles.twoCols}>
-       <label>사진 유형<select value={imageRole} onChange={e=>setImageRole(e.target.value as 'cover'|'inline')}>
-        <option value="cover">글 대표사진</option><option value="inline">본문 사진</option>
-       </select></label>
-       <label>사진 선택<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e:ChangeEvent<HTMLInputElement>)=>setFile(e.target.files?.[0]||null)}/></label>
-      </div>
-      <button className={styles.smallButton} disabled={busy||!file||!owner} onClick={()=>void upload()}>사진 바로 업로드</button>
-      <div className={styles.mediaGrid}>{current.images.map(m=><div key={m.id} className={styles.mediaItem}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={m.image_url} alt={m.alt_text} loading="lazy"/>
-        <strong>{m.alt_text}</strong>
-        <small>{m.media_role==='cover'?'카드 대표사진':'본문 사진'} · {m.width}×{m.height}</small>
-        <small>{m.rights_status==='approved'?'게시권 승인':m.rights_status==='pending'?'승인 대기':'비공개'}</small>
-        {owner&&<div className={styles.actions}>
-         {m.rights_status==='pending'&&<>
-          <button onClick={()=>void inspectImage(m.id,'approve')}>승인</button>
-          <button onClick={()=>void inspectImage(m.id,'reject')}>거절</button>
-         </>}
-         {m.rights_status==='approved'&&<button onClick={()=>void inspectImage(m.id,'hide')}>공개 차단</button>}
-        </div>}
-      </div>)}</div>
-     </section>
+      <BlogMediaLibrary images={current.images} disabled={!owner} onUpload={async image=>{await upload(image)}}/>
+     </div>
     </>}
    </section>
   </div>

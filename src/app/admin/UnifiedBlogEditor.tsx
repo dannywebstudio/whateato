@@ -211,14 +211,17 @@ export default function UnifiedBlogEditor({locale,articleId,translation,images,o
   const caption=document.createElement('figcaption');caption.textContent='';
   figure.append(img,caption);
   const selection=window.getSelection();
-  if(lastCaret.current&&ref.current?.contains(lastCaret.current.commonAncestorContainer)){
-   const range=lastCaret.current;range.deleteContents();range.insertNode(figure);
-   const p=document.createElement('p');p.append(document.createElement('br'));figure.after(p);
-   range.setStart(p,0);range.collapse(true);selection?.removeAllRanges();selection?.addRange(range);lastCaret.current=range.cloneRange();
-  }else ref.current?.append(figure);
+  putNode(figure);chooseFigure(figure);
   setImageChoice('');sync();
  };
+ useEffect(()=>{
+  const insert=(event:Event)=>{const id=(event as CustomEvent<{id:string}>).detail?.id;if(id)insertImage(id)};
+  window.addEventListener('whateato-blog-media-insert',insert);
+  return ()=>window.removeEventListener('whateato-blog-media-insert',insert);
+ },[images]);
  const handleDrop=(event:DragEvent<HTMLDivElement>)=>{
+  const stored=event.dataTransfer.getData('application/x-whateato-blog-image');
+  if(stored){event.preventDefault();rememberCaret();insertImage(stored);return}
   const file=Array.from(event.dataTransfer.files).find(f=>['image/jpeg','image/png','image/webp'].includes(f.type));
   if(file){event.preventDefault();rememberCaret();previewFile(file)}
  };
