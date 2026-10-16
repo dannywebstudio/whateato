@@ -6,7 +6,7 @@ import styles from './blog-editor.module.css';
 type ApprovedImage={id:string;alt_text:string;rights_status:string;image_url:string};
 type Props={locale:string;articleId:string;translation:BlogTranslation;images:ApprovedImage[];onChange:(patch:Partial<BlogTranslation>)=>void;onChooseFile:(file:File)=>void};
 
-const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]||char));
+const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,char=>(({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' } as Record<string,string>)[char]||char));
 const textHtml=(value:string)=>escapeHtml(value).replace(/\n/g,'<br>');
 const render=(translation:BlogTranslation,images:ApprovedImage[])=>'<h1 data-title="true">'+textHtml(translation.title)+'</h1>'+
   translation.blocks.map(block=>{
