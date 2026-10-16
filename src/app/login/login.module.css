@@ -1,14 +1,21 @@
-.page{max-width:1200px;min-height:calc(100vh - 150px);margin:auto;padding:78px 22px 100px;display:flex;align-items:center;justify-content:center}
-.panel{width:100%;max-width:470px;padding:44px 42px 38px;background:#fff;border:1px solid #e1eae4;border-radius:24px;box-shadow:0 20px 65px #14251d09}
-.mark{font-weight:850;letter-spacing:-.06em;font-size:24px;color:#15261c;margin-bottom:32px}.mark>span:first-child{color:#12805a}.mark>span:last-child{color:#12805a}
-.eyebrow{color:#12805a;font-weight:800;font-size:11px;letter-spacing:.15em}
-.panel h1{font-size:clamp(27px,4vw,36px);letter-spacing:-.05em;line-height:1.25;color:#162b1e;margin:10px 0}
-.intro{color:#62756a;line-height:1.8;font-size:14px;margin:0 0 30px}
-.googleButton{width:100%;border:1px solid #cfe0d6;border-radius:12px;background:#f8fcf9;padding:15px 17px;display:flex;align-items:center;justify-content:space-between;gap:16px;color:#23392d;font-size:15px;font-weight:750;cursor:pointer;transition:background .18s,border-color .18s}
-.googleButton:hover{background:#eaf7ef;border-color:#79bd98}.googleButton:focus-visible{outline:3px solid #12805a;outline-offset:3px}
-.googleMark{display:grid;place-items:center;background:#fff;border:1px solid #e0e7e2;border-radius:50%;width:30px;height:30px;color:#4285f4;font-size:19px;font-weight:800;flex:0 0 auto}
-.arrow{margin-left:auto;color:#12805a;font-size:18px}
-.notice{font-size:12px;line-height:1.8;color:#78877f;margin:20px 0 16px}
-.links{display:flex;gap:10px;font-size:12px;color:#617668;flex-wrap:wrap}.links a{text-decoration:underline;text-underline-offset:3px}.links a:hover{color:#12805a}
+.page{max-width:1200px;min-height:calc(100vh - 150px);margin:auto;padding:70px 22px 92px;display:flex;align-items:center;justify-content:center}
+.panel{width:100%;max-width:446px;padding:46px 42px 35px;background:#fff;border:1px solid #e2eae5;border-radius:22px;box-shadow:0 16px 50px rgba(20,37,29,.045)}
+.eyebrow{display:block;color:#14805d;font-weight:800;font-size:11px;letter-spacing:.17em;margin-bottom:15px}
+.panel h1{font-size:clamp(26px,3.4vw,32px);letter-spacing:-.055em;line-height:1.35;color:#162b1e;margin:0 0 12px;font-weight:800}
+.headingLogo{display:inline-flex;align-items:baseline;vertical-align:baseline;margin-right:.12em;font-size:1em;line-height:inherit}
+.headingLogo :global(.brand-signature){color:#151c1a}
+.headingLogo :global(.brand-accent){color:#188a64}
+.intro{color:#62756a;line-height:1.75;font-size:14px;margin:0 0 29px;max-width:345px;word-break:keep-all}
+.googleButton{width:100%;min-height:55px;border:1px solid #cbded2;border-radius:11px;background:#fff;padding:11px 15px;display:flex;align-items:center;justify-content:center;gap:12px;color:#23392d;font-size:14px;font-weight:750;cursor:pointer;transition:background .18s,border-color .18s,box-shadow .18s}
+.googleButton:hover{background:#f3faf5;border-color:#81b99a;box-shadow:0 4px 15px #143b2510}
+.googleButton:focus-visible{outline:3px solid #12805a;outline-offset:3px}
+.googleMark{display:grid;place-items:center;background:#fff;border:1px solid #e0e7e2;border-radius:50%;width:28px;height:28px;color:#4285f4;font-size:18px;font-weight:800;flex:0 0 auto}
+.arrow{color:#12805a;font-size:17px;margin-left:auto}
+.googleButton .googleMark{margin-right:auto}
+.notice{font-size:11px;line-height:1.8;color:#819087;margin:22px 0 17px;word-break:keep-all}
+.links{display:flex;gap:10px;font-size:11px;color:#64766c;flex-wrap:wrap}
+.links a{text-decoration:underline;text-underline-offset:3px}
+.links a:hover{color:#12805a}
 .unavailable{font-size:13px;background:#fff3ef;color:#9f4b31;padding:12px;border-radius:10px}
-@media(max-width:620px){.page{align-items:flex-start;min-height:calc(100vh - 145px);padding:44px 16px 70px}.panel{padding:34px 25px 30px;border-radius:19px}.mark{margin-bottom:24px}}
+@media(max-width:620px){.page{align-items:flex-start;min-height:calc(100vh - 145px);padding:48px 16px 72px}.panel{padding:37px 26px 30px;border-radius:18px}.panel h1{font-size:28px}.intro{margin-bottom:25px}}
+@media(prefers-reduced-motion:reduce){.googleButton{transition:none}}
