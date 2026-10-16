@@ -190,20 +190,33 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
  const upload=async(incoming?:File)=>{
   const chosenFile=incoming||file;
   const chosenRole=incoming?'inline':imageRole;
-  if(!current||!chosenFile){setMessage('사진을 먼저 선택해.');return}
-  setBusy(true);
+  if(!current||!chosenFile){const msg='먼저 게시글 초안을 만들고 사진을 선택해 줘.';setMessage(msg);throw Error(msg)}
+  const articleId=current.id;
+  setBusy(true);setMessage('');
   try{
    const form=new FormData();
-   form.set('file',chosenFile);form.set('media_role',chosenRole);form.set('alt_text',(alt.trim().length>=3?alt.trim():chosenFile.name.slice(0,170)).padEnd(3,'_'));
-
-   const data=await api('/api/v1/owner/blog/'+current.id+'/media',{method:'POST',body:form});
-   setFile(null);setAlt('');setSource('');setRightsRef('');setRights(false);
-   setCurrent(p=>p?{...p,images:[...p.images,{id:data.id,media_role:chosenRole,
-     alt_text:alt||chosenFile.name,rights_status:data.rights_status||'approved',image_url:data.image_url,
-     width:data.width,height:data.height}]}:p);
+   form.set('file',chosenFile);
+   form.set('media_role',chosenRole);
+   form.set('alt_text',(alt.trim().length>=3?alt.trim():chosenFile.name.slice(0,170)).padEnd(3,'_'));
+   const data=await api('/api/v1/owner/blog/'+articleId+'/media',{method:'POST',body:form});
+   if(!data.id||!data.image_url)throw Error('업로드 결과에 사진 ID 또는 주소가 없어. 다시 시도해 줘.');
+   // Do not report success until the server can actually serve the saved photo.
+   const photoResponse=await fetch(data.image_url,{credentials:'same-origin',cache:'no-store'});
+   if(!photoResponse.ok||!photoResponse.headers.get('content-type')?.startsWith('image/'))
+    throw Error('사진은 저장됐지만 이미지 조회에 실패했어. 서버 스토리지 설정을 확인해 줘. (HTTP '+photoResponse.status+')');
+   const result=await api('/api/v1/owner/blog/'+articleId);
+   const article=result.article as Detail;
+   if(!article.images.some(image=>image.id===data.id))throw Error('사진 저장 후 목록 조회에 반영되지 않았어.');
+   setCurrent(previous=>previous?.id===articleId?{...previous,images:article.images}:previous);
+   setFile(null);
    window.dispatchEvent(new CustomEvent('whateato-blog-uploaded',{detail:{id:data.id,url:data.image_url}}));
-   setMessage('사진 업로드 완료 · 본문 위치에 연결됐어. ('+data.id+')');
-  }catch(e){error(e)}finally{setBusy(false)}
+   setMessage('사진이 저장되고 라이브러리에 반영됐어.');
+  }catch(e){
+   const message=e instanceof Error?e.message:String(e);
+   setMessage('사진 업로드 오류: '+message);
+   window.dispatchEvent(new CustomEvent('whateato-blog-upload-failed',{detail:{message}}));
+   throw e;
+  }finally{setBusy(false)}
  };
  const inspectImage=async(imageId:string,decision:'approve'|'reject'|'hide')=>{
   if(!current)return;
@@ -368,7 +381,7 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
        <UnifiedBlogEditor key={current.id+locale} articleId={current.id} locale={locale}
         translation={translation} images={current.images}
         onChange={patch=>updateTranslation(patch)}
-        onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');void upload(incoming)}}/>}
+        onChooseFile={incoming=>{setFile(incoming);setImageRole('inline');void upload(incoming).catch(()=>{})}}/>}
      </section>
       <BlogMediaLibrary images={current.images} disabled={!owner} onUpload={async image=>{await upload(image)}}/>
      </div>
