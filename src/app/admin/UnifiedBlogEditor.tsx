@@ -21,7 +21,7 @@ const render=(translation:BlogTranslation,images:ApprovedImage[])=>'<h1 data-tit
       '<figcaption>'+escapeHtml(block.caption||'')+'</figcaption></figure>';
    }
    if(block.type==='divider')return '<hr/>';
-   if(block.type==='table')return '<table><tbody>'+((block.rows||[]).map(row=>'<tr>'+row.map(cell=>'<td>'+textHtml(cell)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+   if(block.type==='table')return '<table><tbody>'+(block.rows||[]).map(row=>'<tr>'+row.map(cell=>'<td>'+textHtml(cell)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
    return '<p>'+value+'</p>';
   }).join('');
 
