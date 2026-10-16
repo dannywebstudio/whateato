@@ -30,6 +30,8 @@ type Props={owner:boolean;
  addressProof:string;
  publishNew:boolean;
  photoRole:'cover'|'gallery';
+ photoOrigin:'owner_original'|'external_licensed';
+ setPhotoOrigin:(value:'owner_original'|'external_licensed')=>void;
  image:File|null;
  rights:boolean;
  imageEvidence:string;
@@ -72,7 +74,7 @@ type Props={owner:boolean;
  stageVisibility:(kind:'visibility_hide'|'visibility_restore')=>Promise<void>;
  inform:(error:unknown)=>void;
  uploadPhoto:()=>Promise<void>};
-export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,creating,newVenue,publicEvidence,locale,displayName,intro,full,source,menus,chosenTags,tagEvidence,days,hoursEvidence,address,addressProof,publishNew,photoRole,image,rights,imageEvidence,rightsEvidence,imagePosition,imageResult,batchTitle,edit,setQ,setCreating,setNewVenue,setPublicEvidence,setLocale,setDisplayName,setIntro,setFull,setSource,setMenus,setChosenTags,setTagEvidence,setDays,setHoursEvidence,setAddress,setAddressProof,setPublishNew,setPhotoRole,setImage,setRights,setImageEvidence,setRightsEvidence,setImagePosition,setBusy,setBatchTitle,search,select,createRestaurant,importRestaurantLocaleJson,changePublicApproval,save,stageVisibility,inform,uploadPhoto}:Props){return (<div className={styles.split}>
+export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,creating,newVenue,publicEvidence,locale,displayName,intro,full,source,menus,chosenTags,tagEvidence,days,hoursEvidence,address,addressProof,publishNew,photoRole,photoOrigin,setPhotoOrigin,image,rights,imageEvidence,rightsEvidence,imagePosition,imageResult,batchTitle,edit,setQ,setCreating,setNewVenue,setPublicEvidence,setLocale,setDisplayName,setIntro,setFull,setSource,setMenus,setChosenTags,setTagEvidence,setDays,setHoursEvidence,setAddress,setAddressProof,setPublishNew,setPhotoRole,setImage,setRights,setImageEvidence,setRightsEvidence,setImagePosition,setBusy,setBatchTitle,search,select,createRestaurant,importRestaurantLocaleJson,changePublicApproval,save,stageVisibility,inform,uploadPhoto}:Props){return (<div className={styles.split}>
      <section className={styles.panel}>
        <h2>식당 검색</h2><p className={styles.note}>기존 원본 식당 ID를 유지하며 콘텐츠만 수정해.</p>
        <label className={styles.field}>상호명 / 지역 / UUID
@@ -218,7 +220,7 @@ export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,cr
            <button className={styles.button+' '+styles.secondary} onClick={()=>void stageVisibility('visibility_restore')}>비공개 해제 초안</button>
          </div>
          <p className={styles.note}>저장은 곧 공개가 아니야. 배치 승인 후에만 검색·상세·지도 데이터에 반영돼.</p>
-         <MediaPanel selected={selected} owner={owner} busy={busy} image={image} setImage={setImage} rights={rights} setRights={setRights} photoRole={photoRole} setPhotoRole={setPhotoRole} imagePosition={imagePosition} setImagePosition={setImagePosition} imageEvidence={imageEvidence} setImageEvidence={setImageEvidence} rightsEvidence={rightsEvidence} setRightsEvidence={setRightsEvidence} imageResult={imageResult} setBusy={setBusy} uploadPhoto={uploadPhoto} inform={inform} select={select}/>
+         <MediaPanel selected={selected} owner={owner} busy={busy} photoOrigin={photoOrigin} setPhotoOrigin={setPhotoOrigin} image={image} setImage={setImage} rights={rights} setRights={setRights} photoRole={photoRole} setPhotoRole={setPhotoRole} imagePosition={imagePosition} setImagePosition={setImagePosition} imageEvidence={imageEvidence} setImageEvidence={setImageEvidence} rightsEvidence={rightsEvidence} setRightsEvidence={setRightsEvidence} imageResult={imageResult} setBusy={setBusy} uploadPhoto={uploadPhoto} inform={inform} select={select}/>
        </>}
      </section>
    </div>);}
