@@ -1,7 +1,8 @@
 'use client';
-import type {Dispatch,SetStateAction} from 'react';
+import {useEffect,useState,type Dispatch,type SetStateAction} from 'react';
 import type {Place,Detail,Menu,Day} from './modules/types';
 import {tags,locales,weekdays,blankMenu} from './modules/restaurants';
+import {cuisineColor} from '@/lib/cuisine-palette';
 import MediaPanel from './MediaPanel';
 import styles from './admin.module.css';
 type Locale=typeof locales[number];
@@ -74,7 +75,20 @@ type Props={owner:boolean;
  stageVisibility:(kind:'visibility_hide'|'visibility_restore')=>Promise<void>;
  inform:(error:unknown)=>void;
  uploadPhoto:(file?:File,position?:number)=>Promise<void>};
-export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,creating,newVenue,publicEvidence,locale,displayName,intro,full,source,menus,chosenTags,tagEvidence,days,hoursEvidence,address,addressProof,publishNew,photoRole,photoOrigin,setPhotoOrigin,image,rights,imageEvidence,rightsEvidence,imagePosition,imageResult,batchTitle,edit,setQ,setCreating,setNewVenue,setPublicEvidence,setLocale,setDisplayName,setIntro,setFull,setSource,setMenus,setChosenTags,setTagEvidence,setDays,setHoursEvidence,setAddress,setAddressProof,setPublishNew,setPhotoRole,setImage,setRights,setImageEvidence,setRightsEvidence,setImagePosition,setBusy,setBatchTitle,search,select,createRestaurant,importRestaurantLocaleJson,changePublicApproval,save,stageVisibility,inform,uploadPhoto}:Props){return (<div className={styles.split}>
+export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,creating,newVenue,publicEvidence,locale,displayName,intro,full,source,menus,chosenTags,tagEvidence,days,hoursEvidence,address,addressProof,publishNew,photoRole,photoOrigin,setPhotoOrigin,image,rights,imageEvidence,rightsEvidence,imagePosition,imageResult,batchTitle,edit,setQ,setCreating,setNewVenue,setPublicEvidence,setLocale,setDisplayName,setIntro,setFull,setSource,setMenus,setChosenTags,setTagEvidence,setDays,setHoursEvidence,setAddress,setAddressProof,setPublishNew,setPhotoRole,setImage,setRights,setImageEvidence,setRightsEvidence,setImagePosition,setBusy,setBatchTitle,search,select,createRestaurant,importRestaurantLocaleJson,changePublicApproval,save,stageVisibility,inform,uploadPhoto}:Props){
+ const [accent,setAccent]=useState('#16845b');
+ const [accentSaving,setAccentSaving]=useState(false);
+ useEffect(()=>{setAccent(selected?.restaurant.card_accent_color||cuisineColor(selected?.restaurant.category_code))},[selected?.restaurant.id,selected?.restaurant.card_accent_color]);
+ const saveAccent=async(color:string|null)=>{
+  if(!selected||!owner)return;
+  setAccentSaving(true);
+  try{const r=await fetch('/api/v1/owner/catalog/'+selected.restaurant.id+'/card-accent',{
+   method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({color})});
+   if(!r.ok){const e=await r.json();throw Error(e.error||'card_color_save_failed')}
+   await select(selected.restaurant.id);
+  }catch(e){inform(e)}finally{setAccentSaving(false)}
+ };
+ return (<div className={styles.split}>
      <section className={styles.panel}>
        <h2>식당 검색</h2><p className={styles.note}>기존 원본 식당 ID를 유지하며 콘텐츠만 수정해.</p>
        <label className={styles.field}>상호명 / 지역 / UUID
@@ -191,7 +205,14 @@ export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,cr
          </label>)}</div>
          <label className={styles.field}>새 태그 검증 출처 (또는 비공개 사유 근거 URL)
            <input type="url" value={tagEvidence} onChange={e=>setTagEvidence(e.target.value)}/></label>
-         <h3>월~일 영업시간 · KST</h3><p className={styles.note}>일요일부터 토요일까지 저장되며, 브레이크타임은 선택사항이야. 24시 이후 영업은 별도 검증이 필요해.</p>
+         <h3>월~일 영업시간 · KST</h3>
+         <button type="button" className={styles.button+' '+styles.secondary} disabled={busy} onClick={()=>{
+          const mon=days.find(d=>d.weekday===1);if(!mon)return;
+          if(!window.confirm('월요일 영업·휴무·브레이크타임을 화~금에 동일하게 적용할까?'))return;
+          setDays(prev=>prev.map(day=>day.weekday>=2&&day.weekday<=5?
+           {...day,closed:mon.closed,open:mon.open,close:mon.close,breakStart:mon.breakStart,breakEnd:mon.breakEnd}:day));
+         }}>월요일 시간 → 화~금 동일 적용</button>
+         <p className={styles.note}>화~금에 복사한 뒤에도 요일별로 개별 수정할 수 있어. 토·일은 변경하지 않아.</p><p className={styles.note}>일요일부터 토요일까지 저장되며, 브레이크타임은 선택사항이야. 24시 이후 영업은 별도 검증이 필요해.</p>
          {days.map(d=><div key={d.weekday} className={styles.day}>
            <strong>{weekdays[d.weekday]}</strong>
            <input type="time" aria-label={weekdays[d.weekday]+' 오픈'} disabled={d.closed} value={d.open}
@@ -211,6 +232,14 @@ export default function RestaurantPanel({owner,busy,q,matches,selected,cursor,cr
              onChange={e=>setPublishNew(e.target.checked)}/>
              신규 식당 공개 승인 요청 (영어 소개·주소·좌표 확인 필요)
            </label>}
+         {owner&&<div className={styles.panel}>
+          <h3>검색·지도 카드 강조선 색상</h3>
+          <p className={styles.note}>이 식당 카드의 왼쪽 강조선 색상을 직접 설정해. 기본 음식점 유형 색상으로 되돌릴 수도 있어.</p>
+          <label className={styles.field}>카드 색상 <input type="color" value={accent} onChange={e=>setAccent(e.target.value)}/></label>
+          <div style={{borderLeft:'5px solid '+accent,padding:'8px 12px',margin:'8px 0',background:'#f6faf8',borderRadius:6}}>{selected.restaurant.name_ko} · 카드 미리보기</div>
+          <div className={styles.actions}><button type="button" className={styles.button} disabled={accentSaving||busy} onClick={()=>void saveAccent(accent)}>색상 저장</button>
+           <button type="button" className={styles.button+' '+styles.secondary} disabled={accentSaving||busy} onClick={()=>void saveAccent(null)}>유형별 기본 색으로 초기화</button></div>
+         </div>}
          <h3>게시 준비</h3>
          <label className={styles.field}>작업 이름
            <input value={batchTitle} onChange={e=>setBatchTitle(e.target.value)} placeholder="2026-10 Seoul content update"/></label>

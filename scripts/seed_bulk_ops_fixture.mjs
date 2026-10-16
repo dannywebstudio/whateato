@@ -94,5 +94,6 @@ try{
    VALUES('11111111-1111-4111-8111-111111111111',true,'baseline','https://example.org/ci-synthetic-hours')
  `);
  await client.query(readFileSync('db/migrations/050_review_i18n_texts.sql','utf8'));
+ await client.query(readFileSync('db/migrations/051_restaurant_card_accent.sql','utf8'));
  console.log('PASS: isolated bulk fixtures, six genuine migrations, no external DB writes');
 }finally{await client.end()}

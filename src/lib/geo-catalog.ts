@@ -11,7 +11,7 @@ export type GeoMarker={
   id:string;name:string;name_ko:string;address_ko:string|null;address:string|null;short_description:string|null;main_menu:string|null;
   latitude:number;longitude:number;distance_km?:number;
   category_code:string|null;region_sigungu:string|null;
-  editorial_score:number|null;visitor_score:number|null;featured_image_url:string|null;tags:CatalogTag[];opening_hours:OpeningHours|null;
+  card_accent_color:string|null;editorial_score:number|null;visitor_score:number|null;featured_image_url:string|null;tags:CatalogTag[];opening_hours:OpeningHours|null;
 };
 export type GeoEnvelope={south:number;west:number;north:number;east:number};
 export type GeoCatalogResponse={
@@ -94,7 +94,7 @@ export async function getGeoCatalog(input:QueryParams & {
   const db=getPool();if(!db)throw new CatalogDatabaseUnavailable();
   const distance=nearby?haversine:'NULL::float8';
   const sql=`
-    SELECT r.id::text AS id,COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
+    SELECT r.id::text AS id,(SELECT accent_color FROM whateato_restaurant_card_accents WHERE restaurant_id=r.id) AS card_accent_color,COALESCE(l.display_name,k.display_name,r.name_ko) AS name,
       r.name_ko,COALESCE(NULLIF(BTRIM(r.road_address_ko),''),NULLIF(BTRIM(r.lot_address_ko),'')) AS address_ko,
       COALESCE(al.display_address,r.road_address_ko,r.lot_address_ko) AS address,
       COALESCE(l.short_description,k.short_description) AS short_description,

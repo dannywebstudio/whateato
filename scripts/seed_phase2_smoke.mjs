@@ -255,5 +255,6 @@ try{
       ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',true,'baseline','https://example.test/map-4')
   `);
   await client.query(readFileSync('db/migrations/050_review_i18n_texts.sql','utf8'));
+ await client.query(readFileSync('db/migrations/051_restaurant_card_accent.sql','utf8'));
   console.log('Synthetic Phase 2 fixture ready (localhost only; 6 rows; quality hold+lot fallback)');
 }finally{await client.end()}
