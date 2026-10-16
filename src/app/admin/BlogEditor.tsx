@@ -74,12 +74,16 @@ export default function BlogEditor({owner,initialSlug=''}:{owner:boolean;initial
  },[]);
  useEffect(()=>{void refresh().catch(error);void refreshCategories().catch(error)},[refresh,refreshCategories]);
  useEffect(()=>{
-  if(didAutoOpen.current||!initialSlug||!posts.length)return;
-  const match=posts.find(post=>post.slug===initialSlug);
-  if(!match){setMessage('편집할 글을 목록에서 찾지 못했어.');didAutoOpen.current=true;return}
+  if(didAutoOpen.current||!initialSlug)return;
   didAutoOpen.current=true;
-  void open(match.id,true);
- },[posts,initialSlug]);
+  void api('/api/v1/owner/blog?q='+encodeURIComponent(initialSlug))
+   .then(data=>{
+    const match=(data.items as BlogRow[]).find(post=>post.slug===initialSlug);
+    if(!match){setMessage('편집할 글을 찾지 못했어.');return}
+    setShowPublished(true);
+    void open(match.id,true);
+   }).catch(error);
+ },[initialSlug]);
  const open=async(id:string,ignoreDirty=false)=>{
   if(dirty&&!ignoreDirty&&!window.confirm('저장되지 않은 수정 사항이 있어. 이동할까?'))return;
   setBusy(true);setMessage('');
