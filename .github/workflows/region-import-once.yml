@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      NEON_DATABASE_URL: ${{ secrets.WHATEATO_LAUNCH_NEON_DATABASE_URL }}
       WHATEATO_IMPORT_CONFIRM: launch-hostinger-20261015
     steps:
       - uses: actions/checkout@v4
