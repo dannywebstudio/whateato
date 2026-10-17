@@ -68,7 +68,9 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
   const directorySeedRef=useRef<Place[]>([]);
   const [items,setItems]=useState<Place[]>([]);
   const [state,setState]=useState<'loading'|'zoom'|'ready'|'error'>('loading');
+  const [basemapReady,setBasemapReady]=useState(false);
   const [basemapFailed,setBasemapFailed]=useState(false);
+  const [previewCenter,setPreviewCenter]=useState<[number,number]|null>(null);
   const [mapRetry,setMapRetry]=useState(0);
   const [directory,setDirectory]=useState<Place[]>([]);
   const [directoryReady,setDirectoryReady]=useState(false);
@@ -132,7 +134,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
       source?.setData({
         type:'FeatureCollection',features:plotted.map(x=>({
           type:'Feature',geometry:{type:'Point',coordinates:[x.longitude,x.latitude]},
-          properties:{id:x.id,name:x.name,pinColor:cuisineColor(x.category_code),openingState:x.opening_hours?.state||'unknown'}
+          properties:{id:x.id,name:x.name,pinColor:x.card_accent_color||cuisineColor(x.category_code),openingState:x.opening_hours?.state||'unknown'}
         }))
       });
     }catch(e){
@@ -147,6 +149,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
     const timeout=window.setTimeout(()=>{
       if(!cancelled&&!styleReady){setBasemapFailed(true);setState('error')}
     },18000);
+    setBasemapReady(false);
     setBasemapFailed(false);
     setState('loading');
     let instance:MapLibreMap|null=null;
@@ -212,6 +215,9 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
           });
         }
         styleReady=true;
+        // The same-origin server-rendered OSM preview remains visible until
+        // the full vector basemap is ready; the map UI never starts blank.
+        setBasemapReady(true);
         // Reuse the parallel directory/focus response for immediate first pins.
         paintSeed(m,focusItemsRef.current.length?focusItemsRef.current:directorySeedRef.current);
         syncNameVisibility();
@@ -220,7 +226,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         if(focusCenterRef.current)m.jumpTo({center:focusCenterRef.current,zoom:FOCUS_ZOOM});
         // Deep-linked restaurants have a dedicated nearest-neighbor request.
         // Avoid an unrelated initial Seoul viewport marker query before it resolves.
-        if(!focusId||focusCenterRef.current)void load(m);
+        if(!focusId)void load(m);
       };
       // At street-level zoom, prefer showing the actual venue name even in
       // dense restaurant areas. At zoom 14–15, keep collision avoidance.
@@ -302,10 +308,12 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
   useEffect(()=>{
     if(!focusId){
       focusCenterRef.current=null;focusItemsRef.current=[];
+      setPreviewCenter(null);
       setFocusItems([]);setFocusStatus('loading');return;
     }
     const controller=new AbortController();
     focusCenterRef.current=null;focusItemsRef.current=[];
+    setPreviewCenter(null);
     setFocusItems([]);setFocusStatus('loading');setPage(0);
     const p=new URLSearchParams({id:focusId,hl:locale});
     void fetch('/api/v1/map/focus?'+p.toString(),{
@@ -322,13 +330,14 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         x.latitude>=33&&x.latitude<=39.5&&x.longitude>=124&&x.longitude<=132);
       if(!valid)throw Error('Invalid focus coordinates');
       focusCenterRef.current=payload.center;
+      setPreviewCenter(payload.center);
       focusItemsRef.current=payload.items;
       setFocusItems(payload.items);
       if(map.current)paintSeed(map.current,payload.items);setSelected(focusId);setFocusStatus('ready');
       const m=map.current;
       if(m?.getSource(markerSource)){
-        m.jumpTo({center:payload.center,zoom:15});
-        void load(m);
+        // moveend performs the sole viewport request; do not fetch twice.
+        m.jumpTo({center:payload.center,zoom:FOCUS_ZOOM});
       }
     }).catch(()=>{
       if(controller.signal.aborted)return;
@@ -397,11 +406,12 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
     });
   };
   const pick=visibleItems.find(x=>x.id===selected)||null;
-  const fallbackSource=pick?new URLSearchParams({
-    bbox:[pick.longitude-0.0035,pick.latitude-0.0025,pick.longitude+0.0035,
-      pick.latitude+0.0025].map(x=>x.toFixed(6)).join(','),
+  const previewPoint:[number,number]|null=pick?[pick.longitude,pick.latitude]:previewCenter;
+  const fallbackSource=previewPoint?new URLSearchParams({
+    bbox:[previewPoint[0]-0.0035,previewPoint[1]-0.0025,previewPoint[0]+0.0035,
+      previewPoint[1]+0.0025].map(x=>x.toFixed(6)).join(','),
     layer:'mapnik',
-    marker:pick.latitude.toFixed(6)+','+pick.longitude.toFixed(6)
+    marker:previewPoint[1].toFixed(6)+','+previewPoint[0].toFixed(6)
   }).toString():null;
   const fallbackUrl=fallbackSource?'https://www.openstreetmap.org/export/embed.html?'+fallbackSource
     :fallbackIframe;
@@ -434,13 +444,13 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
         style={{width:'100%',height:'100%',minHeight:620,
           background:'#f1f6f3',borderRadius:18,overflow:'hidden',
           border:'1px solid #e5ece8'}}/>
-      {basemapFailed&&<section aria-label="Basemap unavailable"
+      {(!basemapReady||basemapFailed)&&<section aria-label={basemapFailed?'Basemap unavailable':'Restaurant map preview'}
         style={{position:'absolute',inset:0,background:'#f3f7f4',
           borderRadius:18,overflow:'hidden',border:'1px solid #e5ece8'}}>
-        <iframe src={fallbackUrl} title="OpenStreetMap fallback map of central Seoul"
-          loading="lazy" referrerPolicy="strict-origin-when-cross-origin"
+        <iframe src={fallbackUrl} title="OpenStreetMap restaurant location preview"
+          loading="eager" referrerPolicy="strict-origin-when-cross-origin"
           style={{width:'100%',height:'100%',display:'block',border:0}}/>
-        <div style={{position:'absolute',left:12,top:12,right:12,background:'#fffffff0',
+        {basemapFailed&&<div style={{position:'absolute',left:12,top:12,right:12,background:'#fffffff0',
           borderRadius:10,padding:'10px 12px',boxShadow:'0 2px 12px #00000022',
           display:'flex',alignItems:'center',gap:10,justifyContent:'space-between'}}>
           <span style={{fontSize:12,color:'#34443d'}}>
@@ -455,7 +465,7 @@ export default function RestaurantMap({q='',filter='',locale='ko',focusId=null}:
             {locale==='ko'?'다시 시도':locale==='ja'?'再試行':
               locale==='zh-CN'?'重试':'Retry'}
           </button>
-        </div>
+        </div>}
       </section>}
     </div>
 
