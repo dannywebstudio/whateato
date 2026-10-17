@@ -19,13 +19,12 @@ export async function GET(req:NextRequest){
   if(venue.latitude===null||venue.longitude===null||!Number.isFinite(lat)||!Number.isFinite(lon)||
      lat<33||lat>39.5||lon<124||lon>132)
    return NextResponse.json({error:'restaurant_coordinates_unavailable'},{status:422,headers});
-  let nearby:GeoMarker[]=[];
-  for(const radius of [1,3,8,20]){
-   const response=await getGeoCatalog({mode:'nearby',lat:String(lat),lon:String(lon),
-    radius:String(radius),locale:req.nextUrl.searchParams.get('hl'),limit:60});
-   nearby=response.items.filter(item=>item.id!==id);
-   if(nearby.length>=3)break;
-  }
+  // One distance-ranked query is enough for the nearest three public venues.
+  // Expanding 1→3→8→20km made four sequential DB calls when fewer than
+  // three neighbors were published (currently the common case).
+  const response=await getGeoCatalog({mode:'nearby',lat:String(lat),lon:String(lon),
+   radius:'20',locale:req.nextUrl.searchParams.get('hl'),limit:4});
+  const nearby:GeoMarker[]=response.items.filter(item=>item.id!==id).slice(0,3);
   const selected:GeoMarker={
    id,name:venue.name,name_ko:venue.name_ko,address:venue.address,
    address_ko:venue.road_address_ko||venue.lot_address_ko,
