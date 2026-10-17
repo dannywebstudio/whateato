@@ -56,7 +56,7 @@ jobs:
           OFFSET: ${{ inputs.offset }}
           LIMIT: ${{ inputs.limit }}
           ENABLE_IMPORT: ${{ inputs.write_to_neon }}
-          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          NEON_DATABASE_URL: ${{ secrets.WHATEATO_LAUNCH_NEON_DATABASE_URL }}
           WHATEATO_IMPORT_CONFIRM: launch-hostinger-20261015
         run: |
           set -euo pipefail
