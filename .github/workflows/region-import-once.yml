@@ -1,0 +1,61 @@
+name: WhatEatO Stage 1 Incheon Official Data One-Time Import
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/region-import-once.yml'
+permissions:
+  contents: read
+concurrency:
+  group: whateato-incheon-once-20261017
+  cancel-in-progress: false
+jobs:
+  import-incheon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      WHATEATO_IMPORT_CONFIRM: launch-hostinger-20261015
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install import dependencies
+        run: python -m pip install --disable-pip-version-check 'pyproj>=3.6,<4' 'psycopg[binary]>=3.2,<4' 'gdown==5.2.0'
+      - name: Verify launch branch secret is configured
+        run: |
+          test -n "$NEON_DATABASE_URL" || { echo 'BLOCKED: set NEON_DATABASE_URL to launch-hostinger-20261015 Neon branch'; exit 1; }
+          python -m py_compile scripts/import_localdata_regions.py
+      - name: Download original trusted CSV and verify SHA-256
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/whateato-region
+          python -m gdown --id 10jzGEJQsZwYKqCw9QTPqy08UoUwUNqnQ --no-cookies --output /tmp/whateato-region/source.csv
+          test "$(stat -c %s /tmp/whateato-region/source.csv)" -eq 699103898
+          echo '403f9d00ca3a5898aa8b3ab45665bd338c1cf2b29b6b917b53f3a5c525b41272  /tmp/whateato-region/source.csv' | sha256sum --check
+      - name: Remove closed records and validate clean source
+        run: |
+          set -euo pipefail
+          python scripts/filter_closed_localdata.py --source /tmp/whateato-region/source.csv --output /tmp/whateato-region/active.csv --report /tmp/whateato-region/cleanup.json --expected-rows 2303303 --expected-open 676107 --expected-closed 1627196
+          echo 'b3aa8b1c6e8ea108bd6ecbd06a4f46c1211d2c996265384570e0e0b1d207deec  /tmp/whateato-region/active.csv' | sha256sum --check
+      - name: Import five ordered Stage-1 waves as private drafts
+        run: |
+          set -euo pipefail
+          mkdir -p report
+          for spec in '1:1110' '2:894' '3:1745' '4:4498' '5:2065'; do
+            IFS=':' read -r wave limit <<< "$spec"
+            echo "Importing Incheon stage-1 wave $wave as drafts; limit $limit"
+            python scripts/import_localdata_regions.py --file /tmp/whateato-region/active.csv --city 인천 --wave "$wave" --offset 0 --limit "$limit" --commit | tee "report/incheon-wave-$wave.json"
+          done
+      - name: Save reconciliation counts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whateato-incheon-stage1-import-20261017
+          path: report/*.json
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Remove temporary original and cleaned source
+        if: always()
+        run: rm -rf /tmp/whateato-region
