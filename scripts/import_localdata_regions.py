@@ -19,6 +19,11 @@ DONGINCH = ("신포동","인현동","경동","내동","답동","용동","신생�
             "송학동","사동","선린동","북성동","항동","신흥동","송월동",
             "우현로","개항로","신포로","수문통로")
 CITY_NAMES = {"인천":"인천광역시","서울":"서울특별시","부산":"부산광역시"}
+REGION_KEYS = {
+    "인천": ("incheon-dongincheon","incheon-mansu","incheon-guwol","incheon-bupyeong","incheon-yeongjong",None),
+    "서울": ("seoul-station","seoul-sinchon","seoul-hongdae","seoul-ewha","seoul-coex","seoul-other"),
+    "부산": ("busan-gwangalli","busan-haeundae","busan-other"),
+}
 
 def wave_for(city, address):
     if city == "인천":
@@ -85,7 +90,7 @@ def extract(path,city,wave,offset,limit):
                          parts[1] if len(parts)>1 else None,dong,clean(row.get("업태구분명"),120) or None,lat,lon))
     return rows,matching,digest.hexdigest()
 
-def commit_to_neon(rows):
+def commit_to_neon(rows,city,wave):
     if os.getenv("WHATEATO_IMPORT_CONFIRM")!="launch-hostinger-20261015":
         raise RuntimeError("Launch branch explicit import confirmation missing.")
     url=os.environ.get("NEON_DATABASE_URL")
@@ -133,10 +138,28 @@ def commit_to_neon(rows):
                      FROM restaurants r JOIN whateato_localdata_region_stage s
                        ON r.sbiz_source_key=s.source_key
                      ON CONFLICT(provider,source_record_id) DO NOTHING""")
+                queue_key=REGION_KEYS[city][wave-1]
+                queued=0
+                if queue_key:
+                    cur.execute("""INSERT INTO whateato_region_refresh_queue_v1
+                         (region_key,restaurant_id,candidate_name_ko,candidate_address_ko,
+                          source_url,review_state,hold_reason)
+                         SELECT %s,r.id,r.name_ko,
+                           COALESCE(r.road_address_ko,r.lot_address_ko),
+                           'https://file.localdata.go.kr/file/general_restaurants/info',
+                           'hold',
+                           '공적 인허가상 영업: 현시점 운영·출입구·영업시간·메뉴·3언어 확인 전 비공개'
+                         FROM restaurants r
+                         JOIN whateato_localdata_region_stage s
+                           ON r.sbiz_source_key=s.source_key
+                         WHERE NOT EXISTS(SELECT 1 FROM whateato_region_refresh_queue_v1 q
+                           WHERE q.restaurant_id=r.id)
+                         ON CONFLICT DO NOTHING""",(queue_key,))
+                    queued=cur.rowcount
                 cur.execute("""SELECT COUNT(*) FROM whateato_restaurant_public_approvals_v1
                      WHERE is_visible=true""")
                 visible=cur.fetchone()[0]
-    return {"inserted_nonpublic_drafts":inserted,"exact_address_matches_skipped":skipped_matches,
+    return {"inserted_nonpublic_drafts":inserted,"exact_address_matches_skipped":skipped_matches,"queued_for_verification":queued,
             "map_visible_approvals_unchanged":visible}
 
 def main():
@@ -156,6 +179,6 @@ def main():
             "requested_offset":a.offset,"batch_source_rows":len(rows),
             "rows_with_coordinates":sum(x[8] is not None for x in rows),
             "mode":"commit" if a.commit else "dry_run","source_sha256":source_sha}
-    if a.commit and rows: report.update(commit_to_neon(rows))
+    if a.commit and rows: report.update(commit_to_neon(rows,a.city,a.wave))
     print(json.dumps(report,ensure_ascii=False))
 if __name__=="__main__":main()
