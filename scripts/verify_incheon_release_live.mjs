@@ -1,5 +1,5 @@
-import {resolve4,resolve6} from 'node:dns/promises';
 #!/usr/bin/env node
+import {resolve4,resolve6} from 'node:dns/promises';
 // Read-only production QA. No deployment, credentials, writes or website changes.
 const origin=(process.argv[2] || 'https://whateato.com').replace(/\/$/,'');
 const approved = [
