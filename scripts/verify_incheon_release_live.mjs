@@ -1,3 +1,4 @@
+import {resolve4,resolve6} from 'node:dns/promises';
 #!/usr/bin/env node
 // Read-only production QA. No deployment, credentials, writes or website changes.
 const origin=(process.argv[2] || 'https://whateato.com').replace(/\/$/,'');
@@ -36,5 +37,11 @@ try{
  console.log('PASS: Eight verified Incheon restaurants visible in live Search and Map');
 }catch(e){
  console.error('LIVE_RELEASE_QA_FAILED: '+String(e));
+ if (e?.cause) console.error('NETWORK_CAUSE: '+String(e.cause));
+ const host=new URL(origin).hostname;
+ for(const [rr,lookup] of [['A',resolve4],['AAAA',resolve6]]) {
+   try{console.error('DNS_'+rr+': '+(await lookup(host)).join(','));}
+   catch(err){console.error('DNS_'+rr+'_ERROR: '+String(err?.code||err));}
+ }
  process.exitCode=1;
 }
