@@ -1,0 +1,25 @@
+name: WhatEatO Incheon Live Release QA
+on:
+  push:
+    branches:
+      - release/hostinger-launch-v1
+    paths:
+      - 'src/lib/restaurant-catalog.ts'
+      - 'src/lib/geo-catalog.ts'
+      - 'src/lib/triage-ab-gate.ts'
+      - 'scripts/verify_incheon_release_live.mjs'
+      - '.github/workflows/incheon-live-release-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  incheon-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check current WhatEatO public Map
+        run: node scripts/verify_incheon_release_live.mjs https://whateato.com
