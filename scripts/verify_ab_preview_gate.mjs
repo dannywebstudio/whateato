@@ -16,6 +16,8 @@ assert.ok(gate.includes("r.latitude IS NOT NULL AND r.longitude IS NOT NULL"));
 assert.ok(gate.includes("restaurant_menu_localizations"));
 for (const code of ['en','ja','zh-CN']) assert.ok(gate.includes("'"+code+"'"));
 assert.ok(!gate.includes('whateato_release_cohort_300_v1'));
+assert.ok(!cat.includes('WHATEATO_PREVIEW_50_ONLY'), 'search/detail must not hide approved venues behind old image/tag previews');
+assert.ok(!geo.includes('WHATEATO_PREVIEW_50_ONLY'), 'Map must not hide approved venues behind old image/tag previews');
 assert.match(gate,/dq.review_state='confirmed_hold'/);
 assert.match(gate,/FROM restaurant_opening_hours hours/);
 assert.match(gate,/hours.publication_state='published'/);
