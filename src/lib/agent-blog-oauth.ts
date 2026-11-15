@@ -70,11 +70,15 @@ export function registerClient(client:OAuthClient){
  */
 export const WHATEATO_CHATGPT_CLIENT_ID='whateato-chatgpt-publisher';
 const firstChatGptCallback='https://chatgpt.com/connector/oauth/hKW_NZJp2Q4L';
+// OpenAI also uses this stable URI when the authorization server advertises
+// authorization_response_iss_parameter_supported=true (as ours does).
+const stableChatGptCallback='https://chatgpt.com/connector_platform_oauth_redirect';
 export function getClient(clientId:string):OAuthClient|null{
  if(clientId===WHATEATO_CHATGPT_CLIENT_ID){
   const callback=process.env.WHATEATO_CHATGPT_REDIRECT_URI||firstChatGptCallback;
   if(!allowedRedirect(callback))return null;
-  return {name:'WhatEatO ChatGPT Blog Publisher',redirectUris:[callback]};
+  return {name:'WhatEatO ChatGPT Blog Publisher',
+   redirectUris:[...new Set([callback,stableChatGptCallback])]};
  }
  if(!clientId.startsWith('wto_'))return null;
  const p=verify<OAuthClient>(clientId.slice(4),'client');
@@ -86,21 +90,36 @@ export type AuthorizeInput={
  clientId:string;redirectUri:string;state:string;
  codeChallenge:string;scope:string;resource:string
 };
-export function parseAuthorize(query:URLSearchParams):AuthorizeInput|null{
- const origin=oauthOrigin();if(!origin||!oauthEnabled())return null;
+export type OAuthAuthorizeReason=
+ 'oauth_disabled'|'invalid_response_type'|'unknown_client'|'redirect_uri_mismatch'|
+ 'invalid_pkce'|'invalid_state'|'invalid_resource'|'invalid_scope';
+
+export function validateAuthorize(query:URLSearchParams):
+ {input:AuthorizeInput;reason:null}|{input:null;reason:OAuthAuthorizeReason}{
+ const fail=(reason:OAuthAuthorizeReason):{input:null;reason:OAuthAuthorizeReason}=>({input:null,reason});
+ const origin=oauthOrigin();if(!origin||!oauthEnabled())return fail('oauth_disabled');
+ if(query.get('response_type')!=='code')return fail('invalid_response_type');
  const clientId=query.get('client_id')||'',client=getClient(clientId);
+ if(!client)return fail('unknown_client');
  const redirectUri=query.get('redirect_uri')||'';
+ if(!client.redirectUris.includes(redirectUri))return fail('redirect_uri_mismatch');
  const codeChallenge=query.get('code_challenge')||'';
+ if(query.get('code_challenge_method')!=='S256'||
+   !/^[A-Za-z0-9_-]{43,128}$/.test(codeChallenge))return fail('invalid_pkce');
  const state=query.get('state')||'';
- const scope=query.get('scope')||'blog:read blog:write';
+ if(state.length<8||state.length>1024)return fail('invalid_state');
  const resource=query.get('resource')||origin+'/mcp';
- if(query.get('response_type')!=='code'||query.get('code_challenge_method')!=='S256'||
-   !client||!client.redirectUris.includes(redirectUri)||
-   !/^[A-Za-z0-9_-]{43,128}$/.test(codeChallenge)||
-   state.length<8||state.length>1024||
-   resource!==origin+'/mcp'||
-   !['blog:read','blog:read blog:write'].includes(scope))return null;
- return {clientId,redirectUri,state,codeChallenge,scope,resource};
+ if(resource!==origin+'/mcp')return fail('invalid_resource');
+ const requested=(query.get('scope')||'blog:read blog:write').trim().split(/\s+/);
+ if(requested.length<1||requested.length>2||new Set(requested).size!==requested.length||
+    !requested.includes('blog:read')||
+    requested.some(x=>x!=='blog:read'&&x!=='blog:write'))return fail('invalid_scope');
+ // OAuth scopes are unordered, so normalize for consistent storage.
+ const scope=requested.includes('blog:write')?'blog:read blog:write':'blog:read';
+ return {input:{clientId,redirectUri,state,codeChallenge,scope,resource},reason:null};
+}
+export function parseAuthorize(query:URLSearchParams):AuthorizeInput|null{
+ return validateAuthorize(query).input;
 }
 export async function createAuthorizationCode(data:AuthorizeInput,ownerId:string){
  if(!isUuid(ownerId))throw Error('owner_required');

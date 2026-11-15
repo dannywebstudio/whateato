@@ -95,6 +95,31 @@ Security scopes: `blog:read`, `blog:write`. Token lifetime 7 days;
 after expiry reconnect via OAuth. Signing secret rotation revokes all tokens.
 Existing WhatEatO owner account must remain enabled. No anonymous writing.
 
+
+### ChatGPT 연결 클릭 후 invalid_request가 표시될 경우
+
+WhatEatO가 `authorization_response_iss_parameter_supported=true`를 광고하면
+ChatGPT가 기존 개별 콜백 대신 공통 콜백
+`https://chatgpt.com/connector_platform_oauth_redirect`를 사용할 수 있다.
+WhatEatO 사전 등록 클라이언트는 **공통 콜백과 기존에 승인된 개별 콜백 모두**를
+정확히 일치하는 URI로 인정한다. 예상치 못한 다른 콜백은 계속 거부한다.
+
+인증 API는 무해한 `reason` 코드만 반환한다. 전체 로그인 URL의
+`state`나 `code_challenge`를 다른 사람에게 보내지 않아야 한다.
+
+- `redirect_uri_mismatch`: 현재 ChatGPT가 사용하는 개별 콜백과 등록값이 다름.
+  ChatGPT에서 보이는 정확한 URI를
+  `WHATEATO_CHATGPT_REDIRECT_URI`로 설정하고 재배포
+- `invalid_scope`: scope 필드의 값을 공백으로 구분된
+  `blog:read blog:write`로 지정
+- `unknown_client`: Client ID가
+  `whateato-chatgpt-publisher`인지 확인
+- `invalid_resource`: MCP URL 및 OAuth resource가
+  `https://whateato.com/mcp`인지 확인
+- `invalid_pkce`, `invalid_state`, `invalid_response_type`: OAuth
+  클라이언트에서 인증 요청 형식 확인
+- `oauth_disabled`: OAuth 환경변수와 비밀키를 확인
+
 ## Tools
 
 - `whateato_blog_status(slug)` — persisted revision, publication state, URLs
