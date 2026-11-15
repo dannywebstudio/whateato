@@ -149,3 +149,12 @@ export async function validateAgentAccess(token:string):Promise<BlogGrant|null>{
   return r.rowCount?parsed:null;
  }catch{return null}
 }
+
+export function createConsentTicket(data:AuthorizeInput,ownerId:string){
+ return sign('consent',{data,ownerId,expires:Date.now()+5*60*1000});
+}
+export function verifyConsentTicket(ticket:string,data:AuthorizeInput,ownerId:string){
+ const p=verify<{data:AuthorizeInput;ownerId:string;expires:number}>(ticket,'consent');
+ return Boolean(p&&p.ownerId===ownerId&&p.expires>Date.now()&&
+   JSON.stringify(p.data)===JSON.stringify(data));
+}
