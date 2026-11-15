@@ -3,6 +3,7 @@ import type {AuthInfo} from '@modelcontextprotocol/server';
 import {z} from 'zod';
 import {validateAgentAccess} from '@/lib/agent-blog-oauth';
 import {agentBlogStatus,agentBlogDraft,saveAgentBlog} from '@/lib/agent-blog-service';
+import {agentBlogMediaStatus,agentUploadBlogImage,agentReviewBlogImage} from '@/lib/agent-blog-media-service';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -64,7 +65,55 @@ const handler=createMcpHandler(server=>{
    return {isError:true,content:[{type:'text' as const,text:'Draft exceeds 180KB upload limit'}]};
   return resultText(await saveAgentBlog(input,ownerId));
  });
-},{serverInfo:{name:'whateato-blog-publisher',version:'1.0.0'}});
+
+ server.registerTool('whateato_blog_media_status',{
+  title:'Check blog image rights and minimum three-photo readiness',
+  description:'Read the existing article media library by slug, including approved/pending rights, image UUIDs and each language version readiness. Use before editing image blocks or publishing.',
+  inputSchema:z.object({slug:validSlug}),
+  annotations:{readOnlyHint:true}
+ },async({slug})=>resultText(await agentBlogMediaStatus(slug)));
+
+ server.registerTool('whateato_upload_blog_image',{
+  title:'Upload an original or licensed image to a saved WhatEatO article',
+  description:'Upload a base64 JPEG/PNG/WebP (up to 6MB) to an existing article, with ownership/license provenance and explicit rights acknowledgement. Uses the existing private S3 photo storage. New photos are PENDING, not automatically approved. For larger files use owner CMS. Do not upload arbitrary Google Images without commercial-use license evidence. Do not fabricate source URLs, ownership or rights references.',
+  inputSchema:z.object({
+   slug:validSlug,
+   media_role:z.enum(['cover','inline']),
+   mime_type:z.enum(['image/jpeg','image/png','image/webp']),
+   image_base64:z.string().min(344).max(8400000),
+   alt_text:z.string().min(3).max(180),
+   source_kind:z.enum(['ai_generated','owner_original','licensed']),
+   source_url:z.string().max(700).default(''),
+   rights_reference:z.string().max(700).default(''),
+   provenance_note:z.string().min(12).max(600),
+   rights_confirmed:z.boolean()
+  }),
+  annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:false}
+ },async(input,ctx)=>{
+  const info=ctx.http?.authInfo;
+  const ownerId=(info?.extra as {ownerId?:string}|undefined)?.ownerId;
+  if(!ownerId||!info?.scopes?.includes('blog:write'))
+   return {isError:true,content:[{type:'text' as const,text:'Image upload requires blog:write owner grant'}]};
+  return resultText(await agentUploadBlogImage(input,ownerId));
+ });
+
+ server.registerTool('whateato_review_blog_image_rights',{
+  title:'Owner approval or rejection of a pending blog image',
+  description:'Change a pending image to approved/rejected only after the OWNER explicitly confirms the specific image rights and accurate provenance. Approval unlocks use in public articles but does not publish the article. Do not approve images automatically or based only on finding them through Google.',
+  inputSchema:z.object({
+   slug:validSlug,image_id:z.string().uuid(),
+   decision:z.enum(['approve','reject']),
+   owner_rights_attested:z.boolean()
+  }),
+  annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:false}
+ },async(input,ctx)=>{
+  const info=ctx.http?.authInfo;
+  const ownerId=(info?.extra as {ownerId?:string}|undefined)?.ownerId;
+  if(!ownerId||!info?.scopes?.includes('blog:write'))
+   return {isError:true,content:[{type:'text' as const,text:'Image review requires blog:write owner grant'}]};
+  return resultText(await agentReviewBlogImage(input,ownerId));
+ });
+},{serverInfo:{name:'whateato-blog-publisher',version:'1.1.0'}});
 
 const verify=async(_req:Request,bearer?:string):Promise<AuthInfo|undefined>=>{
  if(!bearer)return undefined;
