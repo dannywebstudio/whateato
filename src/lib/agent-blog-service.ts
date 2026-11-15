@@ -176,3 +176,25 @@ export async function saveAgentBlog(raw:unknown,agentOwnerId:string){
     return respond({error:'agent_blog_save_unavailable'},503);
   }finally{client.release()}
 }
+
+/** Return only owner-authorized editorial content to a caller holding OAuth. */
+export async function agentBlogDraft(slug:string){
+ if(!validBlogSlug(slug))return respond({error:'invalid_slug'},400);
+ const pool=getPool();if(!pool)return respond({error:'database_unavailable'},503);
+ try{
+  const result=await pool.query(`
+   SELECT p.id::text,p.slug,d.revision,d.category,d.tags,
+     d.related_restaurant_ids,d.translations,
+     u.is_visible,u.published_at::text
+   FROM whateato_blog_posts p
+   JOIN whateato_blog_drafts d ON d.post_id=p.id
+   LEFT JOIN whateato_blog_publications u ON u.post_id=p.id
+   WHERE p.slug=$1 LIMIT 1`,[slug]);
+  if(!result.rowCount)return respond({error:'not_found'},404);
+  const row=result.rows[0];
+  return respond({slug,id:row.id,revision:row.revision,
+   published:row.is_visible===true,published_at:row.published_at,
+   draft:{category:row.category,tags:row.tags,
+    related_restaurant_ids:row.related_restaurant_ids,translations:row.translations}});
+ }catch{return respond({error:'blog_draft_unavailable'},503)}
+}
