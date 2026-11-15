@@ -102,7 +102,7 @@ export async function agentReviewBlogImage(input:{
  owner_rights_attested:boolean
 },ownerId:string){
  if(!isUuid(ownerId)||!validBlogSlug(input.slug)||!isUuid(input.image_id)||
-   input.owner_rights_attested!==true)
+   (input.decision==='approve'&&input.owner_rights_attested!==true))
   return respond({error:'explicit_owner_rights_attestation_required'},400);
  const pool=getPool();if(!pool)return respond({error:'database_unavailable'},503);
  const client=await pool.connect();
