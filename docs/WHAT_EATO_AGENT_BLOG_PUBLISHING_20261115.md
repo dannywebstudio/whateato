@@ -53,6 +53,27 @@ Existing articles require `expected_revision` to prevent overwriting another edi
 
 ## ChatGPT plugin connection
 
+### DCR 사용 불가일 때: 사전 등록 공개 OAuth 클라이언트
+
+ChatGPT의 DCR 항목이 `사용할 수 없음`으로 표시되면 **DCR을 사용하지 않는다**.
+WhatEatO의 비공개 플러그인은 이제 `provided` 방식으로 구성한다:
+
+- MCP URL: `https://whateato.com/mcp`
+- OAuth Client ID: `whateato-chatgpt-publisher` (공개 식별자, 비밀번호 아님)
+- Token endpoint authentication: `none` (PKCE S256를 사용하는 공개 클라이언트)
+- Redirect URI: `https://chatgpt.com/connector/oauth/hKW_NZJp2Q4L`
+- Required scopes: `blog:read blog:write`
+
+위 Redirect URI는 사용자에게 ChatGPT UI가 보여준 주소이며, **다른 URL을 사용하면 안 된다**.
+ChatGPT가 새 콜백을 발급하면 서버 환경변수
+`WHATEATO_CHATGPT_REDIRECT_URI`를 **새 정확한 URL**로 설정한 다음
+Hostinger를 재시작한다. URL이 바뀌지 않았으면 설정을 추가할 필요 없다.
+`client_id`는 비밀번호가 아니므로 플러그인 manifest에 입력할 수 있으며,
+`client_secret`는 설정하거나 공유하지 않는다.
+
+기존 DCR 인증 방식은 별도 클라이언트를 위해 유지되지만 이 플러그인은
+`provided`를 우선 선택한다. WhatEatO OAuth 인증은 관리자 로그인과 명시적 동의를 여전히 요구한다.
+
 The remote MCP endpoint is:
 `https://whateato.com/mcp`
 

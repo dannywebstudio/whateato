@@ -62,7 +62,20 @@ export function registerClient(client:OAuthClient){
    client.name.length>90)return null;
  return 'wto_'+sign('client',client);
 }
+/**
+ * Static public OAuth client for ChatGPT installations that cannot use DCR.
+ * The callback is a public redirect URI, not a secret. Bind it to the exact
+ * ChatGPT-provided value to prevent a token being sent to another connector.
+ * Override WHATEATO_CHATGPT_REDIRECT_URI if ChatGPT regenerates the callback.
+ */
+export const WHATEATO_CHATGPT_CLIENT_ID='whateato-chatgpt-publisher';
+const firstChatGptCallback='https://chatgpt.com/connector/oauth/hKW_NZJp2Q4L';
 export function getClient(clientId:string):OAuthClient|null{
+ if(clientId===WHATEATO_CHATGPT_CLIENT_ID){
+  const callback=process.env.WHATEATO_CHATGPT_REDIRECT_URI||firstChatGptCallback;
+  if(!allowedRedirect(callback))return null;
+  return {name:'WhatEatO ChatGPT Blog Publisher',redirectUris:[callback]};
+ }
  if(!clientId.startsWith('wto_'))return null;
  const p=verify<OAuthClient>(clientId.slice(4),'client');
  if(!p||!Array.isArray(p.redirectUris)||p.redirectUris.some(uri=>!allowedRedirect(uri))||
