@@ -3,6 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {ownerHeaders} from '@/lib/owner-cms-auth';
 import {parseBlogDraft,publishableBlog,validBlogSlug} from '@/lib/blog-model';
 import {getPool} from '@/lib/db';
+import {validateFirstPublicationPhotos} from '@/lib/blog-media-readiness';
 const respond=(value:unknown,status=200)=>NextResponse.json(value,{status,headers:ownerHeaders});
 export function publicUrls(slug:string){
   const origin=(process.env.NEXT_PUBLIC_SITE_URL||'https://whateato.com').replace(/\/$/,'');
@@ -140,6 +141,11 @@ export async function saveAgentBlog(raw:unknown,agentOwnerId:string){
           await client.query('ROLLBACK');
           return respond({error:'image_not_rights_approved'},409);
         }
+      }
+      const photoProblem=await validateFirstPublicationPhotos(client,postId,draft);
+      if(photoProblem){
+        await client.query('ROLLBACK');
+        return respond({error:photoProblem},409);
       }
       const cover=await client.query<{id:string}>(`
         SELECT id::text FROM whateato_blog_media
