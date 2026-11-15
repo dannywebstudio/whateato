@@ -39,8 +39,10 @@ const handler=createMcpHandler(server=>{
   inputSchema:z.object({slug:validSlug,draft,expected_revision:z.number().int().positive().optional()}),
   annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:false}
  },async({slug,draft,expected_revision},ctx)=>{
-  const ownerId=(ctx.http?.authInfo?.extra as {ownerId?:string}|undefined)?.ownerId;
-  if(!ownerId)return {isError:true,content:[{type:'text' as const,text:'Owner authorization required'}]};
+  const info=ctx.http?.authInfo;
+  const ownerId=(info?.extra as {ownerId?:string}|undefined)?.ownerId;
+  if(!ownerId||!info?.scopes?.includes('blog:write'))
+    return {isError:true,content:[{type:'text' as const,text:'Draft editing requires blog:write owner grant'}]};
   const input={slug,draft,mode:'draft',...(expected_revision?{expected_revision}:{})};
   if(Buffer.byteLength(JSON.stringify(input))>180000)
    return {isError:true,content:[{type:'text' as const,text:'Draft exceeds 180KB upload limit'}]};
