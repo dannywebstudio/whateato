@@ -1,147 +1,125 @@
-# WhatEatO — ChatGPT direct blog publishing bridge (2026-11-15)
+# WhatEatO — ChatGPT 직접 블로그 발행 (MCP + OAuth)
 
-This change provides an **owner-scoped, auditable publishing API** independent
-of the browser session cookie. It is not automatically live on Hostinger or
-automatically connected to ChatGPT. Deploy and connect it explicitly.
+구현 위치: PR #72 / `feature/agent-direct-blog-publishing-20261115`
 
-## Why
+**현재 상태:** 소스 코드가 PR에 구현되어 있으나 운영 서버 배포, DB 마이그레이션,
+ChatGPT 플러그인 사용자 연결은 각각 별도 작업이다. PR만으로 자동 연결되지 않는다.
 
-Before this change, publishing through the external assistant required
-manual SQL against Neon. That bypasses application-level readiness checks
-and cannot be relied on as the regular editorial workflow.
+## Architecture
 
-The new API uses the same `parseBlogDraft`, `publishableBlog`, category,
-approved-image and related-restaurant checks as the CMS, and writes the
-same draft, publication snapshot and audit tables atomically.
-
-## Server setup (Hostinger / deployment)
-
-1. Review this branch and merge to the **actual deployed source branch**.
-   Do not assume that the GitHub release branch is currently deployed.
-2. In your server's private environment settings (never in Git or chat), set:
-   - `WHATEATO_BLOG_AGENT_TOKEN`: random URL-safe high-entropy secret,
-     minimum 40 characters. Suggested command in a private terminal:
-     `openssl rand -hex 32`
-   - `WHATEATO_BLOG_AGENT_ACCOUNT_ID`: UUID of an enabled WhatEatO
-     `owner` account in `whateato_admin_accounts`.
-   - `WHATEATO_BLOG_AGENT_ALLOW_PUBLISH=true` **only after** the
-     authenticated status and draft-mode tests pass.
-3. Keep `DATABASE_URL` pointed to the correct Neon branch. Set
-   `NEXT_PUBLIC_SITE_URL=https://whateato.com` for returned article URLs.
-4. Restart the application and inspect the deployment logs.
-5. Enable TLS/HTTPS on the public origin. Never place bearer secrets
-   in URLs, CMS articles, logs, ChatGPT prompts, or source control.
-6. Rotate the earlier database password exposed in chat; do not reuse it
-   for the blog-agent token.
-
-To find the account UUID privately with Neon, run:
-
-```sql
-SELECT account_id::text FROM whateato_admin_accounts
-WHERE role='owner' AND enabled=true;
+```text
+ChatGPT (user request)
+  -> WhatEatO remote MCP (https://whateato.com/mcp)
+  -> OAuth discovery + owner Google login + explicit consent
+  -> MCP tools: status, read, save draft, publish
+  -> shared service / src/lib/agent-blog-service.ts
+  -> Neon: drafts, publications, audit
+  -> public blog /blog/[slug] (4 languages)
 ```
 
-The agent token is an independent permission for the owner role and can
-be revoked by deleting its environment variable or disabling the owner account.
+API uses existing WhatEatO JSON format and CMS publication validations.
+Images are uploaded + rights-approved through the existing owner CMS before being
+referenced in the draft. Incomplete or unapproved images cannot be published.
+Existing articles require `expected_revision` to prevent overwriting another edit.
 
-## API
+## Hostinger deployment checklist
 
-`GET /api/v1/agent/blog?slug=incheon-airport-to-seoul-station`
+1. Verify Hostinger's actual deployment branch and merge PR #72 **only after CI success**.
+   Confirm Node.js >=22 and run `npm install`, `npm run typecheck`, `npm run build`.
+2. Confirm the Neon `DATABASE_URL` maps to `launch-hostinger-20261015`.
+3. On that Neon branch, apply migration
+   `db/migrations/20261115_blog_agent_oauth.sql` **once** after review.
+   It only creates the short-lived OAuth code table and an index; it does not edit
+   restaurant, user, blog, image, or publication data.
+4. Set all of the following in Hostinger **private environment variables**:
 
-Headers: `Authorization: Bearer <TOKEN>`
+   - `WHATEATO_BLOG_AGENT_ENABLED=true`
+   - `WHATEATO_BLOG_OAUTH_SECRET`: new random 64-byte secret; e.g.
+     `openssl rand -hex 64`
+   - `WHATEATO_BLOG_AGENT_ALLOW_PUBLISH=true` only after status/read/draft tests pass.
+   - `WHATEATO_OWNER_CMS_ENABLED=true` (existing CMS)
+   - `NEXT_PUBLIC_SITE_URL=https://whateato.com`
+   - `WHATEATO_OWNER_CANONICAL_ORIGIN=https://whateato.com`
+   - Existing `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `DATABASE_URL`.
 
-Returns the exact persisted draft revision, publication state, date, and
-language URLs. `401` indicates missing/invalid agent credentials.
+   Keep the **separate REST bearer integration** disabled unless it is actually used.
+   The REST API requires `WHATEATO_BLOG_AGENT_TOKEN` and
+   `WHATEATO_BLOG_AGENT_ACCOUNT_ID`. The MCP OAuth flow does **not** require them.
 
-`POST /api/v1/agent/blog`
+5. Restart Hostinger Node.js process, ensure HTTPS. Never share tokens in chat or
+   put them into the repository, URLs, or GitHub Actions logs.
+6. **Rotate the Neon password exposed in a past conversation**, update Hostinger,
+   and restart the service. Do not use database credentials as OAuth secrets.
 
-Headers: `Authorization: Bearer <TOKEN>`,
-`Content-Type: application/json`
+## ChatGPT plugin connection
 
-Body for a new article (the `draft` field is the CMS JSON package):
+The remote MCP endpoint is:
+`https://whateato.com/mcp`
 
-```json
-{
-  "slug": "incheon-airport-to-seoul-station",
-  "mode": "draft",
-  "draft": {
-    "category": "transportation",
-    "tags": ["arex"],
-    "related_restaurant_ids": [],
-    "translations": {
-      "en": {"title":"...", "excerpt":"...", "seo_title":"...", "seo_description":"...", "blocks":[]},
-      "ko": {"title":"...", "excerpt":"...", "seo_title":"...", "seo_description":"...", "blocks":[]},
-      "ja": {"title":"...", "excerpt":"...", "seo_title":"...", "seo_description":"...", "blocks":[]},
-      "zh-CN": {"title":"...", "excerpt":"...", "seo_title":"...", "seo_description":"...", "blocks":[]}
-    }
-  }
-}
-```
+Use ChatGPT web → Plugins → Add custom MCP server. Choose OAuth authentication.
+The server advertises:
 
-- Use `mode: "publish"` for full, vetted four-language publication when
-  the owner has explicitly requested publication.
-- For an **existing** slug, always provide the current `expected_revision`
-  returned from GET. Stale revisions fail with 409 instead of overwriting
-  another editor's work.
-- For a new slug, omit `expected_revision`.
-- `draft` saves do not change any previously published snapshot.
-- Publishing validates all four locales, category, related restaurants and
-  any photo UUIDs; unapproved image UUIDs cause a 409 error.
-- To add images, use the existing owner CMS image upload and approval workflow
-  first; this endpoint does not upload image files.
-- Only methods GET and POST are supported. Delete, unpublish and role changes
-  are intentionally absent.
-- All mutations write owner-attributed records to `whateato_blog_audit`.
-- API responses report database state; independently load the public URL
-  to validate real Hostinger routing and rendering.
+- `/.well-known/oauth-protected-resource`
+- `/.well-known/oauth-authorization-server`
+- `/api/agent/oauth/register`: dynamic client registration; only ChatGPT OAuth
+  redirect endpoints are permitted and a client ID is signed to prevent tampering.
+- `/api/agent/oauth/authorize` and `/agent/authorize`: owner consent after
+  existing Google login (session is verified against enabled owner role).
+- `/api/agent/oauth/token`: one-time authorization code + PKCE S256 exchange.
 
-### Manual smoke tests
+User must explicitly **approve consent and install/connect** in ChatGPT. This
+cannot be done by merging code or supplying only a database URL.
 
-With the token set in your private terminal and the deployment complete:
+Security scopes: `blog:read`, `blog:write`. Token lifetime 7 days;
+after expiry reconnect via OAuth. Signing secret rotation revokes all tokens.
+Existing WhatEatO owner account must remain enabled. No anonymous writing.
 
-```bash
-curl -fSs "https://whateato.com/api/v1/agent/blog?slug=incheon-airport-to-seoul-station" \
-  -H "Authorization: Bearer ${WHATEATO_BLOG_AGENT_TOKEN}"
-```
+## Tools
 
-Expected behavior:
-- Missing token: 401.
-- Invalid slug: 400.
-- Existing article status: 200 with revision and published state.
-- Old revision on POST: 409 and no data overwritten.
-- Attempt to publish with disabled allow-publish flag: 403.
-- Invalid four-language body: validation failure and no publication.
-- Draft mode: new post/draft created with audit trail; public page stays hidden.
-- Publish mode: all four locales published as a single version; GET says
-  published true; verify the public pages in a normal browser.
+- `whateato_blog_status(slug)` — persisted revision, publication state, URLs
+- `whateato_read_blog_draft(slug)` — full owner-only four-language JSON draft
+- `whateato_save_blog_draft(slug, draft, expected_revision?)` — save only
+- `whateato_publish_blog(slug, draft, expected_revision?)` — publicly
+  publish all four languages with user authorization and validation
 
-**Important:** Do not run a live POST with the example incomplete body.
+The last tool is write-capable and should be used only after a clear user
+instruction to publish. For existing articles, always read the latest revision
+first. Confirm Klook/affiliate URLs and image rights; never invent discounts.
 
-## Connecting from ChatGPT (separate step)
+## HTTP-only smoke tests before plugin setup
 
-This REST endpoint is the **server-side publishing capability**. ChatGPT
-cannot call an arbitrary private URL with stored credentials by itself.
+- `GET https://whateato.com/.well-known/oauth-protected-resource` responds
+  with `resource=https://whateato.com/mcp`.
+- `GET https://whateato.com/.well-known/oauth-authorization-server`
+  advertises PKCE S256, token endpoint, DCR and accepted scopes.
+- `POST https://whateato.com/mcp` without OAuth token returns 401 with
+  `WWW-Authenticate` pointing to protected resource metadata.
+- Malformed client callbacks are denied during DCR.
+- Owner Google login and explicit consent are required.
+- Reusing an OAuth authorization code after successful token exchange fails.
+- `whateato_blog_status` returns the published AREX article and current revision.
+- Draft test creates an unpublished article; verify not visible publicly.
+- Publishing test creates a four-language public snapshot with an audit trail.
+- Modification with stale `expected_revision` fails with 409.
+- Access with expired/invalid tokens fails.
+- Images missing rights approval cause publication to fail.
 
-After Hostinger deployment and tests, expose the authenticated operations
-through a **private MCP server/plugin** with the same role boundaries. Register
-it in ChatGPT Plugins, authorize the connection, and test a draft before
-enabling publication. Installing/connecting the plugin requires the user's
-explicit action. Do not share the secret in conversation.
+## Legacy REST endpoint (optional)
 
-Until that connection exists, the assistant may still read the linked Neon
-database and maintain GitHub code, but it should **not** represent this API
-as callable from the current chat or claim the API was deployed.
+`GET /api/v1/agent/blog?slug=...` and `POST /api/v1/agent/blog` remain
+available for trusted service-to-service callers using a **different**
+`WHATEATO_BLOG_AGENT_TOKEN`. For security, do not put this secret in user
+messages or ChatGPT tool calls. The MCP OAuth route is the preferred ChatGPT path.
 
-## Security / operational limits
+## Known limitations / next steps
 
-- Server-to-server bearer credential; no browser session and no CORS opt-in.
-- Owner UUID must remain enabled in the admin table.
-- Agent bearer token is accepted only via `Authorization` header.
-- Token has separate scope from the bulk-admin token or Neon DB password.
-- No direct SQL supplied by the client; all SQL uses parameter binding.
-- Request body bounded at 180,000 bytes.
-- Recommended additional edge protection before scaling:
-  rate limiting, request logs with secrets redacted, key rotation,
-  a dedicated service principal and fine-grained publication approvals.
-- Initial integration is **not** end-to-end operational until it is deployed
-  and authorized as an actual ChatGPT tool.
+- Public REST/MCP code is not activated before manual Hostinger deployment.
+- Write-enabled custom MCP plugins require eligible ChatGPT workspace permissions;
+  follow the current ChatGPT web UI guidance.
+- This does not yet upload or rights-approve images, unpublish posts, or delete
+  articles. Keep these actions in the existing owner CMS.
+- OAuth DCR currently allows ChatGPT redirect domains only, intentionally.
+- For future scale, add rate limits to DCR, token consent audit, and operational
+  metrics. One-time codes are kept hashed in Neon and should be regularly pruned.
+- A separate live browser test is required to verify production HTML, SEO and
+  4-language rendering after connection.
