@@ -193,7 +193,8 @@ export async function POST(req:NextRequest){
     }
     await client.query('COMMIT');
     return respond({success:true,created,slug,id:postId,revision,
-      published:mode==='publish',urls:publicUrls(slug)},created?201:200);
+      action:mode,published_this_request:mode==='publish',
+      urls:publicUrls(slug)},created?201:200);
   }catch(e){
     await client.query('ROLLBACK').catch(()=>{});
     if((e as {code?:string}).code==='23505')
