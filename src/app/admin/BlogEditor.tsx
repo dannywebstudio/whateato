@@ -8,7 +8,8 @@ import styles from './blog-editor.module.css';
 
 type BlogRow={id:string;slug:string;revision:number;category:string;title:string;state:string;updated_at:string};
 type BlogImage={id:string;media_role:'cover'|'inline';alt_text:string;rights_status:string;
- image_url:string;width:number;height:number};
+ image_url:string;width:number;height:number;source_url?:string;rights_reference?:string;
+ provenance_kind?:string;provenance_note?:string};
 type Detail={id:string;slug:string;revision:number;category:BlogDraft['category'];tags:string[];
  related_restaurant_ids:string[];translations:BlogDraft['translations'];
  review_requested_at:string|null;published_revision:number|null;is_visible:boolean|null;
@@ -52,6 +53,8 @@ export default function BlogEditor({owner}:{owner:boolean}){
  const [dragged,setDragged]=useState<string|null>(null);
  const [file,setFile]=useState<File|null>(null);const [imageRole,setImageRole]=useState<'cover'|'inline'>('cover');
  const [alt,setAlt]=useState('');const [source,setSource]=useState('');const [rightsRef,setRightsRef]=useState('');
+ const [sourceKind,setSourceKind]=useState<'ai_generated'|'owner_original'|'licensed'>('licensed');
+ const [provenanceNote,setProvenanceNote]=useState('');
  const [rights,setRights]=useState(false);
  const editorRef=useRef<HTMLDivElement|null>(null);
  const translation=draft.translations[locale]||blankLocale();
@@ -168,15 +171,20 @@ export default function BlogEditor({owner}:{owner:boolean}){
    const form=new FormData();
    form.set('file',file);form.set('media_role',imageRole);form.set('alt_text',alt);
    form.set('source_url',source);form.set('rights_reference',rightsRef);
+   form.set('source_kind',sourceKind);form.set('provenance_note',provenanceNote);
    form.set('rights_confirmation','yes');
    const data=await api('/api/v1/owner/blog/'+current.id+'/media',{method:'POST',body:form});
-   setFile(null);setAlt('');setSource('');setRightsRef('');setRights(false);
+   setFile(null);setAlt('');setSource('');setRightsRef('');
+   setSourceKind('licensed');setProvenanceNote('');setRights(false);
    await open(current.id);
    setMessage('사진 업로드 완료 · 게시 전에 Owner가 사진 권리를 승인해야 해. ('+data.id+')');
   }catch(e){error(e)}finally{setBusy(false)}
  };
  const inspectImage=async(imageId:string,decision:'approve'|'reject'|'hide')=>{
   if(!current)return;
+  if(decision==='approve'&&!window.confirm(
+   '해당 이미지의 생성·원본 출처와 WhatEatO 상업적 게시 권한을 직접 확인했나요? 확인된 사진만 승인하세요.'
+  ))return;
   setBusy(true);
   try{
    await json('/api/v1/owner/blog/'+current.id+'/media/'+imageId,{decision},'PATCH');
@@ -385,7 +393,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
           <label>승인된 사진 선택
            <select value={block.image_id||''} onChange={e=>changeBlock(block.id,{image_id:e.target.value})}>
             <option value="">본문에 넣을 사진 선택</option>
-            {current.images.filter(m=>m.rights_status==='approved').map(m=>
+            {current.images.filter(m=>m.rights_status==='approved'&&m.media_role==='inline').map(m=>
              <option key={m.id} value={m.id}>{m.alt_text} ({m.media_role})</option>)}
            </select></label>
           <input placeholder="이미지 캡션" maxLength={250} value={block.caption||''}
@@ -415,9 +423,20 @@ export default function BlogEditor({owner}:{owner:boolean}){
         <strong>사진을 여기로 끌어다 놓아도 돼</strong>
         <span>{file?'선택된 사진: '+file.name:'또는 아래에서 파일 선택'}</span>
       </div>
+      <p>새 글 게시 기준: 승인된 대표사진 1장과 본문 사진 2장 이상(4개 언어 공통 사용 가능).</p>
       <p>대표사진 권장 1200×810px · 본문 사진 권장 1400×1100px · JPEG/PNG/WebP 최대 8MB.
        파일은 비공개로 올라가고 사용권 검수 후 발행할 수 있어.</p>
       <div className={styles.twoCols}>
+       <label>사진 출처<select value={sourceKind}
+         onChange={e=>setSourceKind(e.target.value as 'ai_generated'|'owner_original'|'licensed')}>
+         <option value="licensed">라이선스 확인된 외부 사진</option>
+         <option value="owner_original">직접 촬영·소유 사진</option>
+         <option value="ai_generated">AI로 생성한 이미지</option>
+        </select></label>
+       <label>제작 및 사용권 확인 메모
+        <input value={provenanceNote} maxLength={600}
+         placeholder="AI 생성 도구, 직접 촬영자, 권한 확인 내용 등"
+         onChange={e=>setProvenanceNote(e.target.value)}/></label>
        <label>사진 유형<select value={imageRole}
          onChange={e=>setImageRole(e.target.value as 'cover'|'inline')}>
          <option value="cover">글 카드 대표사진 · 1200×810</option>
@@ -426,14 +445,19 @@ export default function BlogEditor({owner}:{owner:boolean}){
          onChange={(e:ChangeEvent<HTMLInputElement>)=>setFile(e.target.files?.[0]||null)}/></label>
        <label>사진 설명(대체텍스트)<input value={alt} maxLength={180}
          onChange={e=>setAlt(e.target.value)}/></label>
-       <label>사진 원본 출처 HTTPS<input value={source} type="url"
+       <label>사진 원본 출처 HTTPS {sourceKind==='licensed'?'(필수)':'(있으면 입력)'}
+        <input value={source} type="url"
          onChange={e=>setSource(e.target.value)}/></label>
-       <label>사진 게시권한 근거 HTTPS<input value={rightsRef} type="url"
+       <label>사진 게시권한 근거 HTTPS {sourceKind==='licensed'?'(필수)':'(있으면 입력)'}
+        <input value={rightsRef} type="url"
          onChange={e=>setRightsRef(e.target.value)}/></label>
       </div>
       <label className={styles.check}><input type="checkbox" checked={rights}
         onChange={e=>setRights(e.target.checked)}/> 사진 사용권과 출처를 확인했어.</label>
-      <button className={styles.smallButton} disabled={busy||!file||!rights}
+      <button className={styles.smallButton}
+       disabled={busy||!file||!rights||
+        (sourceKind==='licensed'&&(!source||!rightsRef))||
+        (sourceKind!=='licensed'&&provenanceNote.trim().length<12)}
        onClick={()=>void upload()}>비공개 사진 업로드</button>
       <div className={styles.mediaGrid}>{current.images.map(m=><div key={m.id} className={styles.mediaItem}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -441,6 +465,12 @@ export default function BlogEditor({owner}:{owner:boolean}){
         <strong>{m.alt_text}</strong>
         <small>{m.media_role==='cover'?'카드 대표사진':'본문 사진'} · {m.width}×{m.height}</small>
         <small>{m.rights_status==='approved'?'게시권 승인':m.rights_status==='pending'?'승인 대기':'비공개'}</small>
+        {m.provenance_kind&&m.provenance_kind!=='legacy'&&<small>출처 유형: {{
+         ai_generated:'AI 생성',owner_original:'직접 소유',licensed:'외부 라이선스'
+        }[m.provenance_kind]||m.provenance_kind}</small>}
+        {m.provenance_note&&<small>근거: {m.provenance_note}</small>}
+        {m.source_url&&<small><a href={m.source_url} target="_blank" rel="noopener noreferrer">원본 출처 확인 ↗</a></small>}
+        {m.rights_reference&&<small><a href={m.rights_reference} target="_blank" rel="noopener noreferrer">사용권 근거 확인 ↗</a></small>}
         {owner&&<div className={styles.actions}>
          {m.rights_status==='pending'&&<>
           <button onClick={()=>void inspectImage(m.id,'approve')}>승인</button>
