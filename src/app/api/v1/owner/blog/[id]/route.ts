@@ -20,6 +20,8 @@ export async function GET(_req:NextRequest,{params}:Ctx){
         'id',m.id::text,'media_role',m.media_role,'alt_text',m.alt_text,
         'rights_status',m.rights_status,'source_url',m.source_url,
         'rights_reference',m.rights_reference,
+        'provenance_kind',m.provenance_kind,
+        'provenance_note',m.provenance_note,
         'image_url','/api/v1/owner/blog/images/'||m.id::text,
         'width',m.width,'height',m.height) ORDER BY m.created_at DESC)
         FROM whateato_blog_media m WHERE m.post_id=p.id),'[]'::jsonb) AS images
