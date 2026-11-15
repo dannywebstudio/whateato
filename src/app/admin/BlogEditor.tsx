@@ -7,6 +7,9 @@ import {BlogBody} from '@/components/BlogBody';
 import styles from './blog-editor.module.css';
 
 type BlogRow={id:string;slug:string;revision:number;category:string;title:string;state:string;updated_at:string};
+const provenanceLabels:Record<string,string>={
+ ai_generated:'AI 생성',owner_original:'직접 소유',licensed:'외부 라이선스'
+};
 type BlogImage={id:string;media_role:'cover'|'inline';alt_text:string;rights_status:string;
  image_url:string;width:number;height:number;source_url?:string;rights_reference?:string;
  provenance_kind?:string;provenance_note?:string};
@@ -465,9 +468,7 @@ export default function BlogEditor({owner}:{owner:boolean}){
         <strong>{m.alt_text}</strong>
         <small>{m.media_role==='cover'?'카드 대표사진':'본문 사진'} · {m.width}×{m.height}</small>
         <small>{m.rights_status==='approved'?'게시권 승인':m.rights_status==='pending'?'승인 대기':'비공개'}</small>
-        {m.provenance_kind&&m.provenance_kind!=='legacy'&&<small>출처 유형: {{
-         ai_generated:'AI 생성',owner_original:'직접 소유',licensed:'외부 라이선스'
-        }[m.provenance_kind]||m.provenance_kind}</small>}
+        {m.provenance_kind&&m.provenance_kind!=='legacy'&&<small>출처 유형: {provenanceLabels[m.provenance_kind]||m.provenance_kind}</small>}
         {m.provenance_note&&<small>근거: {m.provenance_note}</small>}
         {m.source_url&&<small><a href={m.source_url} target="_blank" rel="noopener noreferrer">원본 출처 확인 ↗</a></small>}
         {m.rights_reference&&<small><a href={m.rights_reference} target="_blank" rel="noopener noreferrer">사용권 근거 확인 ↗</a></small>}
