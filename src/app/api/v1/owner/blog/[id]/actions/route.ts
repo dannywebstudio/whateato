@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from 'next/server';
 import {currentStaff,hasPermission,ownerHeaders,safeSameOrigin} from '@/lib/owner-cms-auth';
 import {getPool} from '@/lib/db';
+import {validateFirstPublicationPhotos} from '@/lib/blog-media-readiness';
 import {parseBlogDraft,publishableBlog,type BlogDraft} from '@/lib/blog-model';
 import {isUuid} from '@/lib/platform-v1';
 import {boundedJson} from '@/lib/bulk-content-admin';
@@ -93,6 +94,8 @@ export async function POST(req:NextRequest,{params}:Ctx){
         await client.query('ROLLBACK');return respond({error:'image_not_rights_approved'},409);
       }
     }
+    const photoProblem=await validateFirstPublicationPhotos(client,id,draft);
+    if(photoProblem){await client.query('ROLLBACK');return respond({error:photoProblem},409)}
     const cover=await client.query<{id:string}>(`
       SELECT id::text FROM whateato_blog_media
       WHERE post_id=$1 AND media_role='cover' AND rights_status='approved'

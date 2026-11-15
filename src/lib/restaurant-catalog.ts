@@ -91,29 +91,8 @@ export async function searchRestaurantCatalog(input:RestaurantSearchInput):Promi
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.publication_status='published' AND r.business_status='active'
       ${triageABPublicWhere()}
-      AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
-        SELECT 1 FROM restaurant_enrichment_sample_1000 preview
-        JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
-        WHERE preview.restaurant_id=r.id AND preview.sample_rank BETWEEN 1 AND 50
-          AND readiness.published_languages>=1 AND readiness.verified_menus>=1
-          AND (
-            (readiness.approved_images>=1 OR (${process.env.WHATEATO_PREVIEW_THREE_TEXT_ONLY === 'true' ? 'TRUE' : 'FALSE'} AND preview.sample_rank BETWEEN 1 AND 3))
-            OR (
-              ${process.env.WHATEATO_GOOGLE_PHOTO_APPROVED === 'true' && process.env.WHATEATO_GOOGLE_PHOTO_QUOTA_GUARD_READY === 'true' ? 'TRUE' : 'FALSE'}
-              AND EXISTS (
-                SELECT 1 FROM google_place_manual_identity_approvals_v1 a
-                JOIN restaurant_source_match_checkpoints_v1 cp ON cp.restaurant_id=a.restaurant_id
-                  AND cp.google_place_id=a.google_place_id
-                JOIN google_places_photo_quota_v1 md ON md.month_key=to_char(now() AT TIME ZONE 'UTC','YYYY-MM')
-                  AND md.sku='place_details_photo_metadata' AND md.used<md.limit_count
-                JOIN google_places_photo_quota_v1 pm ON pm.month_key=to_char(now() AT TIME ZONE 'UTC','YYYY-MM')
-                  AND pm.sku='place_photo_media' AND pm.used<pm.limit_count
-                WHERE a.restaurant_id=r.id AND a.verified_at IS NOT NULL
-              )
-            )
-          ) AND readiness.verified_tags>=1
-          AND readiness.next_action <> 'identity_or_evidence_hold'
-      ))
+      -- Only explicit owner approvals and verified publishing gates determine visibility.
+      -- Legacy 50-place previews and image/tag prerequisites must not hide approved text-only venues.
       AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
         WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')
       AND ($2::text='' OR r.name_ko ILIKE $3 OR r.road_address_ko ILIKE $3
@@ -189,14 +168,8 @@ export async function getRestaurantCatalogDetail(id:string,language:unknown):Pro
     LEFT JOIN restaurant_editorial_scores sc ON sc.restaurant_id=r.id AND sc.approval_state='approved'
     WHERE r.id=$1 AND r.publication_status='published' AND r.business_status='active'
       ${triageABPublicWhere()}
-      AND (${process.env.WHATEATO_PREVIEW_50_ONLY === 'true' ? 'FALSE' : 'TRUE'} OR EXISTS (
-        SELECT 1 FROM restaurant_enrichment_sample_1000 preview
-        JOIN restaurant_content_readiness_v1 readiness ON readiness.id=preview.restaurant_id
-        WHERE preview.restaurant_id=r.id AND preview.sample_rank BETWEEN 1 AND 50
-          AND readiness.published_languages>=1 AND readiness.verified_menus>=1
-          AND (readiness.approved_images>=1 OR (${process.env.WHATEATO_PREVIEW_THREE_TEXT_ONLY === 'true' ? 'TRUE' : 'FALSE'} AND preview.sample_rank BETWEEN 1 AND 3)) AND readiness.verified_tags>=1
-          AND readiness.next_action <> 'identity_or_evidence_hold'
-      ))
+      -- Only explicit owner approvals and verified publishing gates determine visibility.
+      -- Legacy 50-place previews and image/tag prerequisites must not hide approved text-only venues.
       AND NOT EXISTS (SELECT 1 FROM restaurant_data_quality_reviews dq
         WHERE dq.restaurant_id=r.id AND dq.review_state='confirmed_hold')`,[id,locale]);
   if(!row.rows[0])return null;
