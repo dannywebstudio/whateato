@@ -3,7 +3,7 @@ import {getPool} from '@/lib/db';
 import {isUuid} from '@/lib/platform-v1';
 
 export type OAuthClient={name:string;redirectUris:string[]};
-export type BlogGrant={ownerId:string;scopes:string[];clientId:string;exp:number};
+export type BlogGrant={ownerId:string;scopes:string[];clientId:string;exp:number;iss:string;aud:string;iat:number};
 type Signed<T>={kind:string;payload:T};
 const encoder=(data:unknown)=>Buffer.from(JSON.stringify(data),'utf8').toString('base64url');
 const secureEq=(a:string,b:string)=>{
@@ -126,8 +126,11 @@ export async function exchangeCode(code:string,clientId:string,redirectUri:strin
     UPDATE whateato_blog_agent_oauth_codes SET used_at=now() WHERE code_hash=$1`,[digest(code)]);
   await client.query('COMMIT');
   const now=Math.floor(Date.now()/1000),lifetime=60*60*24*7;
+  const issuer=oauthOrigin();
+  if(!issuer)return null;
   const grant:BlogGrant={ownerId:row.owner_account_id,
-    clientId,scopes:row.scope.split(' '),exp:now+lifetime};
+    clientId,scopes:row.scope.split(' '),exp:now+lifetime,
+    iss:issuer,aud:issuer+'/mcp',iat:now};
   const access_token='wtoat_'+sign('access',grant);
   return {access_token,token_type:'Bearer',expires_in:lifetime,scope:row.scope};
  }catch{await client.query('ROLLBACK').catch(()=>{});return null}
@@ -140,6 +143,8 @@ export async function validateAgentAccess(token:string):Promise<BlogGrant|null>{
  if(!origin||!parsed||!isUuid(parsed.ownerId)||
    typeof parsed.clientId!=='string'||!getClient(parsed.clientId)||
    !Array.isArray(parsed.scopes)||!parsed.scopes.includes('blog:read')||
+   parsed.iss!==origin||parsed.aud!==origin+'/mcp'||
+   !Number.isInteger(parsed.iat)||parsed.iat>Math.floor(Date.now()/1000)+60||
    !Number.isInteger(parsed.exp)||parsed.exp<Math.floor(Date.now()/1000))return null;
  const pool=getPool();if(!pool)return null;
  try{
