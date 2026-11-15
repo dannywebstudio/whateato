@@ -36,13 +36,23 @@ export async function POST(req:NextRequest,{params}:Ctx){
  }catch{return respond({error:'invalid_multipart'},400)}
  const file=form.get('file'),role=form.get('media_role'),
   alt=form.get('alt_text'),source=form.get('source_url'),
-  rights=form.get('rights_reference');
+  rights=form.get('rights_reference'),
+  sourceKind=form.get('source_kind')??'legacy',
+  provenance=form.get('provenance_note')??'';
  if(!(file instanceof File)||file.size<256||file.size>8*1024*1024||
   !['image/jpeg','image/png','image/webp'].includes(file.type)||
   !['cover','inline'].includes(String(role))||
   typeof alt!=='string'||alt.trim().length<3||alt.length>180||
-  typeof source!=='string'||!/^https:\/\/\S{5,695}$/.test(source)||
-  typeof rights!=='string'||!/^https:\/\/\S{5,695}$/.test(rights)||
+  typeof source!=='string'||typeof rights!=='string'||
+  typeof sourceKind!=='string'||
+  !['legacy','licensed','ai_generated','owner_original'].includes(sourceKind)||
+  typeof provenance!=='string'||provenance.length>600||
+  ((sourceKind==='legacy'||sourceKind==='licensed')&&
+   (!/^https:\/\/\S{5,695}$/.test(source)||!/^https:\/\/\S{5,695}$/.test(rights)))||
+  ((sourceKind==='ai_generated'||sourceKind==='owner_original')&&
+   (provenance.trim().length<12||
+    (source!==''&&!/^https:\/\/\S{5,695}$/.test(source))||
+    (rights!==''&&!/^https:\/\/\S{5,695}$/.test(rights))))||
   form.get('rights_confirmation')!=='yes')
   return respond({error:'invalid_image_or_rights_metadata'},400);
  let data:Buffer;let width=0,height=0;
@@ -73,9 +83,10 @@ export async function POST(req:NextRequest,{params}:Ctx){
   await savePhoto(key,data);uploaded=true;
   await client.query(`
     INSERT INTO whateato_blog_media(id,post_id,storage_key,media_role,alt_text,
-     source_url,rights_reference,file_bytes,width,height,created_by)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[
-    photoId,id,key,role,alt.trim(),source,rights,data.length,width,height,staff.accountId
+     source_url,rights_reference,provenance_kind,provenance_note,file_bytes,width,height,created_by)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,[
+    photoId,id,key,role,alt.trim(),source,rights,
+    sourceKind,provenance.trim(),data.length,width,height,staff.accountId
   ]);
   await client.query(`
     INSERT INTO whateato_blog_audit(post_id,actor_id,action)
