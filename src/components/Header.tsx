@@ -43,7 +43,11 @@ function flagEmoji(country:string){
 function initialUrlLanguage():Language|null{
  if(/^\/ja\/blog\/[a-z0-9-]+\/?$/.test(window.location.pathname))return 'ja';
  const query=new URLSearchParams(window.location.search).get('hl');
- return validLanguage(query)?query:null;
+ if(validLanguage(query))return query;
+ // Unqualified blog URLs are canonical English; restaurant URLs are Korean.
+ if(/^\/blog(?:\/|$)/.test(window.location.pathname))return 'en';
+ if(/^\/restaurant\/[0-9a-f-]{36}\/?$/i.test(window.location.pathname))return 'ko';
+ return null;
 }
 export default function Header(){
  const [country,setCountry]=useState('US');
