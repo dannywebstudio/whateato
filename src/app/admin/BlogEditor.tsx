@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState,type ChangeEvent,type DragEvent} from 'react';
-import {BLOG_LOCALES,BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS,blogLocaleReadiness,publishableBlog,parseBlogDraft,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
+import {safeGoogleMapsEmbedUrl,BLOG_LOCALES,BLOG_REQUIRED_LOCALES,BLOG_LOCALE_LABELS,blogLocaleReadiness,publishableBlog,parseBlogDraft,blogCategoryName,type BlogCategoryInfo,type BlogBlock,type BlogLocale,type BlogDraft,type BlogTranslation} from '@/lib/blog-model';
 import BlogCategoryManager from './BlogCategoryManager';
 import {BlogBody} from '@/components/BlogBody';
 import styles from './blog-editor.module.css';
@@ -16,6 +16,10 @@ type Detail={id:string;slug:string;revision:number;category:BlogDraft['category'
 const blankLocale=():BlogTranslation=>({title:'',excerpt:'',seo_title:'',seo_description:'',blocks:[]});
 const emptyDraft=():BlogDraft=>({category:'restaurants',tags:[],related_restaurant_ids:[],
  translations:{en:blankLocale()}});
+const normalizeMapInput=(input:string)=>{
+ const htmlSrc=/\\bsrc\\s*=\\s*["']([^"']+)["']/i.exec(input);
+ return (htmlSrc?.[1]||input).replaceAll('&amp;','&').trim().slice(0,4096);
+};
 const newBlock=(type:BlogBlock['type']):BlogBlock=>{
  const id=crypto.randomUUID();
  if(type==='heading')return {id,type,level:2,text:''};
@@ -23,6 +27,7 @@ const newBlock=(type:BlogBlock['type']):BlogBlock=>{
  if(type==='list')return {id,type,items:['']};
  if(type==='table')return {id,type,rows:[['Column 1','Column 2'],['','']]};
  if(type==='image')return {id,type,image_id:'',caption:''};
+ if(type==='map')return {id,type,map_embed_url:'',caption:''};
  return {id,type};
 };
 async function api(url:string,init:RequestInit={}):Promise<any>{
@@ -334,10 +339,10 @@ export default function BlogEditor({owner}:{owner:boolean}){
       </div>
       {preview?<BlogBody blocks={translation.blocks} preview/>:<>
        <div className={styles.toolbar}>
-        {(['paragraph','heading','list','quote','table','image','divider'] as const).map(type=>
+        {(['paragraph','heading','list','quote','table','image','map','divider'] as const).map(type=>
          <button key={type} onClick={()=>addBlock(type)}>+ {type==='paragraph'?'문단':
            type==='heading'?'제목':type==='list'?'목록':type==='quote'?'인용':
-           type==='table'?'표':type==='image'?'사진':'구분선'}</button>)}
+           type==='table'?'표':type==='image'?'사진':type==='map'?'지도':'구분선'}</button>)}
         <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('bold')}>**굵게**</button>
         <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('italic')}>*기울임*</button>
         <button onMouseDown={e=>e.preventDefault()} onClick={()=>applyInline('link')}>링크</button>
@@ -392,6 +397,21 @@ export default function BlogEditor({owner}:{owner:boolean}){
            onChange={e=>changeBlock(block.id,{caption:e.target.value})}/>
           {block.image_id&&<img src={'/api/v1/owner/blog/images/'+block.image_id}
             alt={block.caption||'블로그 사진'} loading="lazy" className={styles.thumbnail}/>}
+         </>}
+         {block.type==='map'&&<>
+          <label>구글지도 퍼가기 코드 또는 iframe URL
+           <textarea rows={2} maxLength={5000} value={block.map_embed_url||''}
+            placeholder={'Google 지도 → 공유 → 지도 퍼가기 → HTML 복사 (https://www.google.com/maps/embed?pb=...)'}
+            onChange={e=>changeBlock(block.id,{map_embed_url:normalizeMapInput(e.target.value)})}/>
+          </label>
+          <label>지도 설명 (선택)
+           <input value={block.caption||''} maxLength={250} placeholder="서울역 위치 지도"
+            onChange={e=>changeBlock(block.id,{caption:e.target.value})}/>
+          </label>
+          {block.map_embed_url&&!safeGoogleMapsEmbedUrl(block.map_embed_url)?<p role="alert">
+            구글지도에서 '공유 → 지도 퍼가기'로 생성된 iframe 코드만 지원합니다. 단축 링크는 사용할 수 없습니다.
+           </p>:null}
+          {safeGoogleMapsEmbedUrl(block.map_embed_url)&&<BlogBody blocks={[block]} preview/>}
          </>}
          {block.type==='divider'&&<hr/>}
        </article>)}
