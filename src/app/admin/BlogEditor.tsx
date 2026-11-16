@@ -17,7 +17,7 @@ const blankLocale=():BlogTranslation=>({title:'',excerpt:'',seo_title:'',seo_des
 const emptyDraft=():BlogDraft=>({category:'restaurants',tags:[],related_restaurant_ids:[],
  translations:{en:blankLocale()}});
 const normalizeMapInput=(input:string)=>{
- const htmlSrc=/\\bsrc\\s*=\\s*["']([^"']+)["']/i.exec(input);
+ const htmlSrc=/\bsrc\s*=\s*["']([^"']+)["']/i.exec(input);
  return (htmlSrc?.[1]||input).replaceAll('&amp;','&').trim().slice(0,4096);
 };
 const newBlock=(type:BlogBlock['type']):BlogBlock=>{
