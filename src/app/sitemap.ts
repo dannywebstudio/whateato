@@ -1,6 +1,7 @@
 import type {MetadataRoute} from 'next';
 import {getPool} from '@/lib/db';
 import {getRestaurantCatalogDetail} from '@/lib/restaurant-catalog';
+import {approvedSeoRestaurantLocalizations} from '@/lib/seo-restaurant-locales';
 import {approvedSeoRestaurantIds,seoPublicEnabled,SEO_CANONICAL_ORIGIN} from '@/lib/public-seo';
 import {SEO_LOCALES,type SeoLocale,blogArticlePath,blogIndexPath,restaurantPath,absoluteSeoUrl,localizedAlternates} from '@/lib/seo-locales';
 
@@ -17,24 +18,7 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
 
  // Owner approval is the existing hard gate, independent of import cohort.
  const ids=await approvedSeoRestaurantIds();
- let localizationRows:{restaurant_id:string;locale:SeoLocale;updated_at:Date}[]=[];
- if(ids.length){
-  try{
-   const res=await pool.query<{restaurant_id:string;locale:SeoLocale;updated_at:Date}>(`
-    SELECT l.restaurant_id::text AS restaurant_id,l.locale,l.updated_at
-    FROM restaurant_localizations l
-    WHERE l.restaurant_id=ANY($1::uuid[])
-      AND l.locale IN ('en','ko','ja','zh-CN')
-      AND l.publication_state='published'
-      AND l.verified_at IS NOT NULL
-      AND length(BTRIM(l.short_description))>=35
-    ORDER BY l.restaurant_id,l.locale
-   `,[ids]);
-   localizationRows=res.rows;
-  }catch{
-   // Missing/unavailable locale evidence means do not enumerate restaurants.
-  }
- }
+ const localizationRows=await approvedSeoRestaurantLocalizations(ids);
  for(const id of ids){
   const localizations=localizationRows.filter(row=>row.restaurant_id===id);
   const locales=SEO_LOCALES.filter(locale=>localizations.some(row=>row.locale===locale));
