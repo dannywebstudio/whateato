@@ -41,13 +41,8 @@ function flagEmoji(country:string){
  return String.fromCodePoint(...[...country].map(s=>127397+s.charCodeAt(0)));
 }
 function initialUrlLanguage():Language|null{
- if(/^\/ja\/blog\/[a-z0-9-]+\/?$/.test(window.location.pathname))return 'ja';
  const query=new URLSearchParams(window.location.search).get('hl');
- if(validLanguage(query))return query;
- // Unqualified blog URLs are canonical English; restaurant URLs are Korean.
- if(/^\/blog(?:\/|$)/.test(window.location.pathname))return 'en';
- if(/^\/restaurant\/[0-9a-f-]{36}\/?$/i.test(window.location.pathname))return 'ko';
- return null;
+ return validLanguage(query)?query:null;
 }
 export default function Header(){
  const [country,setCountry]=useState('US');
@@ -65,27 +60,14 @@ export default function Header(){
  }
  function navigateLanguage(language:Language,force=false){
   const path=window.location.pathname;
-  // Search engines should always fetch the canonical document the URL asks for;
-  // browser/IP detection must not silently redirect indexable pages.
-  if(!force&&/^\/(?:blog(?:\/|$)|ja\/blog(?:\/|$)|restaurant\/)/.test(path))return;
-  const article=/^\/(?:ja\/)?blog\/([a-z0-9-]+)\/?$/.exec(path);
-  if(article){
-   const slug=article[1];
-   const next=language==='ja'?'/ja/blog/'+slug:
-    '/blog/'+slug+(language==='en'?'':'?hl='+encodeURIComponent(language));
-   if(next!==path+window.location.search)router.replace(next+window.location.hash,{scroll:false});
-   return;
-  }
   if(path==='/'||!/^\/(search|map|blog(?:\/|$)|contact(?:\/|$)|privacy(?:\/|$)|terms(?:\/|$)|login(?:\/|$)|my-page(?:\/|$)|account(?:\/|$)|restaurant\/)/.test(path))return;
   const params=new URLSearchParams(window.location.search);
   // Explicit language URLs from search engines and shared links are respected
   // on initial auto detection. Only manual choice can replace such a URL.
   if(!force&&params.has('hl'))return;
-  const requested=path.startsWith('/restaurant/')&&language==='ko'?null:language;
-  if(params.get('hl')===requested)return;
-  if(requested)params.set('hl',requested);
-  else params.delete('hl');
-  router.replace(path+(params.size?'?'+params.toString():'')+window.location.hash,{scroll:false});
+  if(params.get('hl')===language)return;
+  params.set('hl',language);
+  router.replace(path+'?'+params.toString()+window.location.hash,{scroll:false});
  }
  useEffect(()=>{
   let alive=true;
@@ -111,7 +93,7 @@ export default function Header(){
      (selectedCountry?languageForCountry(chosen):explicitLocale||languageForCountry(chosen));
    sync(chosen,preferred);
    if(finalized&&(!explicitLocale||selectedCountry||manualLanguage))
-    navigateLanguage(preferred,Boolean(selectedCountry||manualLanguage));
+    navigateLanguage(preferred,true);
   };
   // Show reasonable local hints first; trust edge/IP once it responds.
   // Don't navigate twice while geolocation is resolving.
