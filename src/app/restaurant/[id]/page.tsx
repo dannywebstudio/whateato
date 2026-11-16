@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import {seoPublicEnabled} from '@/lib/public-seo';
+import {approvedSeoRestaurantLocalizations} from '@/lib/seo-restaurant-locales';
+import {SEO_LOCALES,restaurantPath,localizedAlternates,absoluteSeoUrl} from '@/lib/seo-locales';
 import type {Metadata} from 'next';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import {auth,authReady} from '@/auth';
@@ -35,18 +37,24 @@ export async function generateMetadata({params,searchParams}:Params):Promise<Met
   const blocked:Metadata={robots:{index:false,follow:false}};
   if(!isUuid(id)||!seoPublicEnabled())return blocked;
   const query=await searchParams;
+  const locale=normalizeLocale(query.hl);
   try{
-    const detail=await getRestaurantCatalogDetail(id,normalizeLocale(query.hl));
+    const verified=await approvedSeoRestaurantLocalizations([id]);
+    const locales=SEO_LOCALES.filter(l=>verified.some(row=>row.locale===l));
+    if(!locales.includes('ko')||!locales.includes(locale))return blocked;
+    const detail=await getRestaurantCatalogDetail(id,locale);
     const r=detail?.restaurant;
     if(!r?.short_description||r.short_description.trim().length<35)return blocked;
     const description=r.short_description.trim().slice(0,155);
+    const canonical=absoluteSeoUrl(restaurantPath(id,locale));
+    const languages=localizedAlternates(l=>restaurantPath(id,l),locales,'ko');
     return {
       title:r.name,
       description,
-      alternates:{canonical:'/restaurant/'+id},
+      alternates:{canonical,languages},
       robots:{index:true,follow:true},
       openGraph:{
-        type:'website',title:r.name,description,url:'/restaurant/'+id,
+        type:'website',title:r.name,description,url:canonical,
         ...(detail?.images[0]?.url?{images:[{url:detail.images[0].url,alt:detail.images[0].alt_ko||r.name}]}:{})
       }
     };
