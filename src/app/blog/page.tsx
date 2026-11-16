@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import {seoPublicEnabled} from '@/lib/public-seo';
 import {blogLocale} from '@/lib/blog-public';
-import {SEO_LOCALES,blogIndexPath,localizedAlternates,absoluteSeoUrl} from '@/lib/seo-locales';
+import {publishedBlogIndexLocales} from '@/lib/seo-blog-locales';
+import {blogIndexPath,localizedAlternates,absoluteSeoUrl} from '@/lib/seo-locales';
 import type {Metadata} from 'next';
 import {listPublishedBlog} from '@/lib/blog-public';
 import {getBlogCategories,blogCategoryGroups,blogCategoryName} from '@/lib/blog-categories';
@@ -18,14 +19,16 @@ const seoCopy={
 export async function generateMetadata({searchParams}:Props):Promise<Metadata>{
  const query=await searchParams;
  const locale=blogLocale(query.hl);
- const indexable=seoPublicEnabled()&&!query.q?.trim()&&!query.category?.trim()
+ const publishedLocales=await publishedBlogIndexLocales();
+ const indexable=seoPublicEnabled()&&publishedLocales.includes(locale)
+  &&!query.q?.trim()&&!query.category?.trim()
   &&(!query.page||query.page==='1');
  return {
   ...seoCopy[locale],
   robots:{index:indexable,follow:indexable},
   alternates:{
    canonical:absoluteSeoUrl(blogIndexPath(locale)),
-   ...(indexable?{languages:localizedAlternates(blogIndexPath,SEO_LOCALES,'en')}: {})
+   ...(indexable?{languages:localizedAlternates(blogIndexPath,publishedLocales,'en')}: {})
   }
  };
 }
