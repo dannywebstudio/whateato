@@ -12,8 +12,8 @@ export function blogCategoryName(item:BlogCategoryInfo|undefined,locale:string='
 export const BLOG_LOCALES=['en','ja','zh-CN','ko'] as const;
 export type BlogLocale=typeof BLOG_LOCALES[number];
 export type BlogCategory=string;
-export type BlogBlock={id:string;type:'paragraph'|'heading'|'quote'|'list'|'table'|'image'|'divider';
- text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;caption?:string};
+export type BlogBlock={id:string;type:'paragraph'|'heading'|'quote'|'list'|'table'|'image'|'map'|'divider';
+ text?:string;level?:2|3;items?:string[];rows?:string[][];image_id?:string;map_embed_url?:string;caption?:string};
 export type BlogTranslation={title:string;excerpt:string;seo_title:string;seo_description:string;blocks:BlogBlock[]};
 export type BlogDraft={
  category:BlogCategory;tags:string[];related_restaurant_ids:string[];
@@ -25,6 +25,20 @@ const record=(x:unknown):x is Record<string,unknown>=>x!==null&&typeof x==='obje
 const exact=(o:Record<string,unknown>,keys:string[])=>Object.keys(o).every(k=>keys.includes(k));
 const strArray=(v:unknown,maxLength:number,maxItems:number,pattern?:RegExp)=>Array.isArray(v)&&
  v.length<=maxItems&&v.every(x=>text(x,maxLength)&&(pattern?pattern.test(x):true));
+/** Accept only actual Google Maps embed URLs, never arbitrary iframe HTML or shortened links. */
+export function safeGoogleMapsEmbedUrl(raw:unknown):string|null{
+ if(typeof raw!=='string'||raw.length>4096)return null;
+ try{
+  const url=new URL(raw.trim());
+  if(url.protocol!=='https:'||url.hostname!=='www.google.com'||
+     url.username||url.password||url.hash)return null;
+  if(url.pathname==='/maps/embed'&&Boolean(url.searchParams.get('pb')))
+   return url.toString();
+  if(/^\/maps\/embed\/v1\/(place|view|directions|streetview|search)$/.test(url.pathname)&&
+     Boolean(url.searchParams.get('key')))return url.toString();
+ }catch{}
+ return null;
+}
 export function validBlogSlug(slug:unknown):slug is string{
  return typeof slug==='string'&&slug.length>=3&&slug.length<=90&&
  /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
@@ -48,9 +62,9 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
   const blocks:BlogBlock[]=[];
   let total=0;
   for(const original of entry.blocks){
-   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','caption'])||
+   if(!record(original)||!exact(original,['id','type','text','level','items','rows','image_id','map_embed_url','caption'])||
     typeof original.id!=='string'||!/^[a-z0-9-]{3,64}$/.test(original.id)||
-    !['paragraph','heading','quote','list','table','image','divider'].includes(String(original.type)))
+    !['paragraph','heading','quote','list','table','image','map','divider'].includes(String(original.type)))
      return null;
    const kind=original.type as BlogBlock['type'];
    const block:BlogBlock={id:original.id,type:kind};
@@ -75,6 +89,12 @@ export function parseBlogDraft(raw:unknown):BlogDraft|null{
      if(!(original.image_id===''||isUuid(original.image_id))||
         !text(original.caption,250))return null;
      block.image_id=original.image_id as string;
+     block.caption=original.caption as string;
+   }else if(kind==='map'){
+     if(typeof original.map_embed_url!=='string'||
+        !(original.map_embed_url===''||safeGoogleMapsEmbedUrl(original.map_embed_url))||
+        !text(original.caption,250))return null;
+     block.map_embed_url=original.map_embed_url as string;
      block.caption=original.caption as string;
    }
    blocks.push(block);
@@ -116,6 +136,8 @@ export function blogLocaleReadiness(
   return {ready:false,error:base+'_article_heading_required'};
  if(t.blocks.some(b=>b.type==='image'&&!b.image_id))
   return {ready:false,error:base+'_select_images_before_publishing'};
+ if(t.blocks.some(b=>b.type==='map'&&!safeGoogleMapsEmbedUrl(b.map_embed_url)))
+  return {ready:false,error:base+'_valid_google_map_embed_required'};
  return {ready:true,error:null};
 }
 export function publishableBlog(draft:BlogDraft):string|null{

@@ -120,3 +120,11 @@
  .cover{margin-bottom:24px}.cover img{border-radius:11px}
 }
 
+
+/* Native embedded Google Maps in editorial articles (not a link-only card). */
+.inlineGoogleMap{width:100%;margin:24px 0 30px}
+.inlineGoogleMapFrame{position:relative;width:100%;height:clamp(270px,40vw,440px);overflow:hidden;
+ border:1px solid #dce8e0;border-radius:14px;background:#f1f5f2}
+.inlineGoogleMapFrame iframe{width:100%;height:100%;display:block;border:0}
+.inlineGoogleMap figcaption{font-size:13px;line-height:1.5;color:#617267;margin-top:9px}
+@media(max-width:600px){.inlineGoogleMapFrame{height:300px;border-radius:11px}}

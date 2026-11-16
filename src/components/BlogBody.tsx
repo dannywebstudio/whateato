@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import type {BlogBlock} from '@/lib/blog-model';
+import {safeGoogleMapsEmbedUrl,type BlogBlock} from '@/lib/blog-model';
 import styles from '@/app/blog/blog.module.css';
 /** Inline formatting parser for editorial plain text. HTML is never interpreted. */
 export function InlineBlogText({value}:{value:string}){
@@ -32,6 +32,17 @@ export function BlogBody({blocks,preview=false}:{blocks:BlogBlock[];preview?:boo
    <tbody>{(b.rows||[]).slice(1).map((r,i)=><tr key={i}>
      {r.map((s,j)=><td key={j}><InlineBlogText value={s}/></td>)}
    </tr>)}</tbody></table></div>;
+  if(b.type==='map'){
+   const url=safeGoogleMapsEmbedUrl(b.map_embed_url);
+   return <figure key={b.id} className={styles.inlineGoogleMap}>
+    {url?<div className={styles.inlineGoogleMapFrame}>
+     <iframe title={b.caption||'Google Maps location'} src={url}
+      loading="lazy" referrerPolicy="strict-origin-when-cross-origin"
+      allowFullScreen/>
+    </div>:<p role="status">Google Maps embed URL required.</p>}
+    {b.caption&&<figcaption>{b.caption}</figcaption>}
+   </figure>;
+  }
   if(b.type==='image'&&b.image_id)return <figure key={b.id} className={styles.inlineFigure}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
    <img src={(preview?'/api/v1/owner/blog/images/':'/api/blog/images/')+b.image_id}
