@@ -1,16 +1,37 @@
 import Link from 'next/link';
 import {seoPublicEnabled} from '@/lib/public-seo';
+import {blogLocale} from '@/lib/blog-public';
+import {publishedBlogIndexLocales} from '@/lib/seo-blog-locales';
+import {blogIndexPath,localizedAlternates,absoluteSeoUrl} from '@/lib/seo-locales';
 import type {Metadata} from 'next';
 import {listPublishedBlog} from '@/lib/blog-public';
 import {getBlogCategories,blogCategoryGroups,blogCategoryName} from '@/lib/blog-categories';
 import styles from './blog.module.css';
 import BlogStoryCard from '@/components/BlogStoryCard';
 export const runtime='nodejs';export const dynamic='force-dynamic';
-export const metadata:Metadata={title:'Food, Travel & K-Beauty Stories',
- description:'Discover Korean restaurants, travel tips, shopping picks and K-Beauty guides.',
- robots:{index:seoPublicEnabled(),follow:seoPublicEnabled()},
- alternates:{canonical:'/blog'}};
 type Props={searchParams:Promise<{q?:string;category?:string;page?:string;hl?:string}>};
+const seoCopy={
+ en:{title:'Korea Food, Travel & K-Beauty Guides',description:'Explore Korea travel tips, restaurant guides, shopping advice and K-beauty stories.'},
+ ko:{title:'한국 맛집·여행·K뷰티 가이드',description:'한국 맛집 정보와 여행 팁, 쇼핑, K뷰티 이야기를 한국어로 확인하세요.'},
+ ja:{title:'韓国グルメ・旅行・Kビューティーガイド',description:'韓国の飲食店、旅行情報、ショッピングやKビューティーを日本語で紹介します。'},
+ 'zh-CN':{title:'韩国美食、旅行及K美妆指南',description:'用简体中文了解韩国餐厅推荐、旅游攻略、购物与K美妆资讯。'}
+} as const;
+export async function generateMetadata({searchParams}:Props):Promise<Metadata>{
+ const query=await searchParams;
+ const locale=blogLocale(query.hl);
+ const publishedLocales=await publishedBlogIndexLocales();
+ const indexable=seoPublicEnabled()&&publishedLocales.includes(locale)
+  &&!query.q?.trim()&&!query.category?.trim()
+  &&(!query.page||query.page==='1');
+ return {
+  ...seoCopy[locale],
+  robots:{index:indexable,follow:indexable},
+  alternates:{
+   canonical:absoluteSeoUrl(blogIndexPath(locale)),
+   ...(indexable?{languages:localizedAlternates(blogIndexPath,publishedLocales,'en')}: {})
+  }
+ };
+}
 export default async function BlogPage({searchParams}:Props){
  const query=await searchParams;
  const q=(query.q||'').slice(0,90).trim(),category=query.category||'';
