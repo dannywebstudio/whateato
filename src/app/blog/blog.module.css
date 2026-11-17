@@ -126,3 +126,40 @@
 
 .inlineRestaurantCard{margin:28px auto;max-width:780px;min-width:0}
 .inlineRestaurantCard :global(.we-card){width:100%;max-width:100%;line-height:1.5}
+
+
+/* Gyeongbokgung editorial location actions: real links, not pasted text. */
+.placeActionsPanel{margin:18px 0 33px}
+.placeActionsPanel>p{margin:13px 0 17px}
+.placeActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 9px}
+.placeActions a{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;
+ padding:11px 10px;border:1px solid transparent;border-radius:12px;text-decoration:none;
+ font-size:13px;font-weight:800;line-height:1.35;box-shadow:0 3px 9px #1935270a;
+ transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}
+.placeActions a:hover{transform:translateY(-2px);box-shadow:0 6px 14px #19352713;filter:saturate(1.1)}
+.placeActions a:focus-visible{outline:3px solid #306bdf;outline-offset:3px}
+.placeActions .placeGoogle{color:#235189;background:#ebf4ff;border-color:#cde2fc}
+.placeActions .placeNaver{color:#087c45;background:#e9f9ef;border-color:#cbeedb}
+.placeActions .placeNearby{color:#9d481c;background:#fff2e9;border-color:#f6decf}
+.placeActions .placeIcon{font-size:17px;line-height:1;font-weight:950}
+.placeActions .placeNaver .placeIcon{color:#fff;background:#03b65c;width:22px;height:22px;
+ border-radius:5px;display:inline-grid;place-items:center;font-size:15px}
+.placeAttribution{margin:4px 0 0;text-align:right;font-size:12px}
+.articleBody .placeAttribution a{color:#637b70;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:600px){
+ .placeActions{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .placeActions a{min-height:51px;font-size:12px;padding:10px 7px}
+ .placeActions .placeNearby{grid-column:1/-1}
+}
+
+/* Place-specific images: two balanced editorial visuals after every heading. */
+.placeInlinePhoto{display:inline-block;width:calc(50% - 8px);vertical-align:top;
+ margin:14px 8px 22px 0;max-width:100%;overflow:hidden}
+.placeInlinePhoto img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;
+ border-radius:12px;background:#eff4ef}
+.placeInlinePhoto figcaption{font-size:11px;line-height:1.5;color:#6c7c70;margin:7px 2px 0;
+ overflow-wrap:anywhere}
+@media(max-width:600px){
+ .placeInlinePhoto{display:block;width:100%;margin:12px 0 17px}
+ .placeInlinePhoto figcaption{font-size:11px}
+}
