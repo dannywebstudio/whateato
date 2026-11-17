@@ -85,12 +85,17 @@ export function BlogBody({blocks,preview=false,locale='ko'}:{blocks:BlogBlock[];
    <tbody>{(b.rows||[]).slice(1).map((r,i)=><tr key={i} style={{height:b.table_row_heights?.[i+1]+'px'}}>
      {r.map((s,j)=><td key={j} style={{border:(b.table_border_width??1)+'px '+(b.table_border_style||'solid')+' '+(b.table_border_color||'#dae6df')}}><InlineBlogText value={s}/></td>)}
    </tr>)}</tbody></table></div>;
-  if(b.type==='image'&&b.image_id)return <figure key={b.id} className={styles.inlineFigure} style={{...style,width:(b.image_width||100)+'%',maxWidth:'100%',marginLeft:b.align==='right'?'auto':b.align==='center'?'auto':0,marginRight:b.align==='left'?0:'auto'}}>
+  if(b.type==='image'&&b.image_id){
+   const placePhoto=/-actual-place-[0-3]-img-[ab]$/.test(b.id);
+   return <figure key={b.id}
+    className={placePhoto?styles.placeInlinePhoto:styles.inlineFigure}
+    style={placePhoto?undefined:{...style,width:(b.image_width||100)+'%',maxWidth:'100%',marginLeft:b.align==='right'?'auto':b.align==='center'?'auto':0,marginRight:b.align==='left'?0:'auto'}}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
    <img src={(preview?'/api/v1/owner/blog/images/':'/api/blog/images/')+b.image_id}
-    alt={b.caption||'Editorial restaurant photograph'} loading="lazy"/>
+    alt={b.caption||'Editorial restaurant illustration'} loading="lazy"/>
    {b.caption&&<figcaption>{b.caption}</figcaption>}
   </figure>;
+  }
   return <hr key={b.id}/>;
  });
  return <div className={styles.articleBody}>{nodes}</div>;
