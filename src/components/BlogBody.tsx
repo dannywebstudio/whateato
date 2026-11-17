@@ -2,6 +2,23 @@ import type {ReactNode} from 'react';
 import type {BlogBlock} from '@/lib/blog-model';
 import InlineBlogRestaurantCard from '@/components/InlineBlogRestaurantCard';
 import styles from '@/app/blog/blog.module.css';
+
+/** Extract the existing editorial links without altering source URLs or executing HTML.
+ * Only apply the location action layout to explicitly tagged place paragraphs.
+ */
+function locationActions(value:string){
+ const match=/\[([^\]]+)\]\((https:\/\/www\.google\.com\/maps\/[^)]+)\)\s*·\s*\[([^\]]+)\]\((https:\/\/map\.naver\.com\/[^)]+)\)\s*·\s*\[([^\]]+)\]\((https:\/\/[^)]+)\)\.?\s*$/.exec(value);
+ if(!match)return null;
+ return {body:value.slice(0,match.index).trim(),
+  google:{label:match[1],url:match[2]},
+  naver:{label:match[3],url:match[4]},
+  source:{label:match[5],url:match[6]}};
+}
+function localNearbyQuery(blockId:string):string{
+ const found=/-actual-place-([0-3])-b$/.exec(blockId);
+ return ['사직로','자하문로','삼청동','안국'][Number(found?.[1]??0)];
+}
+
 /** Inline formatting parser for editorial plain text. HTML is never interpreted. */
 export function InlineBlogText({value}:{value:string}){
  const pattern=/(\*\*[^*\n]{1,500}\*\*|\*[^*\n]{1,500}\*|\+\+[^+\n]{1,500}\+\+|\{color:#[0-9a-fA-F]{6}\|[^{}\n]{1,500}\}|\[[^\]\n]{1,120}\]\(https:\/\/[^\s)<>]{5,500}\))/g;
@@ -27,6 +44,36 @@ export function BlogBody({blocks,preview=false,locale='ko'}:{blocks:BlogBlock[];
   if(b.type==='heading'){
    return b.level===3?<h3 key={b.id} style={style}><InlineBlogText value={b.text||''}/></h3>:
     <h2 key={b.id} style={style}><InlineBlogText value={b.text||''}/></h2>;
+  }
+  if(b.type==='paragraph'&&/-actual-place-[0-3]-b$/.test(b.id)){
+   const actions=locationActions(b.text||'');
+   if(actions){
+    const nearbyLabel=locale==='en'?'Nearby dining':locale==='ja'?'周辺の飲食店':
+     locale==='zh-CN'?'附近餐厅':'근처 맛집';
+    const nearbyHref='/map?hl='+encodeURIComponent(locale)+'&q='+encodeURIComponent(localNearbyQuery(b.id));
+    return <section key={b.id} className={styles.placeActionsPanel}>
+      <p style={style}><InlineBlogText value={actions.body}/></p>
+      <nav aria-label={locale==='ko'?'장소 지도와 맛집 링크':'Place navigation links'}
+       className={styles.placeActions}>
+       <a href={actions.google.url} target="_blank" rel="noopener noreferrer nofollow"
+        className={styles.placeGoogle} aria-label={actions.google.label}>
+        <span aria-hidden="true" className={styles.placeIcon}>📍</span>
+        <span>{actions.google.label}</span><span aria-hidden="true">↗</span>
+       </a>
+       <a href={actions.naver.url} target="_blank" rel="noopener noreferrer nofollow"
+        className={styles.placeNaver} aria-label={actions.naver.label}>
+        <span aria-hidden="true" className={styles.placeIcon}>N</span>
+        <span>{actions.naver.label}</span><span aria-hidden="true">↗</span>
+       </a>
+       <a href={nearbyHref} className={styles.placeNearby}>
+        <span aria-hidden="true" className={styles.placeIcon}>🍴</span>
+        <span>{nearbyLabel}</span><span aria-hidden="true">→</span>
+       </a>
+      </nav>
+      <div className={styles.placeAttribution}><a href={actions.source.url} target="_blank"
+       rel="noopener noreferrer nofollow">{actions.source.label} ↗</a></div>
+     </section>;
+   }
   }
   if(b.type==='paragraph')return <p key={b.id} style={style}><InlineBlogText value={b.text||''}/></p>;
   if(b.type==='quote')return <blockquote key={b.id} style={style}><InlineBlogText value={b.text||''}/></blockquote>;
