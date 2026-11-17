@@ -151,3 +151,15 @@
  .placeActions a{min-height:51px;font-size:12px;padding:10px 7px}
  .placeActions .placeNearby{grid-column:1/-1}
 }
+
+/* Place-specific images: two balanced editorial visuals after every heading. */
+.placeInlinePhoto{display:inline-block;width:calc(50% - 8px);vertical-align:top;
+ margin:14px 8px 22px 0;max-width:100%;overflow:hidden}
+.placeInlinePhoto img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;
+ border-radius:12px;background:#eff4ef}
+.placeInlinePhoto figcaption{font-size:11px;line-height:1.5;color:#6c7c70;margin:7px 2px 0;
+ overflow-wrap:anywhere}
+@media(max-width:600px){
+ .placeInlinePhoto{display:block;width:100%;margin:12px 0 17px}
+ .placeInlinePhoto figcaption{font-size:11px}
+}
