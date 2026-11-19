@@ -24,7 +24,8 @@ function dexml(value){return value.replace(/&amp;/g,'&').replace(/&quot;/g,'"').
 function capture(html,kind){
  const elements=html.match(/<(?:link|meta)\b[^>]*>/gi)||[];
  const tag=elements.find(v=>kind==='canonical'?/\brel=["']canonical["']/i.test(v):/\bname=["']robots["']/i.test(v));
- return tag?.match(new RegExp((kind==='canonical'?'href':'content')+'=["\\']([^"\\']+)["\\']','i'))?.[1]||'';
+ const m=tag?.match(kind==='canonical'?/\bhref="([^"]+)"/i:/\bcontent="([^"]+)"/i);
+ return m?.[1]||'';
 }
 function sameCanonical(actual,expected){
  try{return new URL(actual,origin).href===new URL(expected,origin).href;}catch{return false;}
