@@ -64,6 +64,20 @@ const poolModule={getPool:()=>pool};
 try{
  const seo=load('src/lib/public-seo.ts',{'@/lib/db':poolModule});
  const locales=load('src/lib/seo-locales.ts',{'@/lib/public-seo':seo});
+ const redirects=load('src/middleware.ts',{'next/server':{
+  NextResponse:{
+   next:()=>({type:'next'}),
+   redirect:(url,status)=>({type:'redirect',url:url.toString(),status})
+  }
+ }});
+ const fakeRequest=(host,path)=>({headers:{get:key=>key==='host'?host:null},
+  nextUrl:{hostname:host.split(':')[0],clone:()=>new URL('https://'+host+path)}});
+ const original=redirects.middleware(fakeRequest('whateato.com','/blog/test?hl=ko'));
+ assert.equal(original.type,'next','canonical non-www host must not redirect');
+ const www=redirects.middleware(fakeRequest('www.whateato.com','/blog/test?hl=ja'));
+ assert.deepEqual(www,{type:'redirect',url:'https://whateato.com/blog/test?hl=ja',status:308});
+ assert.equal(redirects.middleware(fakeRequest('localhost:3000','/')).type,'next');
+
  const approved=load('src/lib/seo-restaurant-locales.ts',{
   '@/lib/db':poolModule,
   '@/lib/platform-v1':{isUuid:v=>typeof v==='string'&&/^[0-9a-f-]{36}$/.test(v)}
