@@ -149,6 +149,15 @@ try{
  assert.equal((migration.match(/'16918f58-|\'6cc37914-|\'2daa58f1-/g)||[]).length,3);
  const layout=readFileSync('src/app/layout.tsx','utf8');
  assert.match(layout,/const ready=false;/);
+ const header=readFileSync('src/components/Header.tsx','utf8');
+ assert.match(header,/navigateLanguage\(preferred,false\)/,
+  'automatic geo detection must not force a canonical language route change');
+ assert.doesNotMatch(header,/navigateLanguage\(preferred,true\)/,
+  'geo detection must not rewrite public SEO URLs');
+ assert.match(header,/if\(!manual\)return;/,
+  'canonical content routes may only change language following user choice');
+ assert.match(header,/\/ja\/blog\//,
+  'manual Japanese article navigation must use the canonical /ja/blog route');
  const blog=readFileSync('src/app/blog/[slug]/page.tsx','utf8');
  assert.match(blog,/findPublishedBlog/);
  assert.match(blog,/localizedAlternates/);
