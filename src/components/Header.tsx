@@ -41,8 +41,14 @@ function flagEmoji(country:string){
  return String.fromCodePoint(...[...country].map(s=>127397+s.charCodeAt(0)));
 }
 function initialUrlLanguage():Language|null{
+ const path=window.location.pathname;
+ // Preserve canonical content language when someone opens a search result.
+ if(/^\/ja\/blog\/[a-z0-9-]+\/?$/.test(path))return 'ja';
  const query=new URLSearchParams(window.location.search).get('hl');
- return validLanguage(query)?query:null;
+ if(validLanguage(query))return query;
+ if(/^\/blog(?:\/|$)/.test(path))return 'en';
+ if(/^\/restaurant\/[0-9a-f-]{36}\/?$/i.test(path))return 'ko';
+ return null;
 }
 export default function Header(){
  const [country,setCountry]=useState('US');
@@ -58,13 +64,42 @@ export default function Header(){
   }catch{}
   window.dispatchEvent(new Event('we_preferences'));
  }
- function navigateLanguage(language:Language,force=false){
+ function navigateLanguage(language:Language,manual=false){
   const path=window.location.pathname;
-  if(path==='/'||!/^\/(search|map|blog(?:\/|$)|contact(?:\/|$)|privacy(?:\/|$)|terms(?:\/|$)|login(?:\/|$)|my-page(?:\/|$)|account(?:\/|$)|restaurant\/)/.test(path))return;
+  if(path==='/')return;
+  const article=/^\/(?:ja\/)?blog\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(path);
+  if(article){
+   // Crawlers and visitors must get the document at the URL they requested.
+   // Only an actual selection by the user may change its canonical language.
+   if(!manual)return;
+   const destination=language==='ja'?'/ja/blog/'+article[1]:
+     '/blog/'+article[1]+(language==='en'?'':'?hl='+encodeURIComponent(language));
+   if(destination!==path+window.location.search)
+    router.replace(destination+window.location.hash,{scroll:false});
+   return;
+  }
+  if(path==='/blog'||path==='/blog/'){
+   if(!manual)return;
+   const params=new URLSearchParams(window.location.search);
+   if(language==='en')params.delete('hl');
+   else params.set('hl',language);
+   const destination='/blog'+(params.size?'?'+params.toString():'');
+   if(destination!==path+window.location.search)
+    router.replace(destination+window.location.hash,{scroll:false});
+   return;
+  }
+  if(/^\/restaurant\/[0-9a-f-]{36}\/?$/i.test(path)){
+   if(!manual)return;
+   const params=new URLSearchParams();
+   if(language!=='ko')params.set('hl',language);
+   const destination=path+(params.size?'?'+params.toString():'');
+   if(destination!==path+window.location.search)
+    router.replace(destination+window.location.hash,{scroll:false});
+   return;
+  }
+  if(!/^\/(search|map|contact|privacy|terms|login|my-page|account)(?:\/|$)/.test(path))return;
   const params=new URLSearchParams(window.location.search);
-  // Explicit language URLs from search engines and shared links are respected
-  // on initial auto detection. Only manual choice can replace such a URL.
-  if(!force&&params.has('hl'))return;
+  if(!manual&&params.has('hl'))return;
   if(params.get('hl')===language)return;
   params.set('hl',language);
   router.replace(path+'?'+params.toString()+window.location.hash,{scroll:false});
@@ -89,11 +124,11 @@ export default function Header(){
    const selectedCountry=validCountry(manualCountry)?manualCountry:null;
    const chosen=selectedCountry||detected;
    // Manual language > manual country > explicit link language > geolocation.
-   const preferred=manualLanguage||
-     (selectedCountry?languageForCountry(chosen):explicitLocale||languageForCountry(chosen));
+   // Explicit URL language wins over any remembered country/device preference.
+   const preferred=explicitLocale||manualLanguage||languageForCountry(chosen);
    sync(chosen,preferred);
    if(finalized&&(!explicitLocale||selectedCountry||manualLanguage))
-    navigateLanguage(preferred,true);
+    navigateLanguage(preferred,false);
   };
   // Show reasonable local hints first; trust edge/IP once it responds.
   // Don't navigate twice while geolocation is resolving.
