@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import {seoPublicEnabled} from '@/lib/public-seo';
-import {SEO_LOCALES,blogArticlePath,localizedAlternates,absoluteSeoUrl} from '@/lib/seo-locales';
+import {SEO_LOCALES,blogArticlePath,blogIndexPath,restaurantPath,localizedAlternates,absoluteSeoUrl} from '@/lib/seo-locales';
 import {currentStaff,hasPermission} from '@/lib/owner-cms-auth';
 import {notFound} from 'next/navigation';
 import type {Metadata} from 'next';
@@ -60,12 +60,12 @@ export default async function BlogStory({params,searchParams}:Ctx){
  };
  return <main className={styles.articleShell} lang={published.locale==='en'?'en-US':published.locale}>
    <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-      <Link href="/blog">Blog</Link><span>›</span>
+      <Link href={blogIndexPath(published.locale)}>Blog</Link><span>›</span>
       {parentCategory&&<>
-        <Link href={'/blog?category='+parentCategory.slug}>
+        <Link href={blogIndexPath(published.locale)+'?'+new URLSearchParams({category:parentCategory.slug}).toString().replace(/^/,'')}>
           {blogCategoryName(parentCategory,published.locale)}</Link><span>›</span>
       </>}
-      <Link href={'/blog?category='+encodeURIComponent(published.draft.category)}>
+      <Link href={blogIndexPath(published.locale)+(blogIndexPath(published.locale).includes('?')?'&':'?')+'category='+encodeURIComponent(published.draft.category)}>
         {blogCategoryName(activeCategory,published.locale)}</Link><span>›</span>
       <span aria-current="page">{published.title.slice(0,65)}</span>
    </nav>
@@ -96,11 +96,11 @@ export default async function BlogStory({params,searchParams}:Ctx){
    </div>}
    {restaurants.length>0&&<section className={styles.related} aria-label="Related restaurants">
      <h2>Restaurants mentioned in this guide</h2>
-     {restaurants.map(r=><Link href={'/restaurant/'+r.id+'?hl='+published.locale} key={r.id}>
+     {restaurants.map(r=><Link href={restaurantPath(r.id,published.locale)} key={r.id}>
        <strong>{r.name}</strong><span>{r.road_address_ko||'View restaurant'} ↗</span>
      </Link>)}
    </section>}
-   <Link className={styles.back} href="/blog">← Back to food stories</Link>
+   <Link className={styles.back} href={blogIndexPath(published.locale)}>← Back to food stories</Link>
    <script type="application/ld+json"
      dangerouslySetInnerHTML={{__html:JSON.stringify(structured).replace(/</g,'\\u003c')}}/>
  </main>;
