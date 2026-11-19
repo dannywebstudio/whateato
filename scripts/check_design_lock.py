@@ -34,11 +34,14 @@ FROZEN_FILES = (
 # Exact, owner-selected latest UI revision. Baseline remains immutable.
 # Owner explicitly approved the 2026-10-16 Header Login/My Page control next to Contact.
 # Freeze the exact revised Header blob; all other design files stay locked.
+# Owner-requested 2026-11-19 SEO navigation fix: no CSS/JSX changes; only stop
+# client geo redirects on canonical blog and restaurant URLs and repair manual
+# language navigation. This is an intentional Header behavior baseline update.
 LATEST_UI_BLOBS = {
     "src/app/globals.css": "c2d831ab2a977f7374062986130de55a7fa452e0",
     "src/app/page.tsx": "999cd8b1bd5423714030820b91dbfb68c2298a67",
     "src/app/layout.tsx": "c5cbe21dd178679f7313a252d7e2fd4fa4ad1ac7",
-    "src/components/Header.tsx": "d16cc14eed224c754b66b2fdc8a6dec2b797d48a",
+    "src/components/Header.tsx": "29a7f9ff845fea8e57c735233c64e9e0e0c9931e",
     "src/components/SearchBox.tsx": "12c000453e99c5fe8552c05c9e62e536c50629f2"
 }
 
