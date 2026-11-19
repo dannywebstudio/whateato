@@ -45,6 +45,8 @@ export default async function BlogStory({params,searchParams}:Ctx){
  ]);
  const activeCategory=categories.find(c=>c.slug===published.draft.category);
  const parentCategory=categories.find(c=>c.slug===activeCategory?.parent_slug);
+ const indexHref=blogIndexPath(published.locale);
+ const categoryHref=(value:string)=>indexHref+(indexHref.includes('?')?'&':'?')+'category='+encodeURIComponent(value);
  const date=new Date(published.published_at).toLocaleDateString('en-US',{
    year:'numeric',month:'long',day:'numeric'});
  const structured={
@@ -62,10 +64,10 @@ export default async function BlogStory({params,searchParams}:Ctx){
    <nav className={styles.breadcrumb} aria-label="Breadcrumb">
       <Link href={blogIndexPath(published.locale)}>Blog</Link><span>›</span>
       {parentCategory&&<>
-        <Link href={blogIndexPath(published.locale)+'?'+new URLSearchParams({category:parentCategory.slug}).toString().replace(/^/,'')}>
+        <Link href={categoryHref(parentCategory.slug)}>
           {blogCategoryName(parentCategory,published.locale)}</Link><span>›</span>
       </>}
-      <Link href={blogIndexPath(published.locale)+(blogIndexPath(published.locale).includes('?')?'&':'?')+'category='+encodeURIComponent(published.draft.category)}>
+      <Link href={categoryHref(published.draft.category)}>
         {blogCategoryName(activeCategory,published.locale)}</Link><span>›</span>
       <span aria-current="page">{published.title.slice(0,65)}</span>
    </nav>
