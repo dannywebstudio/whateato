@@ -44,8 +44,11 @@ assert.ok(allow.every(([id])=>approved.includes(id)),'keep baseline 3 approved')
 assert.ok(approved.every(id=>robots.body.includes('Allow: /restaurant/'+id)),
  'robots must whitelist every currently approved restaurant');
 assert.ok(!approved.includes(knownExcluded),'unapproved restaurant must not enter sitemap');
-assert.ok(restaurantUrls.every(u=>/^\\/restaurant\\/[a-f0-9-]{36}(?:\\?hl=(?:en|ja|zh-CN))?$/.test(
- new URL(u).pathname+new URL(u).search)), 'restaurant sitemap URLs must use canonical locale-only paths');
+assert.ok(restaurantUrls.every(u=>{
+ const parsed=new URL(u);
+ return /^\/restaurant\/[0-9a-f-]{36}$/i.test(parsed.pathname)
+  && (parsed.search===''||['?hl=en','?hl=ja','?hl=zh-CN'].includes(parsed.search));
+}), 'restaurant sitemap URLs must use canonical locale-only paths');
 console.log('PASS sitemap: '+approved.length+' owner-approved restaurant URLs and dynamic blog URLs');
 
 const home=await get('/');
