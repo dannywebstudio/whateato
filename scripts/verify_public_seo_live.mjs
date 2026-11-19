@@ -35,15 +35,20 @@ const sitemap=await get('/sitemap.xml');
 assert.equal(sitemap.status,200);
 assert.match(sitemap.body,/<urlset\b/);
 const urls=[...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x=>x[1]);
-const approved=urls.filter(u=>u.startsWith(base+'/restaurant/'))
- .map(u=>u.slice((base+'/restaurant/').length));
+const restaurantUrls=urls.filter(u=>u.startsWith(base+'/restaurant/'));
+const approved=[...new Set(restaurantUrls.map(u=>new URL(u).pathname.slice('/restaurant/'.length)))];
 assert.ok(approved.length>=3,'the three original restaurants must remain approved');
-assert.equal(new Set(approved).size,approved.length,'no duplicated restaurant URLs');
+assert.equal(new Set(restaurantUrls).size,restaurantUrls.length,'no duplicated localized restaurant URLs');
 assert.ok(urls.includes(base+'/'),'homepage remains indexed');
 assert.ok(allow.every(([id])=>approved.includes(id)),'keep baseline 3 approved');
 assert.ok(approved.every(id=>robots.body.includes('Allow: /restaurant/'+id)),
  'robots must whitelist every currently approved restaurant');
 assert.ok(!approved.includes(knownExcluded),'unapproved restaurant must not enter sitemap');
+assert.ok(restaurantUrls.every(u=>{
+ const parsed=new URL(u);
+ return /^\/restaurant\/[0-9a-f-]{36}$/i.test(parsed.pathname)
+  && (parsed.search===''||['?hl=en','?hl=ja','?hl=zh-CN'].includes(parsed.search));
+}), 'restaurant sitemap URLs must use canonical locale-only paths');
 console.log('PASS sitemap: '+approved.length+' owner-approved restaurant URLs and dynamic blog URLs');
 
 const home=await get('/');

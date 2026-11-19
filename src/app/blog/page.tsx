@@ -44,10 +44,14 @@ export default async function BlogPage({searchParams}:Props){
  const selectedCategory=categories.find(c=>c.slug===category);
  const selectedParent=selectedCategory?.parent_slug||selectedCategory?.slug;
  const url=(nextPage:number,cat=category)=>{
-   const params=new URLSearchParams({hl:locale});
-   if(q)params.set('q',q);if(cat)params.set('category',cat);
+   // Preserve the precise canonical language prefix; do not generate
+   // /blog?hl=en when /blog is the preferred English document.
+   const base=blogIndexPath(locale);
+   const params=new URLSearchParams(base.split('?')[1]||'');
+   if(q)params.set('q',q);
+   if(cat)params.set('category',cat);
    if(nextPage>1)params.set('page',String(nextPage));
-   return '/blog?'+params;
+   return '/blog'+(params.size?'?'+params.toString():'');
  };
  const labels={
   en:{all:'All Stories',search:'Search',placeholder:'Search stories, places or topics...',latest:'Latest Stories',results:'Search results',everything:'All',empty:'Our first stories are being prepared. Check back soon.',notFound:'No matching stories yet. Try another keyword.',previous:'← Previous',next:'More stories →'},
