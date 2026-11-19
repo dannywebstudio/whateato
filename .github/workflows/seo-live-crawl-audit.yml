@@ -1,0 +1,23 @@
+name: WhatEatO live SEO URL & redirect audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/i18n-analytics-backend-v1]
+    paths:
+      - scripts/audit_public_seo_routes.mjs
+      - .github/workflows/seo-live-crawl-audit.yml
+permissions:
+  contents: read
+jobs:
+  public-seo-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate audit script
+        run: node --check scripts/audit_public_seo_routes.mjs
+      - name: Inspect production DNS, sitemap, canonical and redirect chains
+        run: node scripts/audit_public_seo_routes.mjs https://whateato.com 16
